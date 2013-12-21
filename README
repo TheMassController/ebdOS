@@ -1,0 +1,12 @@
+The goal of this project is to create my own little OS for the stellaris Launchpad. 
+
+The following things are requirements:
+-Premeptive Scheduling
+-Mutexing
+-Utalizing the full floating point support
+
+
+Used Sources:
+-VersdOS #The starting basis
+-https://coactionos.com/projects/coactionos/wiki/Context_Switching_on_the_ARM_Cortex_M3 #Context switching in general
+-http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/BABCAEDD.html #Store and load multiple registers

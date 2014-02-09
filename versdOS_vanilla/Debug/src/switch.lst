@@ -1,0 +1,58 @@
+TMS470 Assembler PC v4.9.9 Tue Dec 10 10:58:51 2013
+
+Tools Copyright (c) 1996-2013 Texas Instruments Incorporated
+../src/switch.asm                                                    PAGE    1
+
+       1                    ; Author: Daniel Versluis
+       2                    ; Email: VersD@hr.nl
+       3                    ; Description: Contains all neccesary low-level functions
+       4                    ; for pushing and popping CPU/Stack
+       5                    
+       6                            .global pushRegistersToCurrentPSP
+       7                            .global popRegistersFromCurrentPSP
+       8                            .global readPSP
+       9                            .global readMSP
+      10                            .global writePSP
+      11                            .global writeMSP
+      12                                    
+      13 00000000           pushRegistersToCurrentPSP:
+      14 00000000 8009F3EF                  MRS     R0      , psp                   ;Move PSP to register R0 (the function argumen
+      15 00000004 0FF0E920                  STMDB   R0!     , {r4-r11}              ;Store multiple registers decrement address be
+      16                                                                                            ;when done write back last use
+      17 00000008 8809F380                  MSR     psp     , R0                    ;Move register %0 to psp to update to the new 
+      18 0000000c 46F7                      MOV             PC      , LR                    ;return by moving link-register to pro
+      19                    
+      20                    
+      21 0000000e           popRegistersFromCurrentPSP:
+      22 0000000e 8009F3EF                  MRS     R0      , psp                   ;Move PSP to register R0 ; [KEEP 32-BIT INS]
+      23 00000012 0FF0E8B0                  LDMFD   R0!     , {r4-r11}              ;Load multiple registers increment address aft
+      24                                                                                            ;when done write back last use
+      25 00000016 8809F380                  MSR     psp     , R0                    ;Move register R0 to psp to update to the new 
+      26 0000001a 46F7                      MOV             PC      , LR                    ;return by moving link-register to pro
+      27                    
+      28 0000001c           readPSP:
+      29 0000001c 8009F3EF                  MRS     R0 , psp                        ;move psp to r0 ; [KEEP 32-BIT INS]
+      30 00000020 46F7                      MOV             PC      , LR                    ;return by moving link-register to pro
+      31                    
+      32 00000022           readMSP:
+      33 00000022 8008F3EF                  MRS     R0 , msp                        ;move msp to r0 ; [KEEP 32-BIT INS]
+      34 00000026 46F7                      MOV             PC      , LR                    ;return by moving link-register to pro
+      35                    
+      36 00000028           writePSP:
+      37 00000028 8809F380          MSR     psp     , R0                    ;Move r0 to psp. ; [KEEP 32-BIT INS]
+      38 0000002c 46F7                      MOV             PC      , LR                    ;return by moving link-register to pro
+      39                    
+      40 0000002e           writeMSP:
+      41 0000002e 8808F380          MSR     msp     , R0                    ;Move r0 to msp. ; [KEEP 32-BIT INS]
+      42 00000032 46F7                      MOV             PC      , LR                    ;return by moving link-register to pro
+
+--------------------------
+Thumb2 Statistics
+--------------------------
+Number of Thumb2 ins converted to Thumb = 0 (0%)
+Number of Thumb ins in input = 7 (41%)
+Number of Thumb2 ins encoded as Thumb2 = 10 (100%)
+Number of Thumb2 ins converted to 2 OPND Thumb = 4
+
+
+No Assembly Errors, No Assembly Warnings

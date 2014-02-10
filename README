@@ -10,3 +10,6 @@ Used Sources:
 -VersdOS #The starting basis
 -https://coactionos.com/projects/coactionos/wiki/Context_Switching_on_the_ARM_Cortex_M3 #Context switching in general
 -http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/BABCAEDD.html #Store and load multiple registers
+
+Data on CPP args:
+-https://eehusky.wordpress.com/2012/12/04/using-gcc-with-ti-stellaris-launchpad-a-more-in-depth-look/

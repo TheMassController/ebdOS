@@ -1,0 +1,16 @@
+Building:
+The fundament of the enitre build is arm-gcc-none-eabi:
+https://launchpad.net/gcc-arm-embedded/+download
+This contains compilers, headers and libs that can be used standalone. 
+It also contains a version of newlib, which contain standalone Malloc, printf, sprintf etc. This is very usefull and thus the first goal is to make this project compatible with them
+
+flashing:
+lm4flash:
+https://github.com/utzig/lm4tools
+
+Debugging:
+OpenOCD and arm-none-eabi-gdb
+The ARM bare-metal GDB has no clue what the CPU actually is and this cant inspect some registers. So its necessary to talk to openOCD directly trough gdb to get stuff done. Luckily GDB makes this very easy with the monitor command.
+See: http://openocd.sourceforge.net/doc/html/General-Commands.html for commands
+Example:
+"monitor reg" in GDB will dump all registers, not only the ones in the core ARM set (Cortex M3 subset has some registers of its own)

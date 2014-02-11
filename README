@@ -13,3 +13,6 @@ Used Sources:
 
 Data on CPP args:
 -https://eehusky.wordpress.com/2012/12/04/using-gcc-with-ti-stellaris-launchpad-a-more-in-depth-look/
+
+Compiling for hard-float:
+https://launchpadlibrarian.net/160487135/readme.txt

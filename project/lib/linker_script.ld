@@ -1,4 +1,4 @@
-_stack_size = 4K;
+_stack_size = 0x1000; /*4K*/
 
 MEMORY
 {
@@ -32,9 +32,9 @@ SECTIONS
         *(COMMON)
         _ebss = .;
     } > SRAM
-    _heap_bottom = ORIGIN(SRAM) + LENGTH(SRAM); /*Heap Bottom is at the lowest part of the SRAM and grows up*/                                          
-    _heap_top = ORIGIN(SRAM) + _stack_size;     /*Origin SRAM + stack size is top of heap. Heap grows up*/ 
+    _heap_bottom = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*Heap Bottom is at the lowest part of the SRAM and grows up*/                                          
+    _heap_top = ORIGIN(SRAM) + _stack_size - 1;     /*Origin SRAM + stack size is top of heap. Heap grows up*/ 
 
-    _stack_bottom = _heap_top;
+    _stack_bottom = ORIGIN(SRAM) + _stack_size - 1;
     _stack_top = ORIGIN(SRAM); /*Stack start is at the top of the SRAM*/	
 }

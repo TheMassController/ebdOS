@@ -25,7 +25,7 @@ SECTIONS
         _edata = .;
     } > SRAM
 
-    .bss :
+    .bss : AT (ADDR(.data) + SIZEOF(.data))
     {
         _bss = .;
         *(.bss*)

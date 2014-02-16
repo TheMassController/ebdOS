@@ -42,12 +42,8 @@ static void IntDefaultHandler(void);
 //*****************************************************************************
 extern int main(void);
 
-//*****************************************************************************
-//
-// Reserve space for the system stack.
-//
-//*****************************************************************************
-static unsigned long pulStack[64];
+//System stack start, defined in linker script
+extern char _stack_top;
 
 //*****************************************************************************
 //
@@ -58,7 +54,7 @@ static unsigned long pulStack[64];
 __attribute__ ((section(".isr_vector")))
 void (* const g_pfnVectors[])(void) =
 {
-    (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
+	(void (*)(void))((unsigned long)(&_stack_top)),
                                             // The initial stack pointer
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler

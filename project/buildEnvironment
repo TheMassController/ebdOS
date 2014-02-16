@@ -27,14 +27,28 @@ The "ARMV7E-M" set. This set is located at:
 
 There are more versions like armv7-m, armv6, etc. Some should work, some should not. ARM as exellent sources about which instruction set is compatible with which. These two, however, are the official Instruction Sets for the Cortex M4.
 And they both work, given the correct compiler options.
-NB: compiling will never fail, runtime is when shit happens.
+NB: compiling will never fail, runtime is when shit happens. If it happens, which on a second look, does not seem to happen
 
 Some tests:
 Now its time to test all combinations of params and libraries and see what happens. The basic idea is to check if the program hits _sbrk and if it gets to the while(1)
+
 -mthumb -mcpu=cortex-m4 with the "Thumb" set:
 *breakpoint hit
+*Stops at while(1) (correct behaviour)
 
+-mthumb -mcpu=cortex-m4 with the "ARMV7E-M" set:
+*breakpoint hit
+*Stops at while(1) (correct behaviour)
 
+-mthumb -march=armv7e-m with the "Thumb" set:
+*breakpoint hit
+*Stops at while(1) (correct behaviour)
+
+-mthumb -march=armv7e-m with the "ARMV7E-M" set:
+*breakpoint hit
+*Stops at while(1) (correct behaviour)
+
+So everything works perfect: fully expected. Now for the choice:
 
 flashing:
 lm4flash:

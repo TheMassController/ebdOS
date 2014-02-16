@@ -24,8 +24,8 @@ OFILES+=$(patsubst asm/%,$(ODIR)%,$(_OASMFILES))
 INC= -I$(INCDIR)
 INC+= -I$(LIBDIR)inc
 INC+= -I/usr/arm-none-eabi/include
-#LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/thumb -L /usr/lib/gcc/arm-none-eabi/4.8.3/thumb/
-LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/armv7e-m/ -L /usr/lib/gcc/arm-none-eabi/4.8.3/armv7e-m/
+LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/thumb -L /usr/lib/gcc/arm-none-eabi/4.8.3/thumb/
+#LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/armv7e-m/ -L /usr/lib/gcc/arm-none-eabi/4.8.3/armv7e-m/
 
 LIB=-ldriver-cm4f -lc -lg -lgcc
 LINKER_SCRIPT = $(LIBDIR)linker_script.ld

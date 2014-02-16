@@ -15,6 +15,13 @@ int execve(char *name, char **argv, char **env) {
 	return -1;
 }
 
+//Malloc reentrant
+//#include <malloc.h>
+//void __malloc_lock (struct _reent *reent ){
+//}
+//void __malloc_unlock (struct _reent *reent ){
+//}
+
 //Even easier implementations
 int _close(int file)
 {

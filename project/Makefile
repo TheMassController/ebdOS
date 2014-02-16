@@ -1,3 +1,6 @@
+#defenitions
+#Thumb or ARM?
+
 #Directories and files
 SRCDIR=src/
 ASMDIR=asm/
@@ -5,6 +8,10 @@ INCDIR=inc/
 LIBDIR=lib/
 ODIR=obj/
 GDBDIR=gdb/
+
+#libraries
+
+
 #C Files
 CFILES=$(wildcard $(SRCDIR)*.c)
 _OFILES=$(patsubst %.c,%.c.o,$(CFILES))
@@ -17,7 +24,8 @@ OFILES+=$(patsubst asm/%,$(ODIR)%,$(_OASMFILES))
 INC= -I$(INCDIR)
 INC+= -I$(LIBDIR)inc
 INC+= -I/usr/arm-none-eabi/include
-LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/thumb -L /usr/lib/gcc/arm-none-eabi/4.8.3/thumb/
+#LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/thumb -L /usr/lib/gcc/arm-none-eabi/4.8.3/thumb/
+LIBPATH=-L $(LIBDIR) -L /usr/arm-none-eabi/lib/armv7e-m/ -L /usr/lib/gcc/arm-none-eabi/4.8.3/armv7e-m/
 
 LIB=-ldriver-cm4f -lc -lg -lgcc
 LINKER_SCRIPT = $(LIBDIR)linker_script.ld
@@ -33,7 +41,8 @@ OBJCOPY=arm-none-eabi-objcopy
 
 #compiling and linking options
 LDFLAGS=-T$(LINKER_SCRIPT) --entry ResetISR --gc-sections
-CFLAGS=-mthumb -mcpu=cortex-m4 -mfloat-abi=softfp -ffunction-sections -fdata-sections -MD -std=c99 -Wall -pedantic -DPART_LM4F120H5QR -c $(INC) -DTARGET_IS_BLIZZARD_RA1
+#CFLAGS=-mthumb -mcpu=cortex-m4 -mfloat-abi=softfp -ffunction-sections -fdata-sections -MD -std=c99 -Wall -pedantic -DPART_LM4F120H5QR -c $(INC) -DTARGET_IS_BLIZZARD_RA1
+CFLAGS=-mthumb -march=armv7e-m -mfloat-abi=softfp -ffunction-sections -fdata-sections -MD -std=c99 -Wall -pedantic -DPART_LM4F120H5QR -c $(INC) -DTARGET_IS_BLIZZARD_RA1
 #-mfpu=fpv4-sp-d16
 OBJCPYFLAGS=
 ASMFLAGS=-c -mthumb -mcpu=cortex-m4 -mfloat-abi=softfp -ffunction-sections -fdata-sections

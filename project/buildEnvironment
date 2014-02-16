@@ -2,7 +2,20 @@ Building:
 The fundament of the enitre build is arm-gcc-none-eabi:
 https://launchpad.net/gcc-arm-embedded/+download
 This contains compilers, headers and libs that can be used standalone. 
-It also contains a version of newlib, which contain standalone Malloc, printf, sprintf etc. This is very usefull and thus the first goal is to make this project compatible with them
+It also contains a version of newlib, which contain standalone Malloc, printf, sprintf etc. This is very useful, but requires my own implementation of some functions (_write _read _sbrk, etc)
+
+Architecture, etc:
+The entire project is created for the Stellars Launchpad LM4F120. 
+This product contains a Cortex-M4 CPU with hardware float support. This has the following consequences:
+-ARMv7E-M Instruction set
+-Thumb Instruction set
+And some more extensions. Why are these two important? Because the toolchain delivers newlib compilations for both of them, and, if used incorrectly, they will crash the CPU instead of work. Even though they should both work.
+
+Based on the following document: https://launchpadlibrarian.net/160487135/readme.txt
+There are two (four, technically, but lets ignore floating point for now) sets of paramets that we can use for the compiler:
+-mthumb -mcpu=cortex-m4
+and
+-mthumb -march=armv7e-m
 
 flashing:
 lm4flash:

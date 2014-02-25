@@ -48,23 +48,23 @@ int _open(const char *name, int flags, int mode)
     return -1;
 }
 
-int _read(int file, char *ptr, int len)
-{
-	return -1;
-    //unsigned int i;
-    //for( i = 0; i < len; i++ ){
-    //    ptr[i] = (char)MAP_UARTCharGet(UART0_BASE);
-    //}
-    //return len;
-}
-
-int _write(int file, char *ptr, unsigned int len)
-{
-	return -1;
-    //unsigned int i;
-    //for(i = 0; i < len; i++){
-    //    MAP_UARTCharPut(UART0_BASE, ptr[i]);
-    //}
-    //return i;
-}
+//int _read(int file, char *ptr, int len)
+//{
+//	return -1;
+//    //unsigned int i;
+//    //for( i = 0; i < len; i++ ){
+//    //    ptr[i] = (char)MAP_UARTCharGet(UART0_BASE);
+//    //}
+//    //return len;
+//}
+//
+//int _write(int file, char *ptr, unsigned int len)
+//{
+//	return -1;
+//    //unsigned int i;
+//    //for(i = 0; i < len; i++){
+//    //    MAP_UARTCharPut(UART0_BASE, ptr[i]);
+//    //}
+//    //return i;
+//}
 

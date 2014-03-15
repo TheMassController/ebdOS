@@ -2,9 +2,11 @@
 #include "stdlib.h"
 #include "rom_map.h"
 #include "rom.h"
+#include "hw_types.h"
+#include "uart.h"
 
 int main(void){
-	printf("Hello, World!\n");
+	UARTprintf("Hello, World!\n");
 	int i = 2;
 	int *j = NULL;
 	j = (int*)malloc(sizeof(int));	

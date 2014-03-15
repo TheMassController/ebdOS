@@ -17,13 +17,13 @@ SECTIONS
         _etext = .;
     } > FLASH
 
-    .data : AT(ADDR(.text) + SIZEOF(.text))
+    .data : /*AT(ADDR(.text) + SIZEOF(.text))*/
     {
         _data = .;
         *(vtable)
         *(.data*)
         _edata = .;
-    } > SRAM
+    } > SRAM AT > FLASH
 
     .bss : AT (ADDR(.data) + SIZEOF(.data))
     {
@@ -38,5 +38,5 @@ SECTIONS
 	_heap_top = ORIGIN(SRAM) + LENGTH(SRAM) - _stack_size - 1;
 	
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1;
-	_stack_bottom = ORIGIN(SRAM) + LENGTH(SRAM) - _stack_size; 
+	_stack_bottom = ORIGIN(SRAM) + LENGTH(SRAM) - 1 - _stack_size; 
 }

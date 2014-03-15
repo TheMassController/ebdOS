@@ -16,3 +16,6 @@ Data on C args and on other stuffz:
 
 Compiling for hard-float:
 https://launchpadlibrarian.net/160487135/readme.txt
+
+Notes:
+ROM vs not-ROM functions (ROM_SysCtlClockSet vs SysCtlClockSet), the ROM functions are hardcoded available on the hardware, the not-rom functions need to be linked to the software

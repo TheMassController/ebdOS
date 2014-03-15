@@ -45,6 +45,9 @@ extern int main(void);
 //System stack start, defined in linker script
 extern char _stack_top;
 
+//Hardware setup
+void setupHardware(void);
+
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -279,6 +282,8 @@ ResetISR(void)
 //                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
 //                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
 //
+	//Call the hardware init
+	setupHardware();
     //
     // Call the application's entry point.
     //

@@ -6,6 +6,8 @@
 #include "uart.h"
 #include "uartstdio.h"
 
+#include "assembly.h"
+
 int main(void){
 	UARTprintf("Hello, World!\n");
 	int i = 2;
@@ -16,6 +18,7 @@ int main(void){
 	if ((j ==  NULL)| (cpuSpeed != 80000000)){
 		for(;;); //On failure, the program hangs here
 	}
-	UARTprintf("i=%x\r\n",i);
+	void* stackPointer = getSP();
+	UARTprintf("i=%x   SP = %p\r\n",i,stackPointer);
 	while(1); //On success the program hangs here
 }

@@ -1,4 +1,4 @@
-_stack_size = 0x3000; /*12K*/
+_stack_buffer = 0x7D0; /*2K buffer between HEAP and STACK*/
 
 MEMORY
 {
@@ -32,11 +32,6 @@ SECTIONS
         *(COMMON)
         _ebss = .;
     } > SRAM
-	
 
-	_heap_bottom = .;
-	_heap_top = ORIGIN(SRAM) + LENGTH(SRAM) - _stack_size - 1;
-	
-	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1;
-	_stack_bottom = ORIGIN(SRAM) + LENGTH(SRAM) - 1 - _stack_size; 
+	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/
 }

@@ -4,6 +4,7 @@
 #include "rom.h"
 #include "hw_types.h"
 #include "uart.h"
+#include "uartstdio.h"
 
 int main(void){
 	UARTprintf("Hello, World!\n");
@@ -15,6 +16,6 @@ int main(void){
 	if ((j ==  NULL)| (cpuSpeed != 80000000)){
 		for(;;); //On failure, the program hangs here
 	}
-	printf("i=%x\r\n",i);
+	UARTprintf("i=%x\r\n",i);
 	while(1); //On success the program hangs here
 }

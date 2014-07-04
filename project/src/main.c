@@ -1,12 +1,9 @@
-#include "stdio.h"
-#include "stdlib.h"
-#include "rom_map.h"
-#include "rom.h"
-#include "hw_types.h"
-#include "uart.h"
-#include "uartstdio.h"
+#include "stdlib.h" //Malloc
+#include "rom.h" //rom_ funcs
+#include "uartstdio.h" //For printf, scanf
 
 #include "assembly.h"
+#include "validation.h" 
 
 int main(void){
 	UARTprintf("Hello, World!\n");
@@ -20,5 +17,6 @@ int main(void){
 	}
 	void* stackPointer = getSP();
 	UARTprintf("i=%x   SP = %p\r\n",i,stackPointer);
+    testUARTstdio();
 	while(1); //On success the program hangs here
 }

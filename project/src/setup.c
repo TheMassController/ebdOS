@@ -29,12 +29,6 @@ void setupHardware(void){
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 	//Setup GPIO A as UART
 	ROM_GPIOPinTypeUART(GPIO_PORTA_BASE,GPIO_PIN_0|GPIO_PIN_1);	
-	//Set the clock to the 16 MHz oscillator
-	//ROM_UARTClockSourceSet(UART0_BASE,UART_CLOCK_PIOSC);
-	////Setup the UART
-	////	                UART0,clockspeed of internal oscillator, 115200 baud, 8-bit char len, 1 stop bit, no parity  
-	//ROM_UARTConfigSetExpClk(UART0_BASE,16000000,baud,UART_CONFIG_WLEN_8|UART_CONFIG_STOP_ONE|UART_CONFIG_PAR_NONE);	
-	////enable the UART
-	//ROM_UARTEnable(UART0_BASE);
+    //Start the UART0 with baud BAUD 
 	UARTStdioInitExpClk(0,baud);
 }

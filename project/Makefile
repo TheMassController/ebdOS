@@ -9,13 +9,15 @@ LIBDIR=lib/
 ODIR=obj/
 GDBDIR=gdb/
 ARMGCCDIR=~/gcc-arm-none-eabi/
+SRCCOPY=srcCopy/
 
 #libraries
 
 #C Files
-CFILES=$(wildcard $(SRCDIR)*.c)
+CFILES:=$(shell find $(SRCDIR) -name '*.c')
+#CFILES=$(wildcard $(SRCDIR)*.c)
 _OFILES=$(patsubst %.c,%.c.o,$(CFILES))
-OFILES=$(patsubst src/%,$(ODIR)%,$(_OFILES))
+OFILES=$(addprefix $(ODIR),$(notdir $(CFILES:.c=.c.o)))
 #ASM Files
 ASMFILES=$(wildcard $(ASMDIR)*.S)
 _OASMFILES=$(patsubst %.S,%.S.o,$(ASMFILES))
@@ -49,19 +51,24 @@ ASMFLAGS=-c -mthumb -mcpu=cortex-m4 -mfloat-abi=softfp -ffunction-sections -fdat
 .PHONY: all clean debug flash
 
 all: CFLAGS += -O3
-all: pre-build $(TARGET)
+all: pre-build
+all: $(TARGET)
 
 debug: CFLAGS += -DDEBUG -g
 debug: LDFLAGS += -g
 debug: pre-build $(TARGETELF)
 
 echo: 
-	echo $(OFILES)
+	@echo $(OFILES)
+	@echo $(CFILES)
+	@echo $(SRCCOPY)
 
 pre-build: 
 	@mkdir -p $(ODIR)
-	 
-$(ODIR)%.c.o: $(SRCDIR)%.c
+	@mkdir -p $(SRCCOPY)
+	@cp -f $(CFILES) $(SRCCOPY)
+
+$(ODIR)%.c.o: $(SRCCOPY)%.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 $(ODIR)%.S.o: $(ASMDIR)%.S
@@ -85,5 +92,6 @@ debugRun: clean debug
 
 clean:
 	@rm -rf $(ODIR)
+	@rm -rf $(SRCCOPY)
 	@rm -f $(TARGETELF)
 	@rm -f $(TARGET)

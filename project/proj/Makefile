@@ -14,31 +14,40 @@ DEBUGTARGET := $(DEBUG_DIR)$(TARGET)
 RELEASETARGETBIN := $(RELEASE_DIR)$(TARGETBIN)
 DEBUGTARGETBIN := $(DEBUG_DIR)$(TARGETBIN)
 
+LINKRECEIPE = $(LD) $(LDFLAGS) -o $@ $^ $(LIB) 
+OBJCOPYRECEIPE = $(OBJCOPY) $(OBJCPYFLAGS) -O binary $< $@ 
+CCRECEIPE = $(CC) $(CFLAGS) -c $< -o $@
+ASMRECEIPE = $(CC) $(ASMFLAGS) -c $< -o $@
+
+OBJECTDIRS += $(RELEASE_DIR) $(DEBUG_DIR)
+
 TOP :=./
 
 DIRS := $(shell ls -d */)
 DIRS := $(DIRS:=rules.mk)
 
--include $(DIRS)
 
 .PHONY: echo all debug
 
-all: echo
-#all: CFLAGS += -O3
-#all: pre-build
-#all: $(RELEASETARGETBIN)
+#all: echo
+all: CFLAGS += -O3
+all: pre-build
+all: $(RELEASETARGETBIN)
 
 debug: CFLAGS += -DDEBUG -g3
-debug: LDFLAGS += -g3
+debug: LDFLAGS += -g
+debug: ASMFLAGS +=
 debug: pre-build 
 debug: $(DEBUGTARGET)
 
-LINKRECEIPE = $(LD) $(LDFLAGS) -o $@ $^ $(LIB) 
-OBJCOPYRECEIPE = $(OBJCOPY) $(OBJCPYFLAGS) -O binary $< $@ 
+-include $(DIRS)
 
 INC := $(addprefix -I,$(INCDIRS))
 LIBDIR := $(addprefix -L,$(LIBDIRS))
 LIB := $(addprefix -l,$(LIBS))
+
+-include $(OFILES:%.o=%.d)
+-include $(DOFILES:%.o=%.d)
 
 $(RELEASETARGET) : $(OFILES)
 	$(LINKRECEIPE)
@@ -52,10 +61,20 @@ $(DEBUGTARGET) : $(DOFILES)
 $(DEBUGTARGETBIN) : $(DEBUGTARGET)
 	$(OBJCOPYRECEIPE)
 
-
 echo:
 	@echo "DIRS" $(DIRS)
-	@echo "LIBDIRS" $(LIBDIRS)
-	@echo "LIBS" $(LIBS)
+	@echo "LIBDIR" $(LIBDIR)
+	@echo "LIB" $(LIB)
 	@echo "OFILES" $(OFILES) 
+	@echo "DOFILES" $(DOFILES)
+	@echo "INC" $(INC)
+	@echo "OBJECTDIRS" $(OBJECTDIRS)
 
+pre-build:
+	@mkdir -p $(OBJECTDIRS)
+
+clean: 
+	@rm -f $(OFILES) $(DOFILES) $(RELEASETARGET) $(RELEASETARGETBIN) $(DEBUGTARGET) $(DEBUGTARGETBIN)
+
+distclean: 
+	@rm -rf $(OBJECTDIRS)

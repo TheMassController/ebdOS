@@ -3,3 +3,4 @@
 **/
 
 int testUARTstdio(void);
+int testRegDumpLoad(void);

@@ -1,0 +1,3 @@
+ARMGCCBIN=$HOME/gcc-arm-none-eabi/bin
+ARMGCCEXLIB=$HOME/gcc-arm-none-eabi/lib/gcc/arm-none-eabi/4.8.4/thumb
+ARMGCCLIB=$HOME/gcc-arm-none-eabi/arm-none-eabi/lib/thumb

@@ -2,7 +2,8 @@
 #include "rom.h" //rom_ funcs
 #include "uartstdio.h" //For printf, scanf
 
-#include "assembly.h"
+#include "getRegisters.h" //ASM funcs for getting CPU regs
+#include "asmUtils.h"
 #include "validation.h" 
 
 int main(void){
@@ -15,8 +16,13 @@ int main(void){
 	if ((j ==  NULL)| (cpuSpeed != 80000000)){
 		for(;;); //On failure, the program hangs here
 	}
-	void* stackPointer = getSP();
-	UARTprintf("i=%x   SP = %p\r\n",i,stackPointer);
-    testUARTstdio();
-	while(1); //On success the program hangs here
+	void* mainStackPointer = getMSP();
+    void* programStackPointer = getPSP();
+	UARTprintf("i=%x   MSP = %p\r\n",i,mainStackPointer);
+	UARTprintf("i=%x   PSP = %p\r\n",i,programStackPointer);
+    int testRet = testUARTstdio();
+    testRet = testRegDumpLoad();
+	while(1){ //On success the program hangs here
+        waitForInterrupt();
+    }
 }

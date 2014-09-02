@@ -30,7 +30,7 @@ DIRS := $(DIRS:=rules.mk)
 .PHONY: echo all debug
 
 #all: echo
-all: CFLAGS += -O3
+all: CFLAGS += -Os
 all: pre-build
 all: $(RELEASETARGETBIN)
 

@@ -9,5 +9,5 @@ int testUARTstdio(void){
     UARTprintf("Int test: %i\n",5);
     int i = 6;
     UARTprintf("Pointer test: %p\n",&i);
-    return 0;
+    return 1;
 }

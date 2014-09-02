@@ -21,7 +21,13 @@ int main(void){
 	UARTprintf("i=%x   MSP = %p\r\n",i,mainStackPointer);
 	UARTprintf("i=%x   PSP = %p\r\n",i,programStackPointer);
     int testRet = testUARTstdio();
+    if (testRet != 1){
+        UARTprintf("TestUARTstdio failure %d\n",testRet);
+    }
     testRet = testRegDumpLoad();
+    if (testRet != 1){
+        UARTprintf("testRegDumpLoad failure %d\n",testRet);
+    }
 	while(1){ //On success the program hangs here
         waitForInterrupt();
     }

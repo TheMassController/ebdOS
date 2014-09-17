@@ -37,13 +37,16 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     //Now start pushing registers
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
     *stackPointer-- = 0x01000000; //XSPR, standard stuff 
-    *stackPointer-- = (int)procFunc;
-    *stackPointer-- = (int)&processReturn;
+    *stackPointer-- = (int)procFunc; //PC, initally points to start of function
+    *stackPointer-- = (int)&processReturn; //LR, return func
     *stackPointer-- = 12; // reg12, 12 for debug
     *stackPointer-- = 3; // reg3, 3 for debug
     *stackPointer-- = 2; // reg2, 2 for debug
     *stackPointer-- = 1; // reg1, 1 for debug
     *stackPointer-- = (int)param; // reg 0, first param
+    
+    //Save the stackpointer to the struct
+    newProc->stackPointer = (void*)stackPointer;
     
     if ( firstProcess == NULL) {
         firstProcess = newProc;
@@ -51,7 +54,6 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
         struct Process* thisProc;
         for ( thisProc = firstProcess; thisProc->nextProcess != NULL; thisProc = thisProc->nextProcess);
         thisProc->nextProcess = newProc;
-        
     }
    return 0; 
 }

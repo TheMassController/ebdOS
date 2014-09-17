@@ -17,10 +17,5 @@ OFILES += $(USERROFILES)
 #Make sure the output paths are created
 OBJECTDIRS += $(USERDEBUGDIR) $(USERRELEASEDIR)
 
-#include subdir
-include $(USERDIR)src/validation/rules.mk
-
-
 $(USERDEBUGDIR)%.o $(USERRELEASEDIR)%.o: $(USERSRC)%.c
 	$(CC) $(CFLAGS) -c $< -o $@
-

@@ -5,3 +5,4 @@
 int testUARTstdio(void);
 int testRegDumpLoad(void);
 int heapTest(void);
+int testProcessStructure(void);

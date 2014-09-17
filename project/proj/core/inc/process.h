@@ -10,7 +10,8 @@ struct Process {
     unsigned char mPid;
     char* name;
     struct Process* nextProcess;
-    void* stack; //This one should always be the bottom one
+    void* stack; //refers to the address returned by Malloc
+    void* stackPointer; //The actual stackpointer
 };
 
 /*

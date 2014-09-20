@@ -15,6 +15,7 @@
 #include "process.h" //Process var
 
 extern struct Process* kernel;
+extern struct Process* currentProcess;
 
 void setupHardware(void){
     //Consts
@@ -38,9 +39,15 @@ void setupHardware(void){
 
     //Creat pid 0: the kernel
     kernel = (struct Process*)malloc(sizeof(struct Process));
-    void* stack = malloc(1024); //Temp stack
-    __processCreator(0, "Kernel", 1024, setupHardware, NULL, kernel, stack, 0);
-    free(stack);
+    kernel->pid = 0;
+    kernel->mPid = 0;
+    kernel->name = "kernel";
+    kernel->stackPointer = NULL;
+    kernel->state = WAIT;
+    //These params will not be used
     kernel->stack = NULL;
+    kernel->nextProcess = NULL;
+    
+    currentProcess = kernel;
     
 }

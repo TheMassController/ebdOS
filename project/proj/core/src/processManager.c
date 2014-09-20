@@ -9,22 +9,42 @@
 unsigned char currentPid = 0;
 struct Process* firstProcess = NULL;
 struct Process* kernel = NULL;
+struct Process* currentProcess = NULL;
+extern struct Process* nextProcess;
 //Usefull for selecting the pids
-static unsigned short nextPid = 1; //Short, has to be able to become 256
-#define MAX_PROCESSID (255)
+static unsigned char nextPid = 1; //Short, has to be able to become 256
+#define MAX_PROCESSID (254)
 
-struct Process* nextProcess = NULL;
-
-struct Process* __processCreator(unsigned char mPid, unsigned long stacklen,  char* name, processFunc procFunc, void* param, struct Process* newProc, void* stack, unsigned short pid){
-    if (currentPid != 0 || newProc == NULL){
-        return NULL;
+int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param){
+    if (currentPid != 0) {
+        return 3;
+    } 
+    if ( nextPid > MAX_PROCESSID ) {
+        return 1;
+    }
+    //Create the process on the heap
+    struct Process* newProc = (struct Process*)malloc(sizeof(struct Process)); 
+    if ( newProc == NULL) { //Insufficient mem
+       return 2; 
     }
     //Set some vars
-    newProc->pid = pid;
+    newProc->pid = nextPid++;
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
     newProc->name = (char*)malloc(strlen(name));
+    if (newProc->name == NULL){
+        free(newProc);
+        return 2;
+    }
+    newProc->state = READY;
     strcpy(newProc->name,name);
+    //Create the stack.
+    void* stack = malloc(stacklen);
+    if (stack == NULL){
+        free(newProc->name);
+        free(newProc);
+        return 2;
+    }
     newProc->stack = stack;
     //Because a stack moves up (from high to low) move the pointer to the last address
     int* stackPointer = (int*)(((char*)newProc->stack) + stacklen - 1 ); //Because we are lazy. The -1 is to prevent going above the stack (malloc returns addresses 0 -> asked-1)
@@ -43,34 +63,12 @@ struct Process* __processCreator(unsigned char mPid, unsigned long stacklen,  ch
 
     //The second set is the registers that we have to move manually between RAM and regs when switching contextst
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
-    for ( int u = 4; u <= 10; u++ ){
+    for ( int u = 4; u <= 11; u++ ){
         *stackPointer-- = u; //Reg u, u for debug
     }  
-    *stackPointer = 11; //The last reg and the pos we want the stackpointer to point to: reg 11
     
     //Save the stackpointer to the struct
     newProc->stackPointer = (void*)stackPointer;
-    return newProc;   
-}
-
-int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param){
-    if (currentPid != 0) {
-        return 3;
-    } 
-    if ( nextPid > MAX_PROCESSID ) {
-        return 1;
-    }
-    //Create the process on the heap
-    struct Process* newProc = (struct Process*)malloc(sizeof(struct Process)); 
-    if ( newProc == NULL) { //Insufficient mem
-       return 2; 
-    }
-    //Create the stack.
-    void* stack = malloc(stacklen);
-    if (stack == NULL){
-        return 2;
-    }
-    newProc = __processCreator(mPid, stacklen, name, procFunc, param, newProc, stack, nextPid++);
     if ( firstProcess == NULL) {
         firstProcess = newProc;
     } else {
@@ -81,21 +79,10 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
    return 0; 
 }
 
-void schedule(void){
-//The actual scheduler. 
-}
 
 void processReturn(void){
     //Placeholder
     while (1) {
         waitForInterrupt();
     }
-}
-
-void pendSVHandler(void){
-    //Placeholder
-    while (1) {
-        waitForInterrupt();
-    }
-    
 }

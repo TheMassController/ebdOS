@@ -8,3 +8,6 @@ waitForInterrupt:
     WFI             @Wait for interrupt
     MOV     PC, LR  @Return by moving the link register to the program counter
     
+forceManualReturn:
+    MOV     lr, R0      @Move param0 to R7
+	MOV 	pc , lr		@Return by moving the link register to the program counter

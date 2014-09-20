@@ -47,6 +47,8 @@ extern char _stack_top;
 
 //Hardware setup
 void setupHardware(void);
+//Pendsv interrupt handler
+void pendSVHandler(void);
 
 //*****************************************************************************
 //
@@ -72,7 +74,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // SVCall handler
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
-    IntDefaultHandler,                      // The PendSV handler
+    pendSVHandler,                      // The PendSV handler
     IntDefaultHandler,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B

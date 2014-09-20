@@ -13,7 +13,3 @@ setMSP:
 setPSP:
 	MSR 	psp , R0 	@Move R0 (param 0) to psp
 	MOV 	pc , lr		@Return by moving the link register to the program counter
-
-setR7:
-    MOV     R1, R0      @Move param0 to R7
-	MOV 	pc , lr		@Return by moving the link register to the program counter

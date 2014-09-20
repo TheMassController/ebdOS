@@ -24,10 +24,6 @@ int main(void){
     if (testRet != 1){
         UARTprintf("TestUARTstdio failure %d\n",testRet);
     }
-    testRet = testRegDumpLoad();
-    if (testRet != 1){
-        UARTprintf("testRegDumpLoad failure %d\n",testRet);
-    }
     testRet = testProcessStructure();
     if (testRet != 1){
         UARTprintf("testProcessStructure failure %d\n",testRet);

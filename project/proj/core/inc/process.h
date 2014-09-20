@@ -5,6 +5,13 @@
 //This is a function pionter which forces the function to have the signature "void proc(void*)". The last void* is for possible params
 typedef void (*processFunc)(void*);
 
+//All the states that exist
+enum STATE {
+    READY,
+    SLEEP,
+    WAIT
+};
+
 struct Process {
     unsigned char pid;
     unsigned char mPid;
@@ -12,6 +19,8 @@ struct Process {
     struct Process* nextProcess;
     void* stack; //refers to the address returned by Malloc
     void* stackPointer; //The actual stackpointer
+    enum STATE state;
+    
 };
 
 /*

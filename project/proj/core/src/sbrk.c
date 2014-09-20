@@ -1,7 +1,7 @@
 //Implements the _sbrk function
 //#include <stdio.h> 
 #include <sys/types.h> //Needed for caddr_t
-#include "getRegisters.h" //Needed for getMSP
+#include "getSetRegisters.h" //Needed for getMSP
 
 static caddr_t heap_end = NULL;
 extern char _ebss; //The end of the hard defined sections and the start of the heap (defined in linker script)

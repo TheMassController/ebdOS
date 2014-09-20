@@ -2,7 +2,7 @@
 #include "rom.h" //rom_ funcs
 #include "uartstdio.h" //For printf, scanf
 
-#include "getRegisters.h" //ASM funcs for getting CPU regs
+#include "getSetRegisters.h" //ASM funcs for getting CPU regs
 #include "asmUtils.h"
 #include "validation.h" 
 

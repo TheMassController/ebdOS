@@ -1,5 +1,6 @@
-.thumb
 .syntax unified
+.cpu cortex-m4
+.thumb
 @ Author: Jacko Dirks
 @ Description: Contains util functions that can only be implemented in assembly
 

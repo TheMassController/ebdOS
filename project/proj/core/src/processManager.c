@@ -6,7 +6,6 @@
 #include "asmUtils.h"
 //Responsible for creating and managing processes
 
-unsigned char currentPid = 0;
 struct Process* firstProcess = NULL;
 struct Process* kernel = NULL;
 struct Process* currentProcess = NULL;
@@ -16,7 +15,7 @@ static unsigned char nextPid = 1; //Short, has to be able to become 256
 #define MAX_PROCESSID (254)
 
 int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param){
-    if (currentPid != 0) {
+    if (currentProcess->pid != 0) {
         return 3;
     } 
     if ( nextPid > MAX_PROCESSID ) {

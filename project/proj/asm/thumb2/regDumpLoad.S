@@ -1,5 +1,6 @@
-.thumb
 .syntax unified
+.cpu cortex-m4
+.thumb
 @ Author: Jacko Dirks
 @ Description: Contains functions to move the CPU regs between RAM and CPU
 
@@ -30,6 +31,6 @@ saveRegistersToPSPAndMovePSP:
 
 loadRegistersFromPSPAndMovePSP:
     MRS     R0, psp         @Move the PSP to R0
-    LDMFD   R0! , {r4-r11}      @Move from ram to regs while increasing R0
+    @LDMFD   R0! , {r4-r11}      @Move from ram to regs while increasing R0
     MSR     psp, R0         @Move R0 back to the PSP
     MOV     pc , LR         @Return by moving the link register to the program counter

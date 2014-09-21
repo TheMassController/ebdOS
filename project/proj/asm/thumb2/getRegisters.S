@@ -1,5 +1,6 @@
 .thumb
 .syntax unified
+.cpu cortex-m4
 @ Author: Jacko Dirks
 @ Description: Contains functions to get register values from the CPU
 

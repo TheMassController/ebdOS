@@ -22,8 +22,6 @@ struct Process* nextProcess = NULL;
 void switchFromKernel(void){
     saveRegistersToMSPAndMoveMSP();
     setPSP(nextProcess->stackPointer);        
-    notSetR7((void*)0x2);
-    setR7((void*)0x10101001);
     loadRegistersFromPSPAndMovePSP();
 }
 

@@ -32,7 +32,8 @@
 //*****************************************************************************
 void ResetISR(void);
 static void NmiSR(void);
-extern void faultISR(void);
+//extern void faultISR(void);
+extern void tempHardFault(void);
 static void IntDefaultHandler(void);
 
 //*****************************************************************************
@@ -63,7 +64,7 @@ void (* const g_pfnVectors[])(void) =
                                             // The initial stack pointer
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler
-    faultISR,                               // The hard fault handler
+    tempHardFault,                               // The hard fault handler
     IntDefaultHandler,                      // The MPU fault handler
     IntDefaultHandler,                      // The bus fault handler
     IntDefaultHandler,                      // The usage fault handler

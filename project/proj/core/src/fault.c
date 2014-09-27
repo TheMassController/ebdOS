@@ -3,6 +3,12 @@
 #include "uartstdio.h"
 #include "asmUtils.h"
 
+void tempHardFault(void){
+    while(1){
+        waitForInterrupt();
+    }
+}
+
 void faultISRHandler(unsigned int * hardfault_args){
     UARTprintf("Hard Fault occured\r\n");
     unsigned int stacked_r0;

@@ -45,8 +45,11 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
         return 2;
     }
     newProc->stack = stack;
-    //Because a stack moves up (from high to low) move the pointer to the last address
-    int* stackPointer = (int*)(((char*)newProc->stack) + stacklen - 1 ); //Because we are lazy. The -1 is to prevent going above the stack (malloc returns addresses 0 -> asked-1)
+    //Because a stack moves up (from high to low) move the pointer to the last address and then move it back up to a position where lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
+    
+    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); //Because we are lazy. The -1 is to prevent going above the stack (malloc returns addresses 0 -> asked-1)
+    
+    
     //Now start pushing registers
 
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt

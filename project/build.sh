@@ -22,6 +22,7 @@ function runMake {
 }
 
 function runFlash {
+    pkill openocd || true
     case "$1" in
         flash)
             runMake all
@@ -40,19 +41,23 @@ function runFlash {
 }
 
 function debugRun {
-    pkill openocd || true
     runFlash debugflash
+    launchGDB
+}
+
+function launchGDB {
+    pkill openocd || true
     $OPENOCD --file $OPENOCDSCRIPT > $LOGDIR/openocdLog.txt 2>&1 &
-    sleep 1
     arm-none-eabi-gdb $DEBUGEXEC -x $GDBDIR/gdb.script
     pkill $OPENOCD
+    
 }
 
 function printUsageAndExit {
     echo "Usage: <script> params"
     echo "params:"
-    echo "all, clean, distclean, debug, flash, debugflash, echo" 
-    echo "debugflash implies debug"
+    echo "all, clean, distclean, debug, flash, debugflash, echo, launchGDB" 
+    echo "debugflash implies debug and launchGDB"
     echo "flash implies all"
     exit
 }
@@ -67,6 +72,9 @@ function commandDistribution {
             ;;
         debugRun)
             debugRun
+            ;;
+        launchGDB)
+            launchGDB
             ;;
         *)
             echo "Unknown command $1"   

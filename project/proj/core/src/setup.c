@@ -13,6 +13,9 @@
 #include "uartstdio.h" //UART printf n stuff
 #include "stdlib.h" //Malloc & Free
 #include "process.h" //Process var
+#include "getSetRegisters.h"
+
+#define STACKLEN 69 //8*8 byte for reg + 3 bit for possible allignment
 
 extern struct Process* kernel;
 extern struct Process* currentProcess;
@@ -42,12 +45,12 @@ void setupHardware(void){
     kernel->pid = 0;
     kernel->mPid = 0;
     kernel->name = "kernel";
-    kernel->stackPointer = NULL;
+    kernel->stack = (void*) malloc(STACKLEN); 
+    kernel->stackPointer = (void*)((((long)kernel->stack) + STACKLEN - 4) & (long)0xFFFFFFFC );
+    setPSP(kernel->stackPointer);
     kernel->state = WAIT;
     //These params will not be used
-    kernel->stack = NULL;
     kernel->nextProcess = NULL;
-    
     currentProcess = kernel;
     
 }

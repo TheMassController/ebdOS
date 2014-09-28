@@ -17,9 +17,8 @@
 extern struct Process* kernel;
 extern struct Process* currentProcess;
 extern struct Process* firstProcess;
-struct Process* nextProcess = NULL;
-
-void pendSVHandler(void){
+extern struct Process* nextProcess;
+void PendSVHandler(void){
     //We are assuming nextProcess is not null
     //The PSP always contains the location where the registers are written to, including when switching from and to kernel
     volatile unsigned* msp = getMSP();
@@ -32,19 +31,7 @@ void pendSVHandler(void){
         msp[3] = PSPNONFP_RETURN;
     }
     currentProcess = nextProcess;
-    
-   // if (currentProcess->pid == 0){ //From kernel to..
-   //     saveRegistersToMSPAndMoveMSP();
-   //     setPSP(nextProcess->stackPointer);        
-   //     loadRegistersFromPSPAndMovePSP();
-   // } else if (nextProcess->pid == 0){ //From .. to kernel
-   //     currentProcess->stackPointer = saveRegistersToPSPAndMovePSP();
-   //     loadRegistersFromMSPAndMoveMSP();
-   // } else { //Between processes
-   //     msp[3] = PSPNONFP_RETURN;
-   // }
 }
-
 
 void schedule(void){
 //The actual scheduler. 

@@ -9,7 +9,7 @@
 struct Process* firstProcess = NULL;
 struct Process* kernel = NULL;
 struct Process* currentProcess = NULL;
-extern struct Process* nextProcess;
+struct Process* nextProcess = NULL;
 //Usefull for selecting the pids
 static unsigned char nextPid = 1; //Short, has to be able to become 256
 #define MAX_PROCESSID (254)

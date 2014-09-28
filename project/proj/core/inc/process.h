@@ -11,14 +11,15 @@ enum STATE {
     SLEEP,
     WAIT
 };
-
+//The order of the first two is vital to make the assembly work correctly
 struct Process {
-    unsigned char pid;
-    unsigned char mPid;
+    void* stackPointer; //The actual stackpointer
+    unsigned pid;
+
+    unsigned mPid;
     char* name;
     struct Process* nextProcess;
     void* stack; //refers to the address returned by Malloc
-    void* stackPointer; //The actual stackpointer
     enum STATE state;
     
 };

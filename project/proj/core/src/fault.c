@@ -4,6 +4,7 @@
 #include "asmUtils.h"
 
 void tempHardFault(void){
+    UARTprintf("Hard fault\r\n");
     while(1){
         waitForInterrupt();
     }

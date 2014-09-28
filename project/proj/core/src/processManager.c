@@ -46,12 +46,8 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     }
     newProc->stack = stack;
     //Because a stack moves up (from high to low) move the pointer to the last address and then move it back up to a position where lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
-    
     int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); //Because we are lazy. The -1 is to prevent going above the stack (malloc returns addresses 0 -> asked-1)
-    
-    
     //Now start pushing registers
-
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
     *stackPointer-- = 0x01000000; //XSPR, standard stuff 
@@ -65,12 +61,14 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
 
     //The second set is the registers that we have to move manually between RAM and regs when switching contextst
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
-    for ( int u = 4; u <= 11; u++ ){
+    for ( int u = 11; u > 4; u-- ){
         *stackPointer-- = u; //Reg u, u for debug
     }  
-    
+    *stackPointer = 4;
     //Save the stackpointer to the struct
     newProc->stackPointer = (void*)stackPointer;
+
+    //Add the new process to the list of processes
     if ( firstProcess == NULL) {
         firstProcess = newProc;
     } else {

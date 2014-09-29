@@ -23,10 +23,11 @@
 pendSVHandler:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
-	push	{r4, lr} @Push r4 and lr to the stack
-	sub	sp, sp, #8 
-	bl	getMSP
-	str	r0, [sp, #4]
+    
+    @Pre-stack-kutting-bs
+	push	{lr} @Push r4 and lr to the stack
+
+    @Actual context switch
 	ldr	r3, .L4     @Load L4+0, which is currentprocess (r3 = &currentProcess)
 	ldr	r3, [r3]    @Deref (r3 = currentProcess)
     mrs r0, psp     @Move the PSP to R0
@@ -37,27 +38,26 @@ pendSVHandler:
 	ldr	r2, [r3]    @Deref r3 (r3 = nextProcess->stackPointer)
     ldmfd   r2! , {r4-r11}      @Move from ram to regs while increasing R0
     msr psp, r2     @push r3 to psp
+    
+    @currentProcess = nextProcess
+	ldr	r0, .L4+4
+	ldr	r1, [r0]
+	ldr	r0, .L4
+	str	r1, [r0]
+    
+    @Decide the returnvar and return
 	ldr	r3, [r3, #4]    @Get the second variable of nextProcess
 	cmp	r3, #0      @Test if that var is 0
 	bne	.L2         @Branch if it is not 0
-	ldr	r3, [sp, #4] @l3 = sp + 4 deref
-	adds	r3, r3, #12
-	mvn	r2, #6
-	str	r2, [r3]
+	mvn	r2, #6  @r2 = 0xFFFFFFF9
 	b	.L3
 .L2:
-	ldr	r3, [sp, #4]
-	adds	r3, r3, #12
-	mvn	r2, #2
-	str	r2, [r3]
+	mvn	r2, #2 @r2 = 0xFFFFFFFD
 .L3:
-	ldr	r3, .L4+4
-	ldr	r2, [r3]
-	ldr	r3, .L4
-	str	r2, [r3]
-	add	sp, sp, #8
+	str	r2, [sp] @Push the R2 to the correct place on the stack
 	@ sp needed
-	pop	{r4, pc}
+	pop	{pc}
+    
 .L5:
 	.align	2
 .L4:

@@ -28,6 +28,7 @@ int main(void){
     if (testRet != 1){
         UARTprintf("testProcessStructure failure %d\n",testRet);
     }
+    UARTprintf("Great Succes! (Run finished)\r\n");
 	while(1){ //On success the program hangs here
         waitForInterrupt();
     }

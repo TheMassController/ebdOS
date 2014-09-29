@@ -1,26 +1,68 @@
-.syntax unified
-.cpu cortex-m4
-.thumb
-@ Author: Jacko Dirks
-@ Description: Contains the PendSV handler and thus the context switcher
-
-.global PendSVHandler2
-.extern currentProcess
-.extern nextProcess
-
-PendSVHandler2:
-    LDR     R0,     =0xFF9
-    MOV     PC,     R0
-    @LDR     R0,     =nextProcess        @Load the PSP of the next process
-    @LDR     R2,     =currentProcess     @Load the PSP of the next process
-    @MRS     R1,     PSP                 @R1 = PSP
-    @STMDB   R1!,   {R4-R11}             @Move R4 to R11 to param R0, while decreasing R0
-    @STR     R1,     [R2]                @Store the moved PSP at currentProcess
-    @MOV     R1,     R0                  @Move R0 to R1
-    @LDMFD   R1!,    {R4-R11}            @Move from ram to regs while increasing R0
-    @ADD     R0,     R0,     1           @Add 1 to R0
-    @LDR     R0,     [R0]                @Load the content of the memaddr stored at R0 (the PID of currentProcess)
-    @CBZ     R0,     continueFromMSP     @If the PID is zero, branch
-    @LDR     PC,     =0xFFFFFFFD         @Load the correct value to continue from PSP to PC
-@continueFromMSP:
-    @LDR     PC,     =0xFFFFFFF9         @Load the corrent value to continue from MSP to PC
+	.syntax unified
+	.cpu cortex-m4
+	.eabi_attribute 27, 3
+	.fpu vfp
+	.eabi_attribute 20, 1
+	.eabi_attribute 21, 1
+	.eabi_attribute 23, 3
+	.eabi_attribute 24, 1
+	.eabi_attribute 25, 1
+	.eabi_attribute 26, 1
+	.eabi_attribute 30, 6
+	.eabi_attribute 34, 1
+	.eabi_attribute 18, 4
+	.thumb
+	.file	"scheduling.c"
+	.section	.text.pendSVHandler,"ax",%progbits
+	.align	2
+	.global	pendSVHandler
+	.thumb
+	.thumb_func
+	.type	pendSVHandler, %function
+pendSVHandler:
+	@ args = 0, pretend = 0, frame = 8
+	@ frame_needed = 0, uses_anonymous_args = 0
+	push	{r4, lr}
+	sub	sp, sp, #8
+	bl	getMSP
+	str	r0, [sp, #4]
+	ldr	r3, .L4
+	ldr	r4, [r3]
+	bl	saveRegistersToPSPAndMovePSP
+	mov	r3, r0
+	str	r3, [r4]
+	ldr	r3, .L4+4
+	ldr	r3, [r3]
+	ldr	r3, [r3]
+	mov	r0, r3
+	bl	setPSP
+	bl	loadRegistersFromPSPAndMovePSP
+	ldr	r3, .L4+4
+	ldr	r3, [r3]
+	ldr	r3, [r3, #4]
+	cmp	r3, #0
+	bne	.L2
+	ldr	r3, [sp, #4]
+	adds	r3, r3, #12
+	mvn	r2, #6
+	str	r2, [r3]
+	b	.L3
+.L2:
+	ldr	r3, [sp, #4]
+	adds	r3, r3, #12
+	mvn	r2, #2
+	str	r2, [r3]
+.L3:
+	ldr	r3, .L4+4
+	ldr	r2, [r3]
+	ldr	r3, .L4
+	str	r2, [r3]
+	add	sp, sp, #8
+	@ sp needed
+	pop	{r4, pc}
+.L5:
+	.align	2
+.L4:
+	.word	currentProcess
+	.word	nextProcess
+	.size	pendSVHandler, .-pendSVHandler

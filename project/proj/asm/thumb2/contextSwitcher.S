@@ -28,22 +28,18 @@ pendSVHandler:
 	push	{lr} @Push r4 and lr to the stack
 
     @Actual context switch
-	ldr	r3, .L4     @Load L4+0, which is currentprocess (r3 = &currentProcess)
-	ldr	r3, [r3]    @Deref (r3 = currentProcess)
+	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
+	ldr	r1, [r2]    @Deref (r1 = currentProcess)
     mrs r0, psp     @Move the PSP to R0
     stmdb r0!, {r4-r11}    @Move R4 to R11 to param R0, while decreasing R0
-	str	r0, [r3]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)
+	str	r0, [r1]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 	ldr	r3, .L4+4   @Load l4+4, which is nextProcess (r3 = &nextProcess)
 	ldr	r3, [r3]    @Deref r3 (r3 = nextProcess)
-	ldr	r2, [r3]    @Deref r3 (r3 = nextProcess->stackPointer)
-    ldmfd   r2! , {r4-r11}      @Move from ram to regs while increasing R0
-    msr psp, r2     @push r3 to psp
-    
-    @currentProcess = nextProcess
-	ldr	r0, .L4+4
-	ldr	r1, [r0]
-	ldr	r0, .L4
-	str	r1, [r0]
+	ldr	r0, [r3]    @Deref r3 (r0 = nextProcess->stackPointer)
+    ldmfd   r0! , {r4-r11}      @Move from ram to regs while increasing R0
+    msr psp, r0     @push r0 to psp
+
+	@str	r3, [r1] @currentProcess = nextProcess
     
     @Decide the returnvar and return
 	ldr	r3, [r3, #4]    @Get the second variable of nextProcess
@@ -56,8 +52,7 @@ pendSVHandler:
 .L3:
 	str	r2, [sp] @Push the R2 to the correct place on the stack
 	@ sp needed
-	pop	{pc}
-    
+	pop	{pc} @Pop the modified LR reg to PC
 .L5:
 	.align	2
 .L4:

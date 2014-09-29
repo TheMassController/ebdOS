@@ -4,11 +4,11 @@
 @ Author: Jacko Dirks
 @ Description: Contains the PendSV handler and thus the context switcher
 
-.global pendSVHandler
+.global PendSVHandler2
 .extern currentProcess
 .extern nextProcess
 
-pendSVHandler:
+PendSVHandler2:
     LDR     R0,     =0xFF9
     MOV     PC,     R0
     @LDR     R0,     =nextProcess        @Load the PSP of the next process

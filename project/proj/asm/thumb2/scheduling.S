@@ -27,17 +27,16 @@ PendSVHandler2:
 	sub	sp, sp, #8
 	bl	getMSP
 	str	r0, [sp, #4]
-	ldr	r3, .L4
-	ldr	r4, [r3]
+	ldr	r3, .L4     @Load L4+0, which is currentprocess (r3 = &currentProcess)
+	ldr	r3, [r3]    @Deref (r3 = currentProcess)
     mrs r0, psp     @Move the PSP to R0
     stmdb r0!, {r4-r11}    @Move R4 to R11 to param R0, while decreasing R0
-	str	r0, [r4]
-	ldr	r3, .L4+4
-	ldr	r3, [r3]
-	ldr	r3, [r3]
-	mov	r0, r3
-	bl	setPSP
-	bl	loadRegistersFromPSPAndMovePSP
+	str	r0, [r3]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)
+	ldr	r3, .L4+4   @Load l4+4, which is nextProcess (r3 = &nextProcess)
+	ldr	r3, [r3]    @Deref r3 (r3 = nextProcess)
+	ldr	r3, [r3]    @Deref r3 (r3 = nextProcess->stackPointer)
+    ldmfd   r3! , {r4-r11}      @Move from ram to regs while increasing R0
+    msr psp, r3     @push r3 to psp
 	ldr	r3, .L4+4
 	ldr	r3, [r3]
 	ldr	r3, [r3, #4]

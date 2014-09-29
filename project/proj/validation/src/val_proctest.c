@@ -31,7 +31,9 @@ int testProcessStructure(void){
     //Do a pendSV interrupt
     nextProcess = firstProcess;
     NVIC_INT_CTRL_R |= (1<<28);
+    if (currentProcess != nextProcess) retcode = 2;   
     UARTprintf("Kernel says hi, once again!\r\n");
+    if (retcode == 1) retcode = 11;
     if (!retcode) retcode = 1;
     return retcode;
 }

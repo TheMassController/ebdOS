@@ -13,13 +13,27 @@
 	.eabi_attribute 18, 4
 	.thumb
 	.file	"scheduling.c"
-	.section	.text.PendSVHandler2,"ax",%progbits
+	.global	currentProcess
+	.section	.bss.currentProcess,"aw",%nobits
 	.align	2
-	.global	PendSVHandler2
+	.type	currentProcess, %object
+	.size	currentProcess, 4
+currentProcess:
+	.space	4
+	.global	nextProcess
+	.section	.bss.nextProcess,"aw",%nobits
+	.align	2
+	.type	nextProcess, %object
+	.size	nextProcess, 4
+nextProcess:
+	.space	4
+	.section	.text.pendSVHandler,"ax",%progbits
+	.align	2
+	.global	pendSVHandler
 	.thumb
 	.thumb_func
-	.type	PendSVHandler2, %function
-PendSVHandler2:
+	.type	pendSVHandler, %function
+pendSVHandler:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
@@ -65,4 +79,17 @@ PendSVHandler2:
 .L4:
 	.word	currentProcess
 	.word	nextProcess
-	.size	PendSVHandler2, .-PendSVHandler2
+	.size	pendSVHandler, .-pendSVHandler
+	.section	.text.schedule,"ax",%progbits
+	.align	2
+	.global	schedule
+	.thumb
+	.thumb_func
+	.type	schedule, %function
+schedule:
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	@ link register save eliminated.
+	bx	lr
+	.size	schedule, .-schedule
+	.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.4 20140526 (release) [ARM/embedded-4_8-branch revision 211358]"

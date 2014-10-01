@@ -1,0 +1,26 @@
+Compiler:
+ARM-GCC-None-EABI. Download it and extract the folder somewhere. Then set the parameters in arm-gcc-locations. BASH+Make will handle the rest
+Download location: https://launchpad.net/gcc-arm-embedded/
+
+Debugging:
+Half of the debugging is included in the above: GDB. This will also be handled by BASH and Make
+The other half is OpenOCD
+
+Steps to install:
+1. sudo apt-get install git-core libtool autoconf texinfo libusb-dev libusb-1.0 screen vim
+2. git clone http://git.code.sf.net/p/openocd/code openocd; cd openocd
+3. ./bootstrap
+4. ./configure --enable-maintainer-mode --enable-ti-icdi
+5. make -j9
+6. sudo make install
+
+Setup udev:
+Necessary so that you do not have to be root to flash to the device. You still need to be root for Screen, though.
+1. Open the file /etc/udev/rules.d/61.stellpad.rules 
+2. Write the following into it:
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="1cbe", ATTRS{idProduct}=="00fd", MODE="0666" 
+3. Restart udev: 
+    sudo udevadm control --reload-rules
+4. Reconnect the stellaris
+
+

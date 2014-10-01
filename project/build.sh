@@ -47,7 +47,7 @@ function debugRun {
 
 function launchGDB {
     pkill openocd || true
-    $OPENOCD --file $OPENOCDSCRIPT > $LOGDIR/openocdLog.txt 2>&1 &
+    $OPENOCD --file $OPENOCDSCRIPT >> $LOGDIR/openocdLog.txt 2>&1 &
     arm-none-eabi-gdb $DEBUGEXEC -x $GDBDIR/gdb.script
     pkill $OPENOCD
     

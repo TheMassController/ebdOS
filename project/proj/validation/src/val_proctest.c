@@ -6,8 +6,8 @@
 
 extern struct Process* firstProcess;
 extern struct Process* kernel;
-extern struct Process* nextProcess;
-extern struct Process* currentProcess;
+volatile extern struct Process* nextProcess;
+volatile extern struct Process* currentProcess;
 
 void testFunction1(void){
     UARTprintf("testFunction1 says hi!\r\n");
@@ -31,8 +31,8 @@ int testProcessStructure(void){
     //Do a pendSV interrupt
     nextProcess = firstProcess;
     NVIC_INT_CTRL_R |= (1<<28);
-    if (currentProcess != nextProcess) retcode = 2;   
     UARTprintf("Kernel says hi, once again!\r\n");
+    if (currentProcess != nextProcess) retcode = 2;   
     if (retcode == 1) retcode = 11;
     if (!retcode) retcode = 1;
     return retcode;

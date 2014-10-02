@@ -23,4 +23,13 @@ Necessary so that you do not have to be root to flash to the device. You still n
     sudo udevadm control --reload-rules
 4. Reconnect the stellaris
 
+Screen without sudo:
+Add yourself to the group dialout to be able to use the screen command without sudo:
+-sudo adduser <name> dialout
+-logout and login to apply
 
+Screen command:
+
+screen /dev/ttyACM0 115200
+
+The 0 can be something else, 115200 is the baudrate.

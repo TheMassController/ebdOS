@@ -14,9 +14,9 @@ enum STATE {
 //The order of the first two is vital to make the assembly work correctly
 struct Process {
     void* stackPointer; //The actual stackpointer
-    unsigned pid;
+    char pid;
 
-    unsigned mPid;
+    char mPid;
     char* name;
     struct Process* nextProcess;
     void* stack; //refers to the address returned by Malloc

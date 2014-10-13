@@ -13,7 +13,7 @@ extern struct Process* currentProcess;
 static unsigned char nextPid = 1; //Short, has to be able to become 256
 #define MAX_PROCESSID (254)
 
-int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param){
+int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param, char priority){
     if (currentProcess->pid != 0) {
         return 3;
     } 
@@ -29,6 +29,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     newProc->pid = nextPid++;
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
+    //newProc->priority = priority;
     newProc->name = (char*)malloc(strlen(name));
     if (newProc->name == NULL){
         free(newProc);
@@ -49,7 +50,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
-    *stackPointer-- = 0x01000000; //XSPR, standard stuff 
+    *stackPointer-- = 0x01000000; //XPSR, standard stuff 
     *stackPointer-- = (int)procFunc; //PC, initally points to start of function
     *stackPointer-- = (int)&processReturn; //LR, return func
     *stackPointer-- = 12; // reg12, 12 for debug
@@ -84,4 +85,14 @@ void processReturn(void){
     while (1) {
         waitForInterrupt();
     }
+}
+
+void sleepProcessFunc(void){
+    while(1){
+        waitForInterrupt();
+    }
+}
+
+void hibernateProcessFunc(void){
+   
 }

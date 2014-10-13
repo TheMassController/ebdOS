@@ -24,8 +24,8 @@ void testFunction2(void){
 
 int testProcessStructure(void){
     int retcode;
-    retcode = __createNewProcess(0, 1024, "testproc1", (processFunc)&testFunction1, NULL);
-    retcode = __createNewProcess(0, 1024, "testproc2", (processFunc)&testFunction2, NULL);
+    retcode = __createNewProcess(0, 1024, "testproc1", (processFunc)&testFunction1, NULL, 240);
+    retcode = __createNewProcess(0, 1024, "testproc2", (processFunc)&testFunction2, NULL, 240);
     UARTprintf("Functions created. Code: %d\r\n",retcode);
     UARTprintf("Kernel says hi!\r\n");
     //Do a pendSV interrupt

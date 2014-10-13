@@ -35,6 +35,9 @@ static void NmiSR(void);
 extern void faultISRHandler(void);
 static void IntDefaultHandler(void);
 
+//Scheduler tick (systick) handler
+extern void schedule(void);
+
 //*****************************************************************************
 //
 // The entry point for the application.
@@ -75,7 +78,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     pendSVHandler,                      // The PendSV handler
-    IntDefaultHandler,                      // The SysTick handler
+    schedule,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C

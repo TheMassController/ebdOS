@@ -2,6 +2,7 @@
 #include "processManagement.h"
 #include "stdlib.h"
 #include "asmUtils.h"
+#include "uartstdio.h"
 
 //Defines for correct returns
 // See datasheet pp 106
@@ -16,9 +17,11 @@ extern struct Process* kernel;
 extern struct Process* currentProcess;
 extern struct Process* firstProcess;
 extern struct Process* nextProcess;
+struct Process* sleepProcess; //Runs when no other process wants to run
+struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
 
 void schedule(void){
-//The actual scheduler. 
+    UARTprintf("Scheduling tick\r\n");
 }
 
 

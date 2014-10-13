@@ -7,19 +7,6 @@
 #include "validation.h" 
 
 int main(void){
-	UARTprintf("Hello, World!\n");
-	int i = 2;
-	int *j = NULL;
-	j = (int*)malloc(sizeof(int));	
-	//Check the cpu speed
-	unsigned long cpuSpeed = ROM_SysCtlClockGet();	
-	if ((j ==  NULL)| (cpuSpeed != 80000000)){
-		for(;;); //On failure, the program hangs here
-	}
-	void* mainStackPointer = getMSP();
-    void* programStackPointer = getPSP();
-	UARTprintf("i=%x   MSP = %p\r\n",i,mainStackPointer);
-	UARTprintf("i=%x   PSP = %p\r\n",i,programStackPointer);
     int testRet = testUARTstdio();
     int failure = 0;
     if (testRet != 1){

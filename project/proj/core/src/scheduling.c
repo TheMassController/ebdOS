@@ -6,6 +6,7 @@
 
 //Defines for correct returns
 // See datasheet pp 106
+// These values are now used in the assembly, but for references sake
 #define PSPNONFP_RETURN ((unsigned)0xFFFFFFFD)
 #define MSPNONFP_RETURN ((unsigned)0xFFFFFFF9)
 #define PSPFP_RETURN    ((unsigned)0xFFFFFFED)

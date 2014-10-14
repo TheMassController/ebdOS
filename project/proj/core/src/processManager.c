@@ -25,10 +25,14 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     if ( newProc == NULL) { //Insufficient mem
        return 2; 
     }
+    if (stacklen < 67){
+        return 4;
+    }
     //Set some vars
     newProc->pid = nextPid++;
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
+    newProc->priority = priority;
     //newProc->priority = priority;
     newProc->name = (char*)malloc(strlen(name));
     if (newProc->name == NULL){

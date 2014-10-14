@@ -16,7 +16,8 @@
 #include "getSetRegisters.h"
 #include "lm4f120h5qr.h" //Hardware regs
 
-#define MINSTACKLEN 35 //32 byte for reg + 3 bit for possible allignment
+#define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
+#define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
 #define BAUDRATE 115200
 
 extern struct Process* kernel;
@@ -55,8 +56,8 @@ void setupHardware(void){
     //Hibernate setup
     //If the program finishes, we want to hibernate
     //This register setsup all the variables necessary to do that.
-    //while (!(HIB_CTL_R & 1<<31)); //Wait until the write bit is clear
-    //HIB_CTL_R = 320;    //Dont check battery when hibernating, Keep pinouts,
+    while (!(HIB_CTL_R & 1<<31)); //Wait until the write bit is clear
+    HIB_CTL_R = 320;    //Dont check battery when hibernating, Keep pinouts,
                         //dont check battery before hibernation, enable hib_clk, dont listen to pin, 
                         //dont listen to rtc, no hibernation request, no hibernation RTC module  
                         //Datasheet pp 470                        
@@ -66,8 +67,8 @@ void setupHardware(void){
     kernel->pid = 0;
     kernel->mPid = 0;
     kernel->name = "kernel";
-    kernel->stack = (void*) malloc(MINSTACKLEN); 
-    kernel->stackPointer = (void*)((((long)kernel->stack) + MINSTACKLEN - 4) & (long)0xFFFFFFFC );
+    kernel->stack = (void*) malloc(SAVETEMPSTACKLEN); 
+    kernel->stackPointer = (void*)((((long)kernel->stack) + SAVETEMPSTACKLEN - 4) & (long)0xFFFFFFFC );
     setPSP(kernel->stackPointer);
     kernel->state = WAIT;
     //These params will not be used
@@ -82,6 +83,9 @@ void setupHardware(void){
     firstProcess->nextProcess = NULL;
     sleepProcess = firstProcess;
     firstProcess = NULL; 
+}
 
-    //NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
+//This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
+void finishBoot(void){
+    NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
 }

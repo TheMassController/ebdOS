@@ -21,10 +21,14 @@ extern struct Process* nextProcess;
 struct Process* sleepProcess; //Runs when no other process wants to run
 struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
 
+//This function responds to an interrupt that can be generated at any runlevel.
+void svcHandler(void){
+    UARTprintf("serviceCallInterrupt\r\n");
+}
+
 void schedule(void){
     UARTprintf("Scheduling tick\r\n");
 }
-
 
 //For future reference
 /**

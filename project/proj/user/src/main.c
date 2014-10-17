@@ -18,11 +18,11 @@ int main(void){
         UARTprintf("testProcessStructure failure %d\n",testRet);
         failure = 1;
     }
-    //testRet = testGPIO();
-    //if (testRet != 1){
-    //    UARTprintf("testGPIO failure %d\n");
-    //    failure = 1;
-    //}
+    testRet = testSVCcall();
+    if (testRet != 1){
+        UARTprintf("TestSVCcall failure %d\n",testRet);
+        failure = 1;
+    }
     if (failure){
         UARTprintf("Run failed!");
     } else {

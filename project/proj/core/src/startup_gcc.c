@@ -52,6 +52,8 @@ extern char _stack_top;
 void setupHardware(void);
 //Pendsv interrupt handler
 void pendSVHandler(void);
+//SVCcall handler
+void svcHandler(void);
 
 //*****************************************************************************
 //
@@ -74,7 +76,7 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved
-    IntDefaultHandler,                      // SVCall handler
+    svcHandler,                      // SVCall handler
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     pendSVHandler,                      // The PendSV handler

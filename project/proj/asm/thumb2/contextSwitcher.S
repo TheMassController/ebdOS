@@ -41,11 +41,15 @@ nextProcess:
 pendSVHandler:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
+    
+    @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
+    @This function adds the other registers to the stack and then changes the stack.
+    @Then it does the inverse for the function that is being switched to.
 
     @Actual context switch
 	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
-	ldr	r1, [r2]    @Deref (r1 = currentProcess)
     mrs r0, psp     @Move the PSP to R0
+	ldr	r1, [r2]    @Deref (r1 = currentProcess)
     stmdb r0!, {r4-r11}    @Move R4 to R11 to param R0, while decreasing R0
 	str	r0, [r1]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 	ldr	r3, .L4+4   @Load l4+4, which is nextProcess (r3 = &nextProcess)

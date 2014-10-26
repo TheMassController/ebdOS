@@ -61,6 +61,15 @@ void setupHardware(void){
                         //dont check battery before hibernation, enable hib_clk, dont listen to pin, 
                         //dont listen to rtc, no hibernation request, no hibernation RTC module  
                         //Datasheet pp 470                        
+    
+    //Setup the interrupt priorities
+    //Reset both registers to all 0's
+    NVIC_SYS_PRI2_R &= 0;
+    NVIC_SYS_PRI3_R &= 0;     //Debug level is now 0.
+    NVIC_SYS_PRI2_R |= 1<<29; //SVC gets 1 (lower is higher). Datasheet pp 166
+    NVIC_SYS_PRI3_R |= 2<<29; //Systick gets 2. Datasheet pp 167
+    NVIC_SYS_PRI3_R |= 3<<21; //pendSV gets 3. Datasheet pp 167
+    
  
     //Creat pid 0: the kernel
     kernel = (struct Process*)malloc(sizeof(struct Process));

@@ -10,7 +10,3 @@
 waitForInterrupt:
     WFI             @Wait for interrupt
     MOV     PC, LR  @Return by moving the link register to the program counter
-
-generateSupervisorCall:
-    svc 0             @Generate the SVC interrupt
-    MOV     PC, LR  @Return by moving the link register to the program counter

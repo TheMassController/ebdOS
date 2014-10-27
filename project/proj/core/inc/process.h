@@ -22,6 +22,10 @@ struct Process {
     void* stack; //refers to the address returned by Malloc
     enum STATE state;
     char priority;    
+
+    //Sleep vars
+    unsigned sleepClockTime;
+    char sleepClockOverflows;
 };
 
 /*

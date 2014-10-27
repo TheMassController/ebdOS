@@ -15,6 +15,7 @@
 #include "process.h" //Process var
 #include "getSetRegisters.h"
 #include "lm4f120h5qr.h" //Hardware regs
+#include "timer.h"
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
@@ -28,6 +29,8 @@ extern struct Process* firstProcess;
 
 extern void sleepProcessFunc(void);
 extern void hibernateProcessFunc(void);
+
+extern unsigned sleepClocksPerMS;
 
 void setupHardware(void){
     //Setup the PLL
@@ -69,7 +72,18 @@ void setupHardware(void){
     NVIC_SYS_PRI2_R |= 1<<29; //SVC gets 1 (lower is higher). Datasheet pp 166
     NVIC_SYS_PRI3_R |= 2<<29; //Systick gets 2. Datasheet pp 167
     NVIC_SYS_PRI3_R |= 3<<21; //pendSV gets 3. Datasheet pp 167
-    
+
+    //Setup the sleep clock.    
+    //The first 32 bit timer is the sleep clock. It counts slow and interrupts on overflow.
+    //32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
+    //2 clocks is a ms, 2000 clocks is a second
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); //Enable the timer
+    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PERIODIC_UP); //Setup wide timer 0, part A.
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); //Setup the pre-scaler
+    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 0); //Load it with initial value 0
+    ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 4294967295); //Let it run until it reaches max
+    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
+    sleepClocksPerMS = 2000;
  
     //Creat pid 0: the kernel
     kernel = (struct Process*)malloc(sizeof(struct Process));
@@ -96,5 +110,6 @@ void setupHardware(void){
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
 void finishBoot(void){
+    ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
 }

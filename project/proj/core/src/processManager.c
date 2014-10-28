@@ -4,6 +4,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include "asmUtils.h"
+#include "uartstdio.h"
 //Responsible for creating and managing processes
 
 struct Process* firstProcess = NULL;
@@ -33,13 +34,15 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
     newProc->priority = priority;
+    newProc->state = READY;
+    newProc->sleepClockTime = 0;
+    newProc->sleepClockOverflows = 0;
     //newProc->priority = priority;
     newProc->name = (char*)malloc(strlen(name));
     if (newProc->name == NULL){
         free(newProc);
         return 2;
     }
-    newProc->state = READY;
     strcpy(newProc->name,name);
     //Create the stack.
     void* stack = malloc(stacklen);
@@ -85,7 +88,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
 
 
 void processReturn(void){
-    //Placeholder
+    UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
     while (1) {
         waitForInterrupt();
     }
@@ -98,5 +101,6 @@ void sleepProcessFunc(void){
 }
 
 void hibernateProcessFunc(void){
-   
+    sleepProcessFunc();
+    //TODO make it, you know, hibernate
 }

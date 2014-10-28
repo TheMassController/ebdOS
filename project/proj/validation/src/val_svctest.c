@@ -6,7 +6,7 @@
 
 int testSVCcall(void){
     UARTprintf("Generating supervisor call interrupt...\r\n");
-    CALLSUPERVISOR(0);
+    CALLSUPERVISOR(SVC_test);
     UARTprintf("Done, return\r\n");
     return 1;
 }

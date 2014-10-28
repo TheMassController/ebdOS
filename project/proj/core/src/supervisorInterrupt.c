@@ -7,6 +7,10 @@ void rescheduleImmediately(void){
     NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
+void sayHi(void){
+    UARTprintf("Hi from your favorite supervisor!\r\n");
+}
+
 //This function responds to an interrupt that can be generated at any runlevel.
 void svcHandler_main(char reqCode){
     //UARTprintf("supervisor interrupt, id:%d\r\n",reqCode);
@@ -14,8 +18,11 @@ void svcHandler_main(char reqCode){
         case 0:
             rescheduleImmediately();
             break;
+        case 255:
+            sayHi();
+            break;
         default:
-            UARTprintf("Unknown code %d\r\n",reqCode);
+            UARTprintf("Supervisor call handler: unknown code %d\r\n",reqCode);
             break;
     }
 }

@@ -1,8 +1,5 @@
 //This file makes sure all the default settings are set
-//The following things will be set:
-//PLL: to maximum speed
 
-//#include "hw_memmap.h"      //Contains the memory addresses needed
 #include "hw_types.h" //Contains the types
 #include "sysctl.h"     //Contains defines for PLL regs
 #include "rom_map.h" //Call functions directly from the ROM if available
@@ -77,13 +74,14 @@ void setupHardware(void){
     //The first 32 bit timer is the sleep clock. It counts slow and interrupts on overflow.
     //32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
     //2 clocks is a ms, 2000 clocks is a second
+    //TODO sleep timer runs way to fast
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); //Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PERIODIC_UP); //Setup wide timer 0, part A.
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); //Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 0); //Load it with initial value 0
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 4294967295); //Let it run until it reaches max
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
-    sleepClocksPerMS = 2000;
+    sleepClocksPerMS = 2;
  
     //Creat pid 0: the kernel
     kernel = (struct Process*)malloc(sizeof(struct Process));
@@ -112,4 +110,5 @@ void setupHardware(void){
 void finishBoot(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
+    NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending: kick-off the scheduler
 }

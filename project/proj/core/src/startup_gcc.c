@@ -50,6 +50,8 @@ extern char _stack_top;
 
 //Hardware setup
 void setupHardware(void);
+//Kicking off the actual setup
+void finishBoot(void);
 //Pendsv interrupt handler
 void pendSVHandler(void);
 //SVCcall handler
@@ -297,6 +299,8 @@ ResetISR(void)
     // Call the application's entry point.
     //
     main();
+    //Kick off the scheduler etc
+    finishBoot();
 }
 
 //*****************************************************************************

@@ -21,7 +21,7 @@ struct Process {
     struct Process* nextProcess;
     void* stack; //refers to the address returned by Malloc
     enum STATE state;
-    char priority;    
+    char priority; //Higher is higher: 255 is highest  
 
     //Sleep vars
     unsigned sleepClockTime;

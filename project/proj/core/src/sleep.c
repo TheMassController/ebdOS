@@ -17,30 +17,31 @@ unsigned sleepClocksPerMS = 0;
 extern struct Process* currentProcess;
 
 void sleepTimerInterrupt(void){
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
     UARTprintf("Apparently, almost 40 days have passed");
+    while(1){}
     //TODO alert kernel, let it decrease overflows
 }
 
-unsigned long getCurrentSleepTimerValue(void){
+unsigned getCurrentSleepTimerValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }
 
 //Because a half ms is exactly 1 tick
-void sleepHalfMS(unsigned long sleepTicks){
-    sleepTicks += getCurrentSleepTimerValue();
-    while(sleepTicks > MAXSLEEPTIMER){
+void sleepHalfMS(unsigned sleepTicks){
+    sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
+    while(sleepTicks < 0){
         currentProcess->sleepClockOverflows += 1;
-        sleepTicks -= MAXSLEEPTIMER;
+        sleepTicks += MAXSLEEPTIMER;
     }
-    currentProcess->sleepClockTime = (unsigned)sleepTicks;
+    currentProcess->sleepClockTime = sleepTicks;
     currentProcess->state = SLEEP;
     //Reschedule right the hell now 
     CALLSUPERVISOR(SVC_reschedule);
 }
 
 //The millisecond sleeper
-void sleepMS(unsigned long ms){
+void sleepMS(unsigned ms){
     sleepHalfMS(ms*sleepClocksPerMS);
 }
 

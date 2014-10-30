@@ -1,4 +1,4 @@
-_stack_buffer = 0x7D0; /*2K buffer between HEAP and STACK*/
+_stack_buffer = 1024; /*128 byte buffer between HEAP and STACK*/
 
 MEMORY
 {

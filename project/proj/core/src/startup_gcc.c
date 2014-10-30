@@ -24,6 +24,7 @@
 
 #include "hw_nvic.h"
 #include "hw_types.h"
+#include "uartstdio.h"
 
 //*****************************************************************************
 //
@@ -334,6 +335,7 @@ IntDefaultHandler(void)
     //
     // Go into an infinite loop.
     //
+    UARTprintf("Default interrupt handler called\r\n");
     while(1)
     {
     }

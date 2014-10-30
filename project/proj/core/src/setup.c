@@ -13,6 +13,8 @@
 #include "getSetRegisters.h"
 #include "lm4f120h5qr.h" //Hardware regs
 #include "timer.h"
+#include "asmUtils.h"
+#include "hw_ints.h"
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
@@ -70,17 +72,22 @@ void setupHardware(void){
     NVIC_SYS_PRI3_R |= 2<<29; //Systick gets 2. Datasheet pp 167
     NVIC_SYS_PRI3_R |= 3<<21; //pendSV gets 3. Datasheet pp 167
 
+    //Enable all non-special interrupts
+    ROM_IntMasterEnable();
+
     //Setup the sleep clock.    
     //The first 32 bit timer is the sleep clock. It counts slow and interrupts on overflow.
     //32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
     //2 clocks is a ms, 2000 clocks is a second
     //TODO sleep timer runs way to fast
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); //Enable the timer
-    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PERIODIC_UP); //Setup wide timer 0, part A.
+    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); //Setup wide timer 0, part A.
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); //Setup the pre-scaler
-    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 0); //Load it with initial value 0
-    ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 4294967295); //Let it run until it reaches max
+    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); //Load it with initial value 0
+    ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); //Let it run until it reaches max
+    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT);
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
+    ROM_IntEnable(INT_WTIMER0A);
     sleepClocksPerMS = 2;
  
     //Creat pid 0: the kernel

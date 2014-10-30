@@ -12,6 +12,7 @@ struct Process* kernel = NULL;
 extern struct Process* currentProcess;
 //Usefull for selecting the pids
 static unsigned char nextPid = 1; //Short, has to be able to become 256
+//TODO create system to find out which pids are in use and which not.
 #define MAX_PROCESSID (254)
 
 int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param, char priority){
@@ -92,6 +93,7 @@ void processReturn(void){
     while (1) {
         waitForInterrupt();
     }
+    //TODO tell threadsafe malloc to cleanup
 }
 
 void sleepProcessFunc(void){

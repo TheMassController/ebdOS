@@ -14,7 +14,7 @@ caddr_t _sbrk(int incr){
 		heap_end = &_ebss;
 	}
 	
-	if (heap_end + incr <= (caddr_t)(((unsigned long)getMSP) - ((unsigned long)(&_stack_buffer)))){ //Heap starts at bottom and works up until heap_top. Therefore heap_top is ALWAYS smaller then heap_end: _heap_bottom = end of SRAM
+	if (heap_end + incr <= (caddr_t)(((unsigned long)getMSP()) - ((unsigned long)(&_stack_buffer)))){ //Heap starts at bottom and works up until heap_top. Therefore heap_top is ALWAYS smaller then heap_end: _heap_bottom = end of SRAM
 		heap_end += incr;
 		returnVal = heap_end;	
 	}

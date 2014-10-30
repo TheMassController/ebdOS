@@ -31,7 +31,7 @@ int prepare(void){
     //volatile int i;
     //for (i = 0; i <10; ++i);
     //ROM_GPIODirModeSet(SYSCTL_PERIPH_GPIOF,255,GPIO_DIR_MODE_OUT);
-    //return 0;
+    return 0;
 }
 
 int testGPIO(void){

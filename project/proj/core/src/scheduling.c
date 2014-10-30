@@ -39,7 +39,7 @@ void schedule(void){
             if (nextProcess == NULL || proc->priority > nextProcess->priority){
                 if (proc->state == READY || proc->state == SLEEP){
                     if (proc->state == SLEEP){
-                        if (proc->sleepClockOverflows == 0 && proc->sleepClockTime <= sleepCounterValue){
+                        if (proc->sleepClockOverflows == 0 && proc->sleepClockTime >= sleepCounterValue){
                             proc->sleepClockTime = 0;
                             proc->state = READY;
                         }

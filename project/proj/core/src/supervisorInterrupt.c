@@ -1,6 +1,9 @@
 //Handles the supervisor interrupt call
 #include "uartstdio.h"
 #include "lm4f120h5qr.h" //Hardware regs
+#include "hw_types.h" //Contains the special types
+#include "rom_map.h" //Call functions directly from the ROM if available
+#include "rom.h" //Declare ROM addresses for rom funcs
 
 void rescheduleImmediately(void){
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)

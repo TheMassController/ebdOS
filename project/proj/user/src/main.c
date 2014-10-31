@@ -8,6 +8,7 @@
 #include "sleep.h"
 #include "string.h"
 #include "process.h"
+#include "supervisorCall.h"
 
 int validationStuffz(void){
     int testRet = testUARTstdio();
@@ -60,7 +61,7 @@ int main(void){
     structs[0]->name = (char*)malloc(strlen("timeoutProc1s"));
     strcpy(structs[0]->name,"timeoutProc1s");
     structs[0]->runTimeMS = 1000;
-    __createNewProcess(0, 256, "timeoutProc1s", (processFunc)&testProcess, structs[0], 0);  
+    __createNewProcess(0, 256, "timeoutProc1s", (processFunc)&testProcess, structs[0], 2);  
     structs[1] = (struct SleepTimeStruct*)malloc(sizeof(struct SleepTimeStruct));
     structs[1]->name = (char*)malloc(strlen("timeoutProc10s"));
     strcpy(structs[1]->name,"timeoutProc10s");
@@ -70,5 +71,5 @@ int main(void){
     structs[2]->name = (char*)malloc(strlen("timeoutProc30s"));
     strcpy(structs[2]->name,"timeoutProc30s");
     structs[2]->runTimeMS = 30000;
-    __createNewProcess(0, 256, "timeoutProc30s", (processFunc)&testProcess, structs[2], 2);  
+    __createNewProcess(0, 256, "timeoutProc30s", (processFunc)&testProcess, structs[2], 0);  
 }

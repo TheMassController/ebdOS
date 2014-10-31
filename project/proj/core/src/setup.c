@@ -51,8 +51,8 @@ void setupHardware(void){
     
     //For scheduling: systick
     //It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock
-    //Initially configured as 1 tick per 500 us. (1/2 ms). This is equal to 2000 ticks on the 4 Mhz clock.
-    NVIC_ST_RELOAD_R = 1999; //Fire every 2000 clocks (datasheet pp 135)
+    //Initially configured as 1 tick per ms. This is equal to 4000 ticks on the 4 Mhz clock.
+    NVIC_ST_RELOAD_R = 3999; //Fire every 4000 clocks (datasheet pp 135)
     NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
     
     //Hibernate setup
@@ -79,13 +79,13 @@ void setupHardware(void){
     //The first 32 bit timer is the sleep clock. It counts slow and interrupts on overflow.
     //32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
     //2 clocks is a ms, 2000 clocks is a second
-    //TODO sleep timer runs way to fast
+    //The timer runs from high to low
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); //Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); //Setup wide timer 0, part A.
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); //Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); //Load it with initial value 0
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); //Let it run until it reaches max
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Clear the correct interrupt
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
     ROM_IntEnable(INT_WTIMER0A);
     sleepClocksPerMS = 2;

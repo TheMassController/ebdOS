@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "asmUtils.h"
 #include "hw_ints.h"
+#include "process.h"
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
@@ -26,8 +27,8 @@ extern struct Process* sleepProcess;
 extern struct Process* hibernateProcess;
 extern struct Process* firstProcess;
 
-extern void sleepProcessFunc(void);
-extern void hibernateProcessFunc(void);
+extern void __sleepProcessFunc(void* param);
+extern void __hibernateProcessFunc(void* param);
 
 extern unsigned sleepClocksPerMS;
 
@@ -98,15 +99,18 @@ void setupHardware(void){
     kernel->stack = (void*) malloc(SAVETEMPSTACKLEN); 
     kernel->stackPointer = (void*)((((long)kernel->stack) + SAVETEMPSTACKLEN - 4) & (long)0xFFFFFFFC );
     setPSP(kernel->stackPointer);
-    kernel->state = WAIT;
+    kernel->state = STATE_WAIT;
+    kernel->sleepClockTime = 0;
+    kernel->sleepClockOverflows = 0;
+    kernel->blockAddress = NULL;
     //These params will not be used
     kernel->nextProcess = NULL;
 
     currentProcess = kernel;
     
     //Create the other two special processes: sleep and hibernate
-    __createNewProcess(0, MINSTACKLEN, "SleepProcess", (processFunc)&sleepProcessFunc, NULL, 255);
-    __createNewProcess(0, MINSTACKLEN, "HibernateProcess", (processFunc)&hibernateProcessFunc, NULL, 255);
+    __createNewProcess(0, MINSTACKLEN, "SleepProcess", &__sleepProcessFunc, NULL, 255);
+    __createNewProcess(0, MINSTACKLEN, "HibernateProcess", &__hibernateProcessFunc, NULL, 255);
     hibernateProcess = firstProcess->nextProcess;
     firstProcess->nextProcess = NULL;
     sleepProcess = firstProcess;

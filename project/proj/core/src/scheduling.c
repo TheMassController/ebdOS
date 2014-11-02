@@ -29,7 +29,7 @@ void schedule(void){
     //Actual scheduling.
     nextProcess = NULL;
     //If the kernel is ready, kernel is nextprocess
-    if (kernel->state == READY){
+    if (kernel->state == STATE_READY){
         nextProcess = kernel;
     } else if (firstProcess == NULL){
         nextProcess = hibernateProcess;
@@ -37,13 +37,11 @@ void schedule(void){
         //The actual selection
         for (struct Process* proc = firstProcess; proc != NULL; proc = proc->nextProcess ){
             if (nextProcess == NULL || proc->priority > nextProcess->priority){
-                if (proc->state == READY || proc->state == SLEEP){
-                    if (proc->state == SLEEP){
-                        if (proc->sleepClockOverflows == 0 && proc->sleepClockTime >= sleepCounterValue){
-                            proc->state = READY;
-                        }
-                    } 
-                    if (proc->state == READY){
+                if (proc->state == STATE_READY){
+                    nextProcess = proc;
+                }else if (proc->state & STATE_SLEEP){
+                    if (proc->sleepClockOverflows == 0 && proc->sleepClockTime >= sleepCounterValue){
+                        proc->state = STATE_READY;
                         nextProcess = proc;
                     }
                 }

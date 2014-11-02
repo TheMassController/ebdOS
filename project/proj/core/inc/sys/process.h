@@ -1,31 +1,34 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+//States are handled as different bit flags:
+//pos 0 = sleep
+//pos 1 = wait
+//if state = 0, then it is ready
+//This way, a process can both be sleeping and waiting for a mutex.
 
-//This is a function pionter which forces the function to have the signature "void proc(void*)". The last void* is for possible params
-typedef void (*processFunc)(void*);
+#define STATE_READY 0x0
+#define STATE_SLEEP 0x1
+#define STATE_WAIT 0x2
 
-//All the states that exist
-enum STATE {
-    READY,
-    SLEEP,
-    WAIT
-};
 //The order of the first two is vital to make the assembly work correctly
 struct Process {
     void* stackPointer; //The actual stackpointer
     unsigned pid;
 
-    char mPid;
+    unsigned mPid;
     char* name;
     struct Process* nextProcess;
     void* stack; //refers to the address returned by Malloc
-    enum STATE state;
+    char state; //Set of 1 bit flags
     char priority; //Higher is higher: 255 is highest  
 
     //Sleep vars
     unsigned sleepClockTime;
     char sleepClockOverflows;
+
+    //Block vars
+    void* blockAddress;
 };
 
 /*
@@ -35,10 +38,8 @@ struct Process {
         2: Out of mem
         3: Wrong caller pid, only kernel (PID 0) can create processes
 */
-int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param, char priority );
+int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority );
 
 int __deleteProcess(unsigned char pid);
-
-void processReturn(void);
 
 #endif

@@ -5,6 +5,7 @@
 #include "stdlib.h"
 #include "asmUtils.h"
 #include "uartstdio.h"
+#include "process.h"
 //Responsible for creating and managing processes
 
 struct Process* firstProcess = NULL;
@@ -15,7 +16,13 @@ static unsigned char nextPid = 1; //Short, has to be able to become 256
 //TODO create system to find out which pids are in use and which not.
 #define MAX_PROCESSID (254)
 
-int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, processFunc procFunc, void* param, char priority){
+void __processReturn(void){
+    UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
+    //TODO tell kernel about this stuff and let it cleanup the mess
+    currentProcess->state = STATE_WAIT;
+}
+
+int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
     if (currentProcess->pid != 0) {
         return 3;
     } 
@@ -35,7 +42,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
     newProc->priority = priority;
-    newProc->state = READY;
+    newProc->state = STATE_READY;
     newProc->sleepClockTime = 0;
     newProc->sleepClockOverflows = 0;
     //newProc->priority = priority;
@@ -60,7 +67,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
     *stackPointer-- = 0x01000000; //XPSR, standard stuff 
     *stackPointer-- = (int)procFunc; //PC, initally points to start of function
-    *stackPointer-- = (int)&processReturn; //LR, return func
+    *stackPointer-- = (int)&__processReturn; //LR, return func
     *stackPointer-- = 12; // reg12, 12 for debug
     *stackPointer-- = 3; // reg3, 3 for debug
     *stackPointer-- = 2; // reg2, 2 for debug
@@ -88,19 +95,13 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
 }
 
 
-void processReturn(void){
-    UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
-    //TODO tell kernel about this stuff and let it cleanup the mess
-    currentProcess->state = WAIT;
-}
-
-void sleepProcessFunc(void){
+void __sleepProcessFunc(void* param){
     while(1){
         waitForInterrupt();
     }
 }
 
-void hibernateProcessFunc(void){
-    sleepProcessFunc();
+void __hibernateProcessFunc(void* param){
+    __sleepProcessFunc(NULL);
     //TODO make it, you know, hibernate
 }

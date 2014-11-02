@@ -28,25 +28,25 @@ unsigned getCurrentSleepTimerValue(void){
 }
 
 //Because a half ms is exactly 1 tick
-void sleepHalfMS(unsigned sleepTicks){
+void __sleepHalfMS(unsigned sleepTicks){
     sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
     while(sleepTicks < 0){
         currentProcess->sleepClockOverflows += 1;
         sleepTicks += MAXSLEEPTIMER;
     }
     currentProcess->sleepClockTime = sleepTicks;
-    currentProcess->state = SLEEP;
+    currentProcess->state |= STATE_SLEEP;
     //Reschedule right the hell now 
     CALLSUPERVISOR(SVC_reschedule);
 }
 
 //The millisecond sleeper
 void sleepMS(unsigned ms){
-    sleepHalfMS(ms*sleepClocksPerMS);
+    __sleepHalfMS(ms*sleepClocksPerMS);
 }
 
 //The second sleeper
 void sleepS(unsigned seconds){
     //recalculate to ms, then call the ms function
-    sleepHalfMS(seconds*1000*sleepClocksPerMS);
+    __sleepHalfMS(seconds*1000*sleepClocksPerMS);
 }

@@ -5,7 +5,6 @@
 @ Description: Contains util functions that can only be implemented in assembly
 
     .global waitForInterrupt
-    .global generateSupervisorCall
     
 waitForInterrupt:
     WFI             @Wait for interrupt

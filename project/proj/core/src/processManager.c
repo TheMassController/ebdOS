@@ -90,10 +90,8 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, p
 
 void processReturn(void){
     UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
-    while (1) {
-        waitForInterrupt();
-    }
-    //TODO tell threadsafe malloc to cleanup
+    //TODO tell kernel about this stuff and let it cleanup the mess
+    currentProcess->state = WAIT;
 }
 
 void sleepProcessFunc(void){

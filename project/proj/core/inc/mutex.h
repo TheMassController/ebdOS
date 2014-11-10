@@ -1,6 +1,7 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 //Mutex functions
+//A mutex is locked to its owner: only the owner can release it
 
 struct Mutex{
     unsigned lock;
@@ -23,5 +24,7 @@ void releaseMutex(Mutex* mutex);
 Mutex* createMutex(void);
 
 void deleteMutex(Mutex* mutex);
+
+//Binary mutex functions
 
 #endif //MUTEX_H

@@ -2,17 +2,14 @@
 #include "mutex.h"
 #include "stdlib.h"
 #include "process.h"
-#include "supervisorCall.h"
-#include "sleep.h"
+#include "threadsafeCalls.h" 
 
 Mutex* firstMutex = NULL;
 extern struct Process* currentProcess;
 
-unsigned __lockMutex(void* addr);
-void __unlockMutex(void* addr);
-
 Mutex* createMutex(void){
     Mutex* mutex = (Mutex*)malloc(sizeof(Mutex));
+    if (mutex == NULL) return NULL;
     mutex->lock = 0;
     mutex->ownerPid = 0;
     if (firstMutex == NULL){
@@ -26,6 +23,7 @@ Mutex* createMutex(void){
 }
 
 int __alreadyOwnsMutex(Mutex* mutex){
+    //TODO act like it is already owned by given process when inside interrupt
     if (mutex->ownerPid == currentProcess->pid && mutex->lock){
         return 1;
     }
@@ -38,25 +36,22 @@ void deleteMutex(Mutex* mutex){
 
 void lockMutex(Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return;
-    while (!__lockMutex(mutex)){
-        currentProcess->blockAddress = (void*)mutex;
-        currentProcess->state |= STATE_WAIT;
-        CALLSUPERVISOR(SVC_reschedule);
-    }
-    //TODO maybe implement a way to increase the priority of the process that holds this mutex, if the prio of the current process is higher
+    __lockObjectBlock((void*) mutex);
 }
 
 int lockMutexNoBlock(Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return 1;
-    return __lockMutex(mutex);
+    return __lockObjectNoblock((void*)mutex);
 }
 
 int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime){
-    if (!lockMutexNoBlock(mutex)){
-        currentProcess->blockAddress = (void*)mutex;
-        currentProcess->state |= STATE_WAIT;
-        sleepMS(msWaitTime);
-    }
-    return lockMutexNoBlock(mutex);
+    if (__alreadyOwnsMutex(mutex)) return 1;
+    return __lockObjectBlockTimeout((void*)mutex, msWaitTime);
+}
+
+void releaseMutex(Mutex* mutex){
+    //TODO do not release when inside an interrupt
+    if (!__alreadyOwnsMutex(mutex)) return;
+    __releaseObject((void*)mutex);
 }
 

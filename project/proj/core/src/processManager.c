@@ -6,6 +6,7 @@
 #include "asmUtils.h"
 #include "uartstdio.h"
 #include "process.h"
+#include "supervisorCall.h" 
 //Responsible for creating and managing processes
 
 struct Process* firstProcess = NULL;
@@ -20,6 +21,7 @@ void __processReturn(void){
     UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
     //TODO tell kernel about this stuff and let it cleanup the mess
     currentProcess->state = STATE_WAIT;
+    CALLSUPERVISOR(SVC_reschedule);
 }
 
 int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
@@ -46,7 +48,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, v
     newProc->sleepClockTime = 0;
     newProc->sleepClockOverflows = 0;
     //newProc->priority = priority;
-    newProc->name = (char*)malloc(strlen(name));
+    newProc->name = (char*)malloc(strlen(name)+1);
     if (newProc->name == NULL){
         free(newProc);
         return 2;
@@ -102,6 +104,7 @@ void __sleepProcessFunc(void* param){
 }
 
 void __hibernateProcessFunc(void* param){
+    UARTprintf("No more processes...\r\n");
     __sleepProcessFunc(NULL);
     //TODO make it, you know, hibernate
 }

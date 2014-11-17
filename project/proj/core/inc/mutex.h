@@ -11,6 +11,7 @@ struct Mutex{
 
 typedef struct Mutex Mutex;
 
+#define lockMutex lockMutexBlocking
 void lockMutexBlocking(Mutex* mutex);
 
 //Returns 1 if successfull, 0 if not

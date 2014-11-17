@@ -6,7 +6,7 @@
 
     .global waitForInterrupt
     .global __lockMutex
-    .global __releaseMutex
+    .global __unlockMutex
     
 waitForInterrupt:
     WFI             @Wait for interrupt

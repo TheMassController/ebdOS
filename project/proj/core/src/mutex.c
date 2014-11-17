@@ -37,21 +37,31 @@ void deleteMutex(Mutex* mutex){
 void lockMutex(Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return;
     __lockObjectBlock((void*) mutex);
+    mutex->ownerPid = currentProcess->pid;
 }
 
 int lockMutexNoBlock(Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return 1;
-    return __lockObjectNoblock((void*)mutex);
+    int retCode = __lockObjectNoblock((void*)mutex);
+    if (retCode){
+        mutex->ownerPid = currentProcess->pid;
+    }
+    return retCode;
 }
 
 int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime){
     if (__alreadyOwnsMutex(mutex)) return 1;
-    return __lockObjectBlockTimeout((void*)mutex, msWaitTime);
+    int retCode = __lockObjectBlockTimeout((void*)mutex, msWaitTime);
+    if (retCode){
+        mutex->ownerPid = currentProcess->pid;
+    }
+    return retCode;
 }
 
 void releaseMutex(Mutex* mutex){
     //TODO do not release when inside an interrupt
     if (!__alreadyOwnsMutex(mutex)) return;
     __releaseObject((void*)mutex);
+    mutex->ownerPid = 0;
 }
 

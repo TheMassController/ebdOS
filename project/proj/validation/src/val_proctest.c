@@ -4,14 +4,14 @@
 #include "process.h"
 #include "lm4f120h5qr.h"
 
-extern struct Process* firstProcess;
+extern struct Process* processesReady;
 extern struct Process* kernel;
 volatile extern struct Process* nextProcess;
 volatile extern struct Process* currentProcess;
 
 void testFunction1(void* param){
     UARTprintf("testFunction1 says hi!\r\n");
-    nextProcess = firstProcess->nextProcess;
+    nextProcess = processesReady->nextProcess;
     NVIC_INT_CTRL_R |= (1<<28);
 }
 
@@ -29,7 +29,7 @@ int testProcessStructure(void){
     UARTprintf("Functions created. Code: %d\r\n",retcode);
     UARTprintf("Kernel says hi!\r\n");
     //Do a pendSV interrupt
-    nextProcess = firstProcess;
+    nextProcess = processesReady;
     NVIC_INT_CTRL_R |= (1<<28);
     UARTprintf("Kernel says hi, once again!\r\n");
     if (currentProcess != nextProcess) retcode = 2;   

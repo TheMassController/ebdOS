@@ -2,9 +2,10 @@
 #define MUTEX_H
 //Mutex functions
 //A mutex is locked to its owner: only the owner can release it
+#include "threadsafeCalls.h" 
 
 struct Mutex{
-    unsigned lock;
+    SingleLockObject* singleLockObject;
     unsigned ownerPid;
     struct Mutex* nextMutex;
 };

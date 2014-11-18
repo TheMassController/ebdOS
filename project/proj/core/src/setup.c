@@ -25,7 +25,7 @@ extern struct Process* kernel;
 extern struct Process* currentProcess;
 extern struct Process* sleepProcess;
 extern struct Process* hibernateProcess;
-extern struct Process* firstProcess;
+extern struct Process* processesReady;
 
 extern void __sleepProcessFunc(void* param);
 extern void __hibernateProcessFunc(void* param);
@@ -111,10 +111,10 @@ void setupHardware(void){
     //Create the other two special processes: sleep and hibernate
     __createNewProcess(0, MINSTACKLEN, "SleepProcess", &__sleepProcessFunc, NULL, 255);
     __createNewProcess(0, MINSTACKLEN, "HibernateProcess", &__hibernateProcessFunc, NULL, 255);
-    hibernateProcess = firstProcess->nextProcess;
-    firstProcess->nextProcess = NULL;
-    sleepProcess = firstProcess;
-    firstProcess = NULL; 
+    hibernateProcess = processesReady->nextProcess;
+    processesReady->nextProcess = NULL;
+    sleepProcess = processesReady;
+    processesReady = NULL; 
 }
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes

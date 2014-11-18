@@ -9,8 +9,9 @@
 #include "supervisorCall.h" 
 //Responsible for creating and managing processes
 
-struct Process* firstProcess = NULL;
+struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
+struct Process* sleepProcessList = NULL;
 extern struct Process* currentProcess;
 //Usefull for selecting the pids
 static unsigned char nextPid = 1; //Short, has to be able to become 256
@@ -21,7 +22,24 @@ void __processReturn(void){
     UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
     //TODO tell kernel about this stuff and let it cleanup the mess
     currentProcess->state = STATE_WAIT;
-    CALLSUPERVISOR(SVC_reschedule);
+    while(1){
+        CALLSUPERVISOR(SVC_reschedule);
+    }
+}
+
+void __addProcessToReady(struct Process* process){
+    if ( processesReady == NULL) {
+        processesReady = process;
+    } else if ( processesReady->priority < process->priority){
+        process->nextProcess = processesReady;
+        processesReady = process;
+    } else {
+        struct Process* thisProc;
+        for ( thisProc = processesReady; thisProc->nextProcess != NULL && thisProc->nextProcess->priority >= process->priority ; thisProc = thisProc->nextProcess);
+        process->nextProcess = thisProc->nextProcess;
+        thisProc->nextProcess = process;
+    }
+    
 }
 
 int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
@@ -47,7 +65,7 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, v
     newProc->state = STATE_READY;
     newProc->sleepClockTime = 0;
     newProc->sleepClockOverflows = 0;
-    //newProc->priority = priority;
+    newProc->blockAddress = NULL;
     newProc->name = (char*)malloc(strlen(name)+1);
     if (newProc->name == NULL){
         free(newProc);
@@ -86,14 +104,8 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, v
     newProc->stackPointer = (void*)stackPointer;
 
     //Add the new process to the list of processes
-    if ( firstProcess == NULL) {
-        firstProcess = newProc;
-    } else {
-        struct Process* thisProc;
-        for ( thisProc = firstProcess; thisProc->nextProcess != NULL; thisProc = thisProc->nextProcess);
-        thisProc->nextProcess = newProc;
-    }
-   return 0; 
+    __addProcessToReady(newProc);
+    return 0; 
 }
 
 

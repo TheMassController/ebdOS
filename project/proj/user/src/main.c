@@ -11,6 +11,8 @@
 #include "supervisorCall.h"
 #include "mutex.h" 
 
+extern struct Process* currentProcess;
+
 int validationStuffz(void){
     int testRet = testUARTstdio();
     int failure = 0;
@@ -45,20 +47,25 @@ struct MutexStruct{
 
 void testProcess1(void* mutexstruct){
     struct MutexStruct* mutexStruct = (struct MutexStruct*)mutexstruct;
+    UARTprintf("Process with pid %d and prio %d is trying to lock mutex.\r\n",currentProcess->pid, currentProcess->priority);
     lockMutex(mutexStruct->mutex);
+    UARTprintf("Process with pid %d and prio %d has locked mutex and is falling asleep for 2 seconds\r\n", currentProcess->pid, currentProcess->priority);
     sleepS(2);
     releaseMutex(mutexStruct->mutex);
-    UARTprintf("success!\r\n");
+    UARTprintf("Process with pid %d and prio %d has just released mutex\r\n", currentProcess->pid, currentProcess->priority);
 }
 
 void testProcess2(void* mutexstruct){
     struct MutexStruct* mutexStruct = (struct MutexStruct*)mutexstruct;
+    UARTprintf("Process with pid %d is trying to lock mutex.\r\n",currentProcess->pid);
     lockMutex(mutexStruct->mutex);
 }
 
 int main(void){
     struct MutexStruct* mutexS = (struct MutexStruct*)malloc(sizeof(struct MutexStruct));
     mutexS->mutex = createMutex();
-    __createNewProcess(0, 256, "testProcess1", &testProcess1, mutexS, 2);  
-    __createNewProcess(0, 128, "testProcess2", &testProcess2, mutexS, 1);
+    __createNewProcess(0, 300, "testProcess2", &testProcess1, mutexS, 99);
+    __createNewProcess(0, 300, "testProcess4", &testProcess1, mutexS, 100);
+    __createNewProcess(0, 300, "testProcess3", &testProcess1, mutexS, 97);
+    __createNewProcess(0, 300, "testProcess1", &testProcess1, mutexS, 100);  
 }

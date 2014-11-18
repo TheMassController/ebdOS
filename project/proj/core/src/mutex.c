@@ -10,7 +10,7 @@ extern struct Process* currentProcess;
 Mutex* createMutex(void){
     Mutex* mutex = (Mutex*)malloc(sizeof(Mutex));
     if (mutex == NULL) return NULL;
-    mutex->lock = 0;
+    mutex->singleLockObject = __createSingleLockObject();
     mutex->ownerPid = 0;
     if (firstMutex == NULL){
         firstMutex = mutex;
@@ -24,25 +24,26 @@ Mutex* createMutex(void){
 
 int __alreadyOwnsMutex(Mutex* mutex){
     //TODO act like it is already owned by given process when inside interrupt
-    if (mutex->ownerPid == currentProcess->pid && mutex->lock){
+    if (mutex->ownerPid == currentProcess->pid && __singleLockObjectIsLocked(mutex->singleLockObject)){
         return 1;
     }
     return 0;
 }
 
 void deleteMutex(Mutex* mutex){
-    //TODO call kernel to delete this mutex. If a resource was still waiting for it, kernel panic or some shit.
+    __deleteSingleLockObject(mutex->singleLockObject);
+    free(mutex);
 }
 
 void lockMutex(Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return;
-    __lockObjectBlock((void*) mutex);
+    __lockObjectBlock(mutex->singleLockObject);
     mutex->ownerPid = currentProcess->pid;
 }
 
 int lockMutexNoBlock(Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return 1;
-    int retCode = __lockObjectNoblock((void*)mutex);
+    int retCode = __lockObjectNoblock(mutex->singleLockObject);
     if (retCode){
         mutex->ownerPid = currentProcess->pid;
     }
@@ -51,7 +52,7 @@ int lockMutexNoBlock(Mutex* mutex){
 
 int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime){
     if (__alreadyOwnsMutex(mutex)) return 1;
-    int retCode = __lockObjectBlockTimeout((void*)mutex, msWaitTime);
+    int retCode = __lockObjectBlockTimeout(mutex->singleLockObject, msWaitTime);
     if (retCode){
         mutex->ownerPid = currentProcess->pid;
     }
@@ -61,7 +62,7 @@ int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime){
 void releaseMutex(Mutex* mutex){
     //TODO do not release when inside an interrupt
     if (!__alreadyOwnsMutex(mutex)) return;
-    __releaseObject((void*)mutex);
+    __releaseObject(mutex->singleLockObject);
     mutex->ownerPid = 0;
 }
 

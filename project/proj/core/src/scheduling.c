@@ -19,7 +19,7 @@
 
 extern struct Process* kernel;
 extern struct Process* currentProcess;
-extern struct Process* firstProcess;
+extern struct Process* processesReady;
 extern struct Process* nextProcess;
 struct Process* sleepProcess; //Runs when no other process wants to run
 struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
@@ -31,11 +31,11 @@ void schedule(void){
     //If the kernel is ready, kernel is nextprocess
     if (kernel->state == STATE_READY){
         nextProcess = kernel;
-    } else if (firstProcess == NULL){
+    } else if (processesReady == NULL){
         nextProcess = hibernateProcess;
     } else {
         //The actual selection
-        for (struct Process* proc = firstProcess; proc != NULL; proc = proc->nextProcess ){
+        for (struct Process* proc = processesReady; proc != NULL; proc = proc->nextProcess ){
             if (nextProcess == NULL || proc->priority > nextProcess->priority){
                 if (proc->state == STATE_READY){
                     nextProcess = proc;

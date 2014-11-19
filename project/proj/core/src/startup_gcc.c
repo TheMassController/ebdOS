@@ -51,8 +51,10 @@ extern char _stack_top;
 
 //Hardware setup
 void setupHardware(void);
-//Kicking off the actual setup
+//Kicking off the scheduler etc
 void finishBoot(void);
+//Actual kernel process
+void kernelMain(void);
 //Pendsv interrupt handler
 void pendSVHandler(void);
 //SVCcall handler
@@ -302,6 +304,8 @@ ResetISR(void)
     main();
     //Kick off the scheduler etc
     finishBoot();
+    //Actual kernel process
+    kernelMain();
 }
 
 //*****************************************************************************

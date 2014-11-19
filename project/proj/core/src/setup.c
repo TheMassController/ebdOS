@@ -12,14 +12,16 @@
 #include "process.h" //Process var
 #include "getSetRegisters.h"
 #include "lm4f120h5qr.h" //Hardware regs
-#include "timer.h"
-#include "asmUtils.h"
-#include "hw_ints.h"
-#include "process.h"
+#include "timer.h" //The subaddresses of timers
+#include "hw_ints.h" //Memory addresses of hw interrupts
+
+#include "asmUtils.h" //setpsp function
+#include "process.h" //Everything related to the processes
+#include "mutex.h" //Everything related to mutexes
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
-#define BAUDRATE 115200
+#define BAUDRATE 115200 //Default baudrate, fastest possible
 
 extern struct Process* kernel;
 extern struct Process* currentProcess;
@@ -31,6 +33,8 @@ extern void __sleepProcessFunc(void* param);
 extern void __hibernateProcessFunc(void* param);
 
 extern unsigned sleepClocksPerMS;
+
+extern Mutex* mallocMutex;
 
 void setupHardware(void){
     //Setup the PLL
@@ -90,6 +94,9 @@ void setupHardware(void){
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
     ROM_IntEnable(INT_WTIMER0A);
     sleepClocksPerMS = 2;
+
+    //Initialize malloc mutex
+    mallocMutex = createMutex();
  
     //Creat pid 0: the kernel
     kernel = (struct Process*)malloc(sizeof(struct Process));

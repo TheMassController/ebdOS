@@ -19,12 +19,15 @@ void rescheduleImmediately(void){
 }
 
 void processBlockedSingleLock(void){
+    //Get the object that you are waiting for
+    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
+    //Check its lock. If it got unlocked since last test, do nothing
+    if (!waitObject->lock) return;
     //Remove the currentProcess from the list of active processes
     struct Process* prevProc = processesReady;
     for (; prevProc->nextProcess != currentProcess; prevProc = prevProc->nextProcess);
     prevProc->nextProcess = currentProcess->nextProcess;
     //Add it to the waiting queue for the singleLockObject
-    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
     if (waitObject->processWaitingQueue == NULL){
         waitObject->processWaitingQueue = currentProcess;
         currentProcess->nextProcess = NULL;
@@ -76,4 +79,4 @@ void svcHandler_main(char reqCode){
             UARTprintf("Supervisor call handler: unknown code %d\r\n",reqCode);
             break;
     }
-}
+

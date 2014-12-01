@@ -7,8 +7,8 @@
 extern struct Process* currentProcess;
 
 //Returns 1 if successful
-unsigned __lockMutex(SingleLockObject* addr);
-void __unlockMutex(SingleLockObject* addr);
+unsigned __lockSingleLockObject(SingleLockObject* addr);
+void __unlockSingleLockObject(SingleLockObject* addr);
 
 SingleLockObject* __createSingleLockObject(void){
     SingleLockObject* object = (SingleLockObject*)malloc(sizeof(SingleLockObject));
@@ -23,11 +23,11 @@ void __deleteSingleLockObject(SingleLockObject* object){
 }
 
 int __lockObjectNoblock(SingleLockObject* object){
-    return __lockMutex(object);
+    return __lockSingleLockObject(object);
 }
 
 void __lockObjectBlock(SingleLockObject* object){
-   while(!__lockMutex(object)){
+   while(!__lockSingleLockObject(object)){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
         //TODO different interrupt
@@ -47,7 +47,7 @@ int __lockObjectBlockTimeout(SingleLockObject* object, unsigned timeout){
 }
 
 void __releaseObject(SingleLockObject* object){
-    __unlockMutex(object);
+    __unlockSingleLockObject(object);
     currentProcess->blockAddress = object;
     CALLSUPERVISOR(SVC_objectRelease);
 }

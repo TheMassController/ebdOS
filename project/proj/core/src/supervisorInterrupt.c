@@ -79,4 +79,5 @@ void svcHandler_main(char reqCode){
             UARTprintf("Supervisor call handler: unknown code %d\r\n",reqCode);
             break;
     }
+}
 

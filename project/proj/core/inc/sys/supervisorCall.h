@@ -3,6 +3,8 @@
 #define SVC_objectLock "1"
 #define SVC_objectRelease "2"
 #define SVC_sleep "3"
+#define SVC_multiObjectIncrease "4"
+#define SVC_multiObjectDecrease "5"
 #define SVC_test "255"        
 //Contains the macro to create the supervisor call
 #define CALLSUPERVISOR(code) __asm__("svc "code); //Inject the code into the ASM

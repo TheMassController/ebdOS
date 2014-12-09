@@ -37,8 +37,11 @@ __unlockSingleLockObject:
     STR r1, [r0]            @Store a zero to the memaddr, basically unlocking the single lock object
     BX lr                   @return
 
-__increaseMultiLockObject:  @2 params: address of object and max value of object. r0 and r1 are thus in use
-    LDREX r2, [r0]          @Load exclusive 
+__increaseMultiLockObject:  @2 params: address of object. 
+    MOV r1, r0              @r1 = r0
+    ADD r1, r1, #4          @increase the memaddr with 4. Memaddr is now &maxLockVal
+    LDR r1, [r1]             @Deref r1, r1 is now maxLockVal 
+    LDREX r2, [r0]          @Load exclusive the deref of r0, which is the lock
     CMP r1, r2              @Do a compare to set the flags
     BLE L2                  @If r1 (=maxval of the lock) is smaller then or equal to r2(=current value of the lock), jump to L2
     ADD r2, r2, #1          @r2++
@@ -48,3 +51,16 @@ __increaseMultiLockObject:  @2 params: address of object and max value of object
     MOV r0, #1              @If successful, store a 1 to R0
     B L3
     
+__decreaseMultiLockObject:  @2 params: address of object.
+    MOV r1, r0              @r1 = r0
+    ADD r1, r1, #4          @increase the memaddr with 4. Memaddr is now &maxLockVal
+    LDR r1, [r1]             @Deref r1, r1 is now maxLockVal 
+    LDREX r2, [r0]          @Load exclusive the deref of r0, which is the lock
+    CMP r2, #0              @Do a compare to set the flags
+    BLE L2                  @If r2(=current value of the lock) is smaller then or equal to 0, jump to L2
+    SUB r2, r2, #1          @r2--
+    STREX r3, r2, [r0]      @Store-exclusive the value in r2 to the mem location pointed to by r0, store the result of the exclusive part to r3
+    CMP r3, #1              @Test if the operation was successfull
+    BEQ __decreaseMultiLockObject
+    MOV r0, #1              @If successful, store a 1 to R0
+    B L3

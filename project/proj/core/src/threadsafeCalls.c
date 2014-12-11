@@ -88,8 +88,12 @@ void __decreaseMultiLockObjectBlock(MultiLockObject* object){
         CALLSUPERVISOR(SVC_multiObjectIncrease);
     } 
 }
-int __increaseMultiLockObjectNoBlock(MultiLockObject* object);
-int __decreaseMultiLockObjectNoBlock(MultiLockObject* object);
+int __increaseMultiLockObjectNoBlock(MultiLockObject* object){
+    return __increaseMultiLockObject(object);
+}
+int __decreaseMultiLockObjectNoBlock(MultiLockObject* object){
+    return __decreaseMultiLockObject(object);
+}
 int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object);
 int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object);
 unsigned __getMultiLockVal(MultiLockObject* object);

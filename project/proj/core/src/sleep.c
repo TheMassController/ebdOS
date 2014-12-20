@@ -10,17 +10,32 @@
 #include "rom.h" //Declare ROM addresses for rom funcs
 #include "supervisorCall.h"
 #include "process.h"
+#include "sleep.h"
+#include "sysSleep.h"
 
 #define MAXSLEEPTIMER 4294967295
 
 unsigned sleepClocksPerMS = 0;
 extern struct Process* currentProcess;
 
-void sleepTimerInterrupt(void){
+struct SleepingProcessStruct sleepProcessListStart;
+
+void addSleeperToList(struct SleepingProcessStruct* ptr){
+}
+
+void setSleepTimerWB(void){
+    
+}
+
+void sleepTimerWAInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
     UARTprintf("Apparently, almost 40 days have passed");
     while(1){}
     //TODO alert kernel, let it decrease overflows
+}
+
+void sleepTimerWBInterrupt(void){
+    
 }
 
 unsigned getCurrentSleepTimerValue(void){
@@ -28,14 +43,18 @@ unsigned getCurrentSleepTimerValue(void){
 }
 
 //Because a half ms is exactly 1 tick
-void __sleepHalfMS(unsigned sleepTicks){
-    sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
-    while(sleepTicks < 0){
-        currentProcess->sleepClockOverflows += 1;
-        sleepTicks += MAXSLEEPTIMER;
-    }
-    currentProcess->sleepClockTime = sleepTicks;
-    currentProcess->state |= STATE_SLEEP;
+void __sleepHalfMS(long sleepTicks){
+    //TODO call kernel
+
+    //unsigned overflows = 0;
+    //sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
+    //while(sleepTicks < 0){
+    //    overflows++;
+    //    sleepTicks += MAXSLEEPTIMER;
+    //}
+
+    //currentProcess->sleepClockTime = sleepTicks;
+    //currentProcess->state |= STATE_SLEEP;
     //Reschedule right the hell now 
     CALLSUPERVISOR(SVC_reschedule);
 }

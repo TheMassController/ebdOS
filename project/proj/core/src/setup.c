@@ -107,8 +107,6 @@ void setupHardware(void){
     kernel->stackPointer = (void*)((((long)kernel->stack) + SAVETEMPSTACKLEN - 4) & (long)0xFFFFFFFC );
     setPSP(kernel->stackPointer);
     kernel->state = STATE_WAIT;
-    kernel->sleepClockTime = 0;
-    kernel->sleepClockOverflows = 0;
     kernel->blockAddress = NULL;
     //These params will not be used
     kernel->nextProcess = NULL;

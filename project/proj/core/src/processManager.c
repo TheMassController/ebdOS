@@ -63,8 +63,6 @@ int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, v
     newProc->nextProcess = NULL;
     newProc->priority = priority;
     newProc->state = STATE_READY;
-    newProc->sleepClockTime = 0;
-    newProc->sleepClockOverflows = 0;
     newProc->blockAddress = NULL;
     newProc->name = (char*)malloc(strlen(name)+1);
     if (newProc->name == NULL){

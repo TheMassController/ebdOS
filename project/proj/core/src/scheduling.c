@@ -25,7 +25,6 @@ struct Process* sleepProcess; //Runs when no other process wants to run
 struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
 
 void schedule(void){
-    unsigned long sleepCounterValue = getCurrentSleepTimerValue();
     //Actual scheduling.
     nextProcess = NULL;
     //If the kernel is ready, kernel is nextprocess
@@ -39,11 +38,6 @@ void schedule(void){
             if (nextProcess == NULL || proc->priority > nextProcess->priority){
                 if (proc->state == STATE_READY){
                     nextProcess = proc;
-                }else if (proc->state & STATE_SLEEP){
-                    if (proc->sleepClockOverflows == 0 && proc->sleepClockTime >= sleepCounterValue){
-                        proc->state = STATE_READY;
-                        nextProcess = proc;
-                    }
                 }
             }
         }

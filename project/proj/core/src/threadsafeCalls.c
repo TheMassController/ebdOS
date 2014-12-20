@@ -96,5 +96,10 @@ int __decreaseMultiLockObjectNoBlock(MultiLockObject* object){
 }
 int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object);
 int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object);
-unsigned __getMultiLockVal(MultiLockObject* object);
+unsigned __getMultiLockVal(MultiLockObject* object){
+    return object->lock;
+}
 
+unsigned __getMultiLockMaxVal(MultiLockObject* object){
+   return object->maxLockVal; 
+}

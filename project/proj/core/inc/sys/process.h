@@ -1,6 +1,8 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "sysSleep.h" 
+
 //States are handled as different bit flags:
 //pos 0 = sleep
 //pos 1 = wait
@@ -22,10 +24,6 @@ struct Process {
     void* stack; //refers to the address returned by Malloc
     char state; //Set of 1 bit flags
     char priority; //Higher is higher: 255 is highest  
-
-    //Sleep vars
-    unsigned sleepClockTime;
-    char sleepClockOverflows;
 
     //Block vars
     void* blockAddress;

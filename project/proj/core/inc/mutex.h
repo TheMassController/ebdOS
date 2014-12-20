@@ -7,7 +7,6 @@
 struct Mutex{
     SingleLockObject* singleLockObject;
     unsigned ownerPid;
-    struct Mutex* nextMutex;
 };
 
 typedef struct Mutex Mutex;

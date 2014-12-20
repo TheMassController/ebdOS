@@ -4,21 +4,17 @@
 #include "process.h"
 #include "threadsafeCalls.h" 
 
-Mutex* firstMutex = NULL;
 extern struct Process* currentProcess;
 
 Mutex* createMutex(void){
     Mutex* mutex = (Mutex*)malloc(sizeof(Mutex));
     if (mutex == NULL) return NULL;
     mutex->singleLockObject = __createSingleLockObject();
-    mutex->ownerPid = 0;
-    if (firstMutex == NULL){
-        firstMutex = mutex;
-    } else {
-        Mutex* mut;
-        for(mut = firstMutex; mut->nextMutex == NULL; mut = mut->nextMutex);
-        mut->nextMutex = mutex;
+    if (mutex->singleLockObject == NULL){
+        free(mutex);
+        return NULL;
     }
+    mutex->ownerPid = 0;
     return mutex;
 }
 

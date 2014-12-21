@@ -31,6 +31,10 @@ void processBlockedSingleLock(void){
     if (waitObject->processWaitingQueue == NULL){
         waitObject->processWaitingQueue = currentProcess;
         currentProcess->nextProcess = NULL;
+    }else if (waitObject->processWaitingQueue->priority < currentProcess->priority){
+        currentProcess->nextProcess = waitObject->processWaitingQueue;
+        waitObject->processWaitingQueue = currentProcess;
+    }
     } else {
         struct Process* waitQueueProc = waitObject->processWaitingQueue;
         for(;waitQueueProc->nextProcess != NULL && waitQueueProc->nextProcess->priority >= currentProcess->priority; waitQueueProc = waitQueueProc->nextProcess);

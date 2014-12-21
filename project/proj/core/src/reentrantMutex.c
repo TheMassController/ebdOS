@@ -9,6 +9,10 @@ ReentrantMutex* createReentrantMutex(void){
         free(mutex);
         return NULL;
     }   
+    mutex->mutex = createBinaryMutex();
+    if (mutex->mutex == NULL){
+        free(mutex->multiLockObject);
+    }
     mutex->ownerPid = 0;
     return mutex;
 }

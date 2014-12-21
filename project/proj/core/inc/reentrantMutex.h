@@ -2,9 +2,11 @@
 #define REENTRANTMUTEX_H
 
 #include "threadsafeCalls.h"
+#include "binaryMutex.h"
 
 struct ReentrantMutex{
     MultiLockObject* multiLockObject;
+    BinaryMutex* mutex;
     unsigned ownerPid;
 };
 

@@ -1,14 +1,14 @@
 //Malloc reentrant 
 #include "malloc.h"
-#include "mutex.h"
+#include "reentrantMutex.h"
 
-Mutex* mallocMutex = NULL;
+ReentrantMutex* mallocMutex = NULL;
 
 void __malloc_lock (struct _reent *reent ){ 
-    lockMutexBlocking(mallocMutex);
+    lockReentrantMutexBlocking(mallocMutex);
 } 
 
 void __malloc_unlock (struct _reent *reent ){ 
-    releaseMutex(mallocMutex);
+    releaseReentrantMutex(mallocMutex);
 } 
 

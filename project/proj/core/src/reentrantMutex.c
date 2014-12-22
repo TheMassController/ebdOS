@@ -9,6 +9,7 @@ ReentrantMutex* createReentrantMutex(void){
         free(mutex);
         return NULL;
     }
+    mutex->value = 0;
     return mutex;
 }
 

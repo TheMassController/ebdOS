@@ -18,6 +18,7 @@
 #include "asmUtils.h" //setpsp function
 #include "process.h" //Everything related to the processes
 #include "mutex.h" //Everything related to mutexes
+#include "reentrantMutex.h" //Everything related to mutexes
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
@@ -34,7 +35,7 @@ extern void __hibernateProcessFunc(void* param);
 
 extern unsigned sleepClocksPerMS;
 
-extern Mutex* mallocMutex;
+extern ReentrantMutex* mallocMutex;
 
 void setupHardware(void){
     //Setup the PLL
@@ -94,9 +95,6 @@ void setupHardware(void){
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
     ROM_IntEnable(INT_WTIMER0A);
     sleepClocksPerMS = 2;
-
-    //Initialize malloc mutex
-    mallocMutex = createMutex();
  
     //Creat pid 0: the kernel
     kernel = (struct Process*)malloc(sizeof(struct Process));
@@ -120,6 +118,9 @@ void setupHardware(void){
     processesReady->nextProcess = NULL;
     sleepProcess = processesReady;
     processesReady = NULL; 
+
+    //Initialize malloc mutex
+    mallocMutex = createReentrantMutex();
 }
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes

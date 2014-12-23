@@ -24,7 +24,6 @@
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
 #define BAUDRATE 115200 //Default baudrate, fastest possible
 
-extern struct Process* kernel;
 extern struct Process* currentProcess;
 extern struct Process* sleepProcess;
 extern struct Process* hibernateProcess;
@@ -96,28 +95,22 @@ void setupHardware(void){
     ROM_IntEnable(INT_WTIMER0A);
     sleepClocksPerMS = 2;
  
-    //Creat pid 0: the kernel
-    kernel = (struct Process*)malloc(sizeof(struct Process));
-    kernel->pid = 0;
-    kernel->mPid = 0;
-    kernel->name = "kernel";
-    kernel->stack = (void*) malloc(SAVETEMPSTACKLEN); 
-    kernel->stackPointer = (void*)((((long)kernel->stack) + SAVETEMPSTACKLEN - 4) & (long)0xFFFFFFFC );
+    //Creat pid 1: the kernel
+    currentProcess = (struct Process*)malloc(sizeof(struct Process));
+    currentProcess->pid = 1;
+    __createNewProcess(0, 67, "Kernel", NULL, NULL, 100);
+    struct Process* kernel = processesReady;
     setPSP(kernel->stackPointer);
-    kernel->state = STATE_WAIT;
-    kernel->blockAddress = NULL;
-    //These params will not be used
-    kernel->nextProcess = NULL;
-
+    free(currentProcess);
     currentProcess = kernel;
     
     //Create the other two special processes: sleep and hibernate
     __createNewProcess(0, MINSTACKLEN, "SleepProcess", &__sleepProcessFunc, NULL, 255);
     __createNewProcess(0, MINSTACKLEN, "HibernateProcess", &__hibernateProcessFunc, NULL, 255);
-    hibernateProcess = processesReady->nextProcess;
-    processesReady->nextProcess = NULL;
-    sleepProcess = processesReady;
-    processesReady = NULL; 
+    hibernateProcess = processesReady->nextProcess->nextProcess; //Order: kernel, sleepprocess, hibernateprocess
+    processesReady->nextProcess->nextProcess = NULL;
+    sleepProcess = processesReady->nextProcess;
+    processesReady->nextProcess = NULL; 
 
     //Initialize malloc mutex
     mallocMutex = createReentrantMutex();

@@ -42,7 +42,7 @@ void __addProcessToReady(struct Process* process){
     
 }
 
-int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
+int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
     if (currentProcess->pid != 1) {
         return 3;
     } 

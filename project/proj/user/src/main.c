@@ -10,7 +10,7 @@
 #include "process.h"
 #include "supervisorCall.h"
 #include "mutex.h" 
-#include "threadsafeCalls.h"
+#include "semaphore.h"
 
 extern struct Process* currentProcess;
 
@@ -73,13 +73,15 @@ int mutexTest(void){
 }
 
 int main(void){
-    MultiLockObject* mLockObject = __createMultiLockObject(3);
-    UARTprintf("MaxLockVal: %d\r\n", __getMultiLockMaxVal(mLockObject));
+    Semaphore* semaphore = createSemaphore(3);
+    UARTprintf("MaxVal: %d\r\n", getSemaphoreMaxval(semaphore));
     for (int i = 0; i < 5; ++i){
-        UARTprintf("mLockObject increasing: %d\r\n", __increaseMultiLockObjectNoBlock(mLockObject)); 
+        UARTprintf("semaphore increasing: %d\r\n", increaseSemaphoreNonBlocking(semaphore));
+        UARTprintf("Semaphore currentval: %d\r\n", getSemaphoreCurrentVal(semaphore));
     }
     for (int i = 4; i >=0 ; --i){
-        UARTprintf("mLockObject decreasing: %d\r\n", __decreaseMultiLockObjectNoBlock(mLockObject)); 
+        UARTprintf("Semaphore decreasing: %d\r\n", decreaseSemaphoreNonBlocking(semaphore));
+        UARTprintf("Semaphore currentval: %d\r\n", getSemaphoreCurrentVal(semaphore));
     }
     
 }

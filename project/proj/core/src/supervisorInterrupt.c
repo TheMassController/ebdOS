@@ -8,6 +8,7 @@
 #include "threadsafeCalls.h" 
 #include "stdlib.h" 
 
+//TODO check if a process was also sleeping, and if yes, remove it from the list of sleepers
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
@@ -58,9 +59,23 @@ void singleLockReleased(void){
     currentProcess->blockAddress = NULL;
 }
 
+void multiLockIncrease(void){
+}
+
+void multiLockDecrease(void){    
+}
+
+void multiLockIncreaseWait(void){
+}
+
+void multiLockDecreaseWait(void){
+}
+
+#ifdef DEBUG
 void sayHi(void){
     UARTprintf("Hi from your favorite supervisor!\r\n");
 }
+#endif //DEBUG
 
 //This function responds to an interrupt that can be generated at any runlevel.
 void svcHandler_main(char reqCode){
@@ -75,9 +90,23 @@ void svcHandler_main(char reqCode){
         case 2:
             singleLockReleased();
             break;
+        case 3:
+            multiLockIncrease();
+            break;
+        case 4:
+            multiLockDecrease();
+            break;
+        case 5:
+            multiLockIncreaseWait();
+            break;
+        case 6:
+            multiLockDecreaseWait();
+            break;
+#ifdef DEBUG
         case 255:
             sayHi();
             break;
+#endif //DEBUG
         default:
             UARTprintf("Supervisor call handler: unknown code %d\r\n",reqCode);
             break;

@@ -36,9 +36,7 @@ struct Process {
         2: Out of mem
         3: Wrong caller pid, only kernel (PID 0) can create processes
 */
-int __createNewProcess(unsigned char mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority );
-
-int __deleteProcess(unsigned char pid);
+int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority );
 
 void __addProcessToReady(struct Process* process);
 

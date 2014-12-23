@@ -19,6 +19,7 @@
 #include "process.h" //Everything related to the processes
 #include "mutex.h" //Everything related to mutexes
 #include "reentrantMutex.h" //Everything related to mutexes
+#include "kernelQueue.h" //For the initialization of the kernelQueue
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
@@ -28,6 +29,7 @@ extern struct Process* currentProcess;
 extern struct Process* sleepProcess;
 extern struct Process* hibernateProcess;
 extern struct Process* processesReady;
+extern struct KernelQueue* kernelQueue;
 
 extern void __sleepProcessFunc(void* param);
 extern void __hibernateProcessFunc(void* param);
@@ -111,6 +113,13 @@ void setupHardware(void){
     processesReady->nextProcess->nextProcess = NULL;
     sleepProcess = processesReady->nextProcess;
     processesReady->nextProcess = NULL; 
+
+    //Create the kernelQueue
+    kernelQueue = (struct KernelQueue*)malloc(sizeof(struct KernelQueue));
+    kernelQueue->existingItems = createSemaphore(255);
+    kernelQueue->readyItems = createSemaphore(255);
+    kernelQueue->listProtectionMutex = createMutex();
+    kernelQueue->firstItem = NULL;
 
     //Initialize malloc mutex
     mallocMutex = createReentrantMutex();

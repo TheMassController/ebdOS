@@ -38,7 +38,7 @@ int __increaseMultiLockObjectNoBlock(MultiLockObject* object);
 int __decreaseMultiLockObjectNoBlock(MultiLockObject* object);
 int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);
 int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);
-unsigned __getMultiLockVal(MultiLockObject* object);
-unsigned __getMultiLockMaxVal(MultiLockObject* object);
+int __getMultiLockVal(MultiLockObject* object);
+int __getMultiLockMaxVal(MultiLockObject* object);
 //TODO semaphore functions
 #endif //THREADSAFECALLS_H

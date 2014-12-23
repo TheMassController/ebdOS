@@ -9,8 +9,9 @@ extern struct Process* currentProcess;
 //Returns 1 if successful, 0 otherwise
 unsigned __lockSingleLockObject(SingleLockObject* addr);
 void __unlockSingleLockObject(SingleLockObject* addr);
-unsigned __increaseMultiLockObject(MultiLockObject* addr);
-unsigned __decreaseMultiLockObject(MultiLockObject* addr);
+//Returns new value of multilockobject, or -1 in case of failure
+int __increaseMultiLockObject(MultiLockObject* addr);
+int __decreaseMultiLockObject(MultiLockObject* addr);
 
 
 SingleLockObject* __createSingleLockObject(void){
@@ -58,8 +59,8 @@ int __singleLockObjectIsLocked(SingleLockObject* object){
     return object->lock;
 }
 
-MultiLockObject* createMultiLockObject(unsigned maxval){
-    if (maxval == 0) maxval = 1;
+MultiLockObject* __createMultiLockObject(int maxval){
+    if (maxval <= 0) maxval = 1;
     MultiLockObject* object = (MultiLockObject*)malloc(sizeof(MultiLockObject));
     object->lock = 0;
     object->maxLockVal = maxval;
@@ -74,7 +75,7 @@ void __deleteMultiLockObject(MultiLockObject* object){
 }
 
 void __increaseMultiLockObjectBlock(MultiLockObject* object){
-   while(!__increaseMultiLockObject(object)){
+   while(__increaseMultiLockObject(object) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
         CALLSUPERVISOR(SVC_multiObjectDecrease);
@@ -82,7 +83,7 @@ void __increaseMultiLockObjectBlock(MultiLockObject* object){
     
 }
 void __decreaseMultiLockObjectBlock(MultiLockObject* object){
-   while(!__decreaseMultiLockObject(object)){
+   while(__decreaseMultiLockObject(object) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
         CALLSUPERVISOR(SVC_multiObjectIncrease);
@@ -94,8 +95,9 @@ int __increaseMultiLockObjectNoBlock(MultiLockObject* object){
 int __decreaseMultiLockObjectNoBlock(MultiLockObject* object){
     return __decreaseMultiLockObject(object);
 }
-int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object);
-int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object);
+//TODO
+int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);
+int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);
 unsigned __getMultiLockVal(MultiLockObject* object){
     return object->lock;
 }

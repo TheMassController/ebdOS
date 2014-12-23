@@ -10,6 +10,7 @@
 #include "process.h"
 #include "supervisorCall.h"
 #include "mutex.h" 
+#include "threadsafeCalls.h"
 
 extern struct Process* currentProcess;
 
@@ -61,11 +62,24 @@ void testProcess2(void* mutexstruct){
     lockMutex(mutexStruct->mutex);
 }
 
-int main(void){
+int mutexTest(void){
     struct MutexStruct* mutexS = (struct MutexStruct*)malloc(sizeof(struct MutexStruct));
     mutexS->mutex = createMutex();
     __createNewProcess(0, 300, "testProcess2", &testProcess1, mutexS, 99);
     __createNewProcess(0, 300, "testProcess4", &testProcess1, mutexS, 100);
     __createNewProcess(0, 300, "testProcess3", &testProcess1, mutexS, 97);
     __createNewProcess(0, 300, "testProcess1", &testProcess1, mutexS, 100);  
+    return 1;
+}
+
+int main(void){
+    MultiLockObject* mLockObject = __createMultiLockObject(3);
+    UARTprintf("MaxLockVal: %d\r\n", __getMultiLockMaxVal(mLockObject));
+    for (int i = 0; i < 5; ++i){
+        UARTprintf("mLockObject increasing: %d\r\n", __increaseMultiLockObjectNoBlock(mLockObject)); 
+    }
+    for (int i = 4; i >=0 ; --i){
+        UARTprintf("mLockObject decreasing: %d\r\n", __decreaseMultiLockObjectNoBlock(mLockObject)); 
+    }
+    
 }

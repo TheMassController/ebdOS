@@ -30,14 +30,14 @@ void __releaseObject(SingleLockObject* object);
 int __singleLockObjectIsLocked(SingleLockObject* object);
 
 //MultiLockObject
-MultiLockObject* __createMultiLockObject(unsigned maxval);
+MultiLockObject* __createMultiLockObject(int maxval);
 void __deleteMultiLockObject(MultiLockObject* object);
 void __increaseMultiLockObjectBlock(MultiLockObject* object);
 void __decreaseMultiLockObjectBlock(MultiLockObject* object);
 int __increaseMultiLockObjectNoBlock(MultiLockObject* object);
 int __decreaseMultiLockObjectNoBlock(MultiLockObject* object);
-int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object);
-int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object);
+int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);
+int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);
 unsigned __getMultiLockVal(MultiLockObject* object);
 unsigned __getMultiLockMaxVal(MultiLockObject* object);
 //TODO semaphore functions

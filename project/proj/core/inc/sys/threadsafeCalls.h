@@ -32,8 +32,8 @@ int __singleLockObjectIsLocked(SingleLockObject* object);
 //MultiLockObject
 MultiLockObject* __createMultiLockObject(int maxval);
 void __deleteMultiLockObject(MultiLockObject* object);
-void __increaseMultiLockObjectBlock(MultiLockObject* object);
-void __decreaseMultiLockObjectBlock(MultiLockObject* object);
+int __increaseMultiLockObjectBlock(MultiLockObject* object);
+int __decreaseMultiLockObjectBlock(MultiLockObject* object);
 int __increaseMultiLockObjectNoBlock(MultiLockObject* object);
 int __decreaseMultiLockObjectNoBlock(MultiLockObject* object);
 int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout);

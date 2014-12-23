@@ -74,20 +74,23 @@ void __deleteMultiLockObject(MultiLockObject* object){
     free(object);
 }
 
-void __increaseMultiLockObjectBlock(MultiLockObject* object){
-   while(__increaseMultiLockObject(object) == -1){
+int __increaseMultiLockObjectBlock(MultiLockObject* object){
+   int retCode;
+   while((retCode = __increaseMultiLockObject(object)) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
         CALLSUPERVISOR(SVC_multiObjectDecrease);
     } 
-    
+    return retCode;  
 }
-void __decreaseMultiLockObjectBlock(MultiLockObject* object){
-   while(__decreaseMultiLockObject(object) == -1){
+int __decreaseMultiLockObjectBlock(MultiLockObject* object){
+   int retCode;
+   while((retCode = __decreaseMultiLockObject(object)) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
         CALLSUPERVISOR(SVC_multiObjectIncrease);
     } 
+    return retCode;
 }
 int __increaseMultiLockObjectNoBlock(MultiLockObject* object){
     return __increaseMultiLockObject(object);

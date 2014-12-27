@@ -7,6 +7,7 @@
 #include "process.h" 
 #include "threadsafeCalls.h" 
 #include "stdlib.h" 
+#include "utils.h"
 
 //TODO check if a process was also sleeping, and if yes, remove it from the list of sleepers
 
@@ -19,56 +20,63 @@ void rescheduleImmediately(void){
     NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
-void processBlockedSingleLock(void){
-    //Get the object that you are waiting for
-    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    //Check its lock. If it got unlocked since last test, do nothing
-    if (!waitObject->lock) return;
-    //Remove the currentProcess from the list of active processes
-    struct Process* prevProc = processesReady;
-    for (; prevProc->nextProcess != currentProcess; prevProc = prevProc->nextProcess);
-    prevProc->nextProcess = currentProcess->nextProcess;
-    //Add it to the waiting queue for the singleLockObject
-    if (waitObject->processWaitingQueue == NULL){
-        waitObject->processWaitingQueue = currentProcess;
-        currentProcess->nextProcess = NULL;
-    }else if (waitObject->processWaitingQueue->priority < currentProcess->priority){
-        currentProcess->nextProcess = waitObject->processWaitingQueue;
-        waitObject->processWaitingQueue = currentProcess;
-    } else {
-        struct Process* waitQueueProc = waitObject->processWaitingQueue;
-        for(;waitQueueProc->nextProcess != NULL && waitQueueProc->nextProcess->priority >= currentProcess->priority; waitQueueProc = waitQueueProc->nextProcess);
-        currentProcess->nextProcess = waitQueueProc->nextProcess;
-        waitQueueProc->nextProcess = currentProcess;
+struct Process* popFromLockQueue(struct Process* listHead){
+    if (listHead != NULL){
+        struct Process* item = listHead;
+        if (item->state & STATE_SLEEP){
+            //TODO remove from sleep list
+            //TODO update counter
+        }
+        item->state = 0;
+        item->blockAddress = NULL;
+        listHead = listHead->nextProcess;
+        __addProcessToReady(item);
+        rescheduleImmediately();
     }
+    return listHead;
+}
+
+void processBlockedSingleLock(void){
+    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
+    if (!waitObject->lock) return;
+    processesReady = __removeProcessFromList(processesReady, currentProcess);
+    waitObject->processWaitingQueue = __sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
     rescheduleImmediately();
 }
 
 void singleLockReleased(void){
     //The released mutex is in the currentProcess->blockAddress var
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    if (waitObject->processWaitingQueue != NULL){
-        //Pop the first item
-        struct Process* awokenOne = waitObject->processWaitingQueue;
-        waitObject->processWaitingQueue = awokenOne->nextProcess;
-        awokenOne->state = 0;
-        awokenOne->blockAddress = NULL;
-        __addProcessToReady(awokenOne);
-        rescheduleImmediately();
-    }    
+    waitObject->processWaitingQueue = popFromLockQueue(waitObject->processWaitingQueue);
     currentProcess->blockAddress = NULL;
 }
 
 void multiLockIncrease(void){
+    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+    multiLock->processWaitingQueueIncrease = popFromLockQueue(multiLock->processWaitingQueueIncrease);
+    currentProcess->blockAddress = NULL;
 }
 
 void multiLockDecrease(void){    
+    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+    multiLock->processWaitingQueueDecrease = popFromLockQueue(multiLock->processWaitingQueueDecrease);
+    currentProcess->blockAddress = NULL;
 }
 
-void multiLockIncreaseWait(void){
+void multiLockIncreaseBlock(void){
+    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+    if (multiLock->lock == 0) return;
+    processesReady = __removeProcessFromList(processesReady, currentProcess);
+    multiLock->processWaitingQueueIncrease = __sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+    rescheduleImmediately();
 }
 
-void multiLockDecreaseWait(void){
+void multiLockDecreaseBlock(void){
+    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+    if (multiLock->lock < multiLock->maxLockVal) return;
+    processesReady = __removeProcessFromList(processesReady, currentProcess);
+    multiLock->processWaitingQueueDecrease = __sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+    rescheduleImmediately();
 }
 
 #ifdef DEBUG
@@ -79,7 +87,6 @@ void sayHi(void){
 
 //This function responds to an interrupt that can be generated at any runlevel.
 void svcHandler_main(char reqCode){
-    //UARTprintf("supervisor interrupt, id:%d\r\n",reqCode);
     switch(reqCode){
         case 0:
             rescheduleImmediately();
@@ -97,10 +104,10 @@ void svcHandler_main(char reqCode){
             multiLockDecrease();
             break;
         case 5:
-            multiLockIncreaseWait();
+            multiLockIncreaseBlock();
             break;
         case 6:
-            multiLockDecreaseWait();
+            multiLockDecreaseBlock();
             break;
 #ifdef DEBUG
         case 255:

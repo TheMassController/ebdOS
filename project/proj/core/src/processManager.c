@@ -7,6 +7,7 @@
 #include "uartstdio.h"
 #include "process.h"
 #include "supervisorCall.h" 
+#include "utils.h"
 //Responsible for creating and managing processes
 
 struct Process* processesReady = NULL;
@@ -28,18 +29,7 @@ void __processReturn(void){
 }
 
 void __addProcessToReady(struct Process* process){
-    if ( processesReady == NULL) {
-        processesReady = process;
-    } else if ( processesReady->priority < process->priority){
-        process->nextProcess = processesReady;
-        processesReady = process;
-    } else {
-        struct Process* thisProc;
-        for ( thisProc = processesReady; thisProc->nextProcess != NULL && thisProc->nextProcess->priority >= process->priority ; thisProc = thisProc->nextProcess);
-        process->nextProcess = thisProc->nextProcess;
-        thisProc->nextProcess = process;
-    }
-    
+    processesReady = __sortProcessIntoList(processesReady, process);
 }
 
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
@@ -78,8 +68,8 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
         return 2;
     }
     newProc->stack = stack;
-    //Because a stack moves up (from high to low) move the pointer to the last address and then move it back up to a position where lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
-    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); //Because we are lazy. The -1 is to prevent going above the stack (malloc returns addresses 0 -> asked-1)
+    //Because a stack moves up (from high to low) move the pointer to the last address and then move it back up to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
+    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); 
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR

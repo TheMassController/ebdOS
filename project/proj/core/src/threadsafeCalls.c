@@ -79,6 +79,7 @@ int __increaseMultiLockObjectBlock(MultiLockObject* object){
    while((retCode = __increaseMultiLockObject(object)) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
+        //You want to increase, so you wait for a decrease
         CALLSUPERVISOR(SVC_multiObjectDecrease);
     } 
     return retCode;  
@@ -88,6 +89,7 @@ int __decreaseMultiLockObjectBlock(MultiLockObject* object){
    while((retCode = __decreaseMultiLockObject(object)) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
+        //You want to decrease, so you wait for an increase
         CALLSUPERVISOR(SVC_multiObjectIncrease);
     } 
     return retCode;

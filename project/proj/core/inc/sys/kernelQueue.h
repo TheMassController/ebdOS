@@ -9,7 +9,7 @@ enum KQITEMTYPE
 {
     newprocess,
     deleteprocess,
-    addsleeper
+   addsleeper
 };
 
 struct KernelQueueItem{

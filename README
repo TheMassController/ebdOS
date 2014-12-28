@@ -1,6 +1,7 @@
 The goal of this project is to create my own little OS for the stellaris Launchpad. 
 
 The following things are requirements:
+
 -Premeptive Scheduling
 -Mutexing
 -Utalizing the full floating point support
@@ -20,4 +21,3 @@ https://launchpadlibrarian.net/160487135/readme.txt
 Notes:
 ROM vs not-ROM functions (ROM_SysCtlClockSet vs SysCtlClockSet), the ROM functions are hardcoded available on the hardware, the not-rom functions need to be linked to the software
 The printf functions of newlib cannot be used. Instead the TI UARTprintf is being used
-

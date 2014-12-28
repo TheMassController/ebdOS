@@ -12,6 +12,7 @@
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
 extern struct Process* sleepProcessList;
+extern struct Process* kernel;
 
 void rescheduleImmediately(void){
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
@@ -77,6 +78,10 @@ void multiLockDecreaseBlock(void){
     rescheduleImmediately();
 }
 
+void setKernelPrioMax(void){
+   kernel->priority = 255; 
+}
+
 #ifdef DEBUG
 void sayHi(void){
     UARTprintf("Hi from your favorite supervisor!\r\n");
@@ -106,6 +111,9 @@ void svcHandler_main(char reqCode){
             break;
         case 6:
             multiLockDecreaseBlock();
+            break;
+        case 7:
+            setKernelPrioMax();
             break;
 #ifdef DEBUG
         case 255:

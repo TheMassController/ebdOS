@@ -29,6 +29,7 @@ extern struct Process* currentProcess;
 extern struct Process* sleepProcess;
 extern struct Process* hibernateProcess;
 extern struct Process* processesReady;
+extern struct Process* kernel;
 extern struct KernelQueue* kernelQueue;
 
 extern void __sleepProcessFunc(void* param);
@@ -100,11 +101,12 @@ void setupHardware(void){
     //Creat pid 1: the kernel
     currentProcess = (struct Process*)malloc(sizeof(struct Process));
     currentProcess->pid = 1;
-    __createNewProcess(0, 67, "Kernel", NULL, NULL, 100);
-    struct Process* kernel = processesReady;
+    __createNewProcess(0, 67, "Kernel", NULL, NULL, 254);
+    kernel = processesReady;
     setPSP(kernel->stackPointer);
     free(currentProcess);
     currentProcess = kernel;
+    kernel->priority = 100;
     
     //Create the other two special processes: sleep and hibernate
     __createNewProcess(0, MINSTACKLEN, "SleepProcess", &__sleepProcessFunc, NULL, 255);

@@ -17,15 +17,7 @@
 
 unsigned sleepClocksPerMS = 0;
 extern struct Process* currentProcess;
-
-struct SleepingProcessStruct sleepProcessListStart;
-
-void addSleeperToList(struct SleepingProcessStruct* ptr){
-}
-
-void setSleepTimerWB(void){
-    
-}
+struct SleepingProcessStruct sleepProcessListHead;
 
 void sleepTimerWAInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
@@ -35,7 +27,6 @@ void sleepTimerWAInterrupt(void){
 }
 
 void sleepTimerWBInterrupt(void){
-    
 }
 
 unsigned getCurrentSleepTimerValue(void){
@@ -44,19 +35,14 @@ unsigned getCurrentSleepTimerValue(void){
 
 //Because a half ms is exactly 1 tick
 void __sleepHalfMS(long sleepTicks){
-    //TODO call kernel
-
-    //unsigned overflows = 0;
-    //sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
-    //while(sleepTicks < 0){
-    //    overflows++;
-    //    sleepTicks += MAXSLEEPTIMER;
-    //}
-
-    //currentProcess->sleepClockTime = sleepTicks;
-    //currentProcess->state |= STATE_SLEEP;
-    //Reschedule right the hell now 
-    CALLSUPERVISOR(SVC_reschedule);
+    unsigned overflows = 0;
+    sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
+    while(sleepTicks < 0){
+        overflows++;
+        sleepTicks += MAXSLEEPTIMER;
+    }
+    currentProcess->state |= STATE_SLEEP;
+    
 }
 
 //The millisecond sleeper
@@ -68,4 +54,15 @@ void sleepMS(unsigned ms){
 void sleepS(unsigned seconds){
     //recalculate to ms, then call the ms function
     __sleepHalfMS(seconds*1000*sleepClocksPerMS);
+}
+
+void __sleepHalfMSDelayBlock(long sleepticks){
+}
+
+void __sleepSDelayBlock(unsigned seconds){
+
+}
+
+void __sleepMSDelayBlock(unsigned ms){
+    
 }

@@ -9,8 +9,6 @@
 #include "stdlib.h" 
 #include "utils.h"
 
-//TODO check if a process was also sleeping, and if yes, remove it from the list of sleepers
-
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
 extern struct Process* sleepProcessList;

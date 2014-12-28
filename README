@@ -2,21 +2,24 @@ The goal of this project is to create my own little OS for the stellaris Launchp
 
 The following things are requirements:
 
--Premeptive Scheduling
--Mutexing
--Utalizing the full floating point support
--Working Malloc
+* Premeptive Scheduling
+* Mutexing
+* Utalizing the full floating point support
+* Working Malloc
 
 Used Sources:
--VersdOS #The starting basis
--https://coactionos.com/projects/coactionos/wiki/Context_Switching_on_the_ARM_Cortex_M3 #Context switching in general
--http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/BABCAEDD.html #Store and load multiple registers
+
+* VersdOS #The starting basis
+* https://coactionos.com/projects/coactionos/wiki/Context_Switching_on_the_ARM_Cortex_M3 #Context switching in general
+* http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/BABCAEDD.html #Store and load multiple registers
 
 Data on C args and on other stuffz:
--https://eehusky.wordpress.com/2012/12/04/using-gcc-with-ti-stellaris-launchpad-a-more-in-depth-look/
+
+* https://eehusky.wordpress.com/2012/12/04/using-gcc-with-ti-stellaris-launchpad-a-more-in-depth-look/
 
 Compiling for hard-float:
-https://launchpadlibrarian.net/160487135/readme.txt
+
+* https://launchpadlibrarian.net/160487135/readme.txt
 
 Notes:
 ROM vs not-ROM functions (ROM_SysCtlClockSet vs SysCtlClockSet), the ROM functions are hardcoded available on the hardware, the not-rom functions need to be linked to the software

@@ -33,6 +33,7 @@ void __addProcessToReady(struct Process* process){
 }
 
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
+    if (priority == 255) priority = 254; //Max 254, 255 is kernel only
     if (currentProcess->pid != 1) {
         return 3;
     } 
@@ -54,6 +55,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->priority = priority;
     newProc->state = STATE_READY;
     newProc->blockAddress = NULL;
+    newProc->sleepObjAddress = NULL;
     newProc->name = (char*)malloc(strlen(name)+1);
     if (newProc->name == NULL){
         free(newProc);

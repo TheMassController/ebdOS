@@ -10,7 +10,9 @@ struct SleepingProcessStruct{
     unsigned sleepUntil;
 };
 
-void setSleepTimerWB(void);
-void addSleeperToList(struct SleepingProcessStruct* ptr);
+void __setSleepTimerWB(void);
+void __addSleeperToList(struct SleepingProcessStruct* ptr);
+void __sleepActive(unsigned seconds);
+void __sleepMSActive(unsigned seconds);
 
 #endif //SYSSLEEP_H

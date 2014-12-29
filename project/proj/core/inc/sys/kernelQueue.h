@@ -39,7 +39,6 @@ struct DeleteProcess{
 };
 
 struct KernelQueueItem* __popItem(void);
-void __addSleeper(struct Process* process, unsigned sleepTicks, unsigned overflows, int removeFromReady);
 void createProcess(unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority);
 void __deleteProcess(struct Process* processToDelete);
 #endif //KERNELQUEUE_h

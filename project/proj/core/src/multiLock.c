@@ -4,6 +4,12 @@
 #include "sleep.h"
 #include "stdlib.h"
 
+extern struct Process* currentProcess;
+
+//Returns new value of multilockobject, or -1 in case of failure
+int __increaseMultiLockObject(MultiLockObject* addr);
+int __decreaseMultiLockObject(MultiLockObject* addr);
+
 MultiLockObject* __createMultiLockObject(int maxval){
     if (maxval <= 0) maxval = 1;
     MultiLockObject* object = (MultiLockObject*)malloc(sizeof(MultiLockObject));

@@ -1,7 +1,7 @@
 #include "threadsafeCalls.h"
 #include "process.h"
 #include "supervisorCall.h"
-#include "sleep.h"
+#include "sysSleep.h"
 #include "stdlib.h"
 
 extern struct Process* currentProcess;
@@ -77,8 +77,9 @@ int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTi
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
         //You want to increase, so you wait for a decrease
+        __sleepMSDelayBlock(msTimeout);
         CALLSUPERVISOR(SVC_multiObjectWaitForDecrease);
-        sleepMS(msTimeout);
+        __sleepDelayBlockWakeup();
         retCode = increaseMultiLock(object);
     } 
     return retCode;  
@@ -90,8 +91,9 @@ int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTi
    if ((retCode = decreaseMultiLock(object)) == -1){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
+        __sleepMSDelayBlock(msTimeout);
         CALLSUPERVISOR(SVC_multiObjectWaitForIncrease);
-        sleepMS(msTimeout);
+        __sleepDelayBlockWakeup();
         retCode = decreaseMultiLock(object);
     } 
     return retCode;  

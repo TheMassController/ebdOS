@@ -35,12 +35,13 @@ void __lockObjectBlock(SingleLockObject* object){
      //TODO maybe implement a way to increase the priority of the process that holds this mutex, if the prio of the current process is higher
 }
 
-int __lockObjectBlockTimeout(SingleLockObject* object, unsigned timeout){
+int __lockObjectBlockTimeout(SingleLockObject* object, unsigned msTimeout){
      if (!__lockObjectNoblock(object)){
         currentProcess->blockAddress = object;
         currentProcess->state |= STATE_WAIT;
+        __sleepMSDelayBlock(msTimeout);
         CALLSUPERVISOR(SVC_objectLock);
-        sleepMS(timeout);
+        __sleepDelayBlockWakeup();
     }
     return __lockObjectNoblock(object);
 }

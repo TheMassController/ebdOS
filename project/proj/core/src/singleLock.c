@@ -10,11 +10,6 @@ extern struct Process* currentProcess;
 unsigned __lockSingleLockObject(SingleLockObject* addr);
 void __unlockSingleLockObject(SingleLockObject* addr);
 
-//Returns new value of multilockobject, or -1 in case of failure
-int __increaseMultiLockObject(MultiLockObject* addr);
-int __decreaseMultiLockObject(MultiLockObject* addr);
-
-
 SingleLockObject* __createSingleLockObject(void){
     SingleLockObject* object = (SingleLockObject*)malloc(sizeof(SingleLockObject));
     object->lock = 0;

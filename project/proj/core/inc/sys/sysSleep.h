@@ -12,7 +12,8 @@ struct SleepingProcessStruct{
 
 void __setSleepTimerWB(void);
 void __addSleeperToList(struct SleepingProcessStruct* ptr);
-void __sleepActive(unsigned seconds);
-void __sleepMSActive(unsigned seconds);
+
+void __sleepMSDelayBlock(unsigned ms);
+void __sleepDelayBlockWakeup(void);
 
 #endif //SYSSLEEP_H

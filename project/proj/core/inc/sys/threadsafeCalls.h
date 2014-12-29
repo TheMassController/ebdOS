@@ -25,7 +25,7 @@ void __deleteSingleLockObject(SingleLockObject* object);
 
 int __lockObjectNoblock(SingleLockObject* object);
 void __lockObjectBlock(SingleLockObject* object);
-int __lockObjectBlockTimeout(SingleLockObject* object, unsigned timeout);
+int __lockObjectBlockTimeout(SingleLockObject* object, unsigned msTimeout);
 void __releaseObject(SingleLockObject* object);
 int __singleLockObjectIsLocked(SingleLockObject* object);
 

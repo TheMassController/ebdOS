@@ -59,10 +59,9 @@ void sleepS(unsigned seconds){
 void __sleepHalfMSDelayBlock(long sleepticks){
 }
 
-void __sleepSDelayBlock(unsigned seconds){
-
-}
-
 void __sleepMSDelayBlock(unsigned ms){
     
+}
+
+void __sleepDelayBlockWakeup(void){
 }

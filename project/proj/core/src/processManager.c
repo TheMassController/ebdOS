@@ -8,12 +8,16 @@
 #include "process.h"
 #include "supervisorCall.h" 
 #include "utils.h"
+#include "lm4f120h5qr.h" //Hardware regs
+
 //Responsible for creating and managing processes
 
 struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
-struct Process* sleepProcessList = NULL;
 extern struct Process* currentProcess;
+extern struct Process* nextProcess;
+struct Process* sleepProcess; //Runs when no other process wants to run
+struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
 //Usefull for selecting the pids
 static unsigned char nextPid = 1; //Short, has to be able to become 256
 //TODO create system to find out which pids are in use and which not.
@@ -29,7 +33,13 @@ void __processReturn(void){
 }
 
 void __addProcessToReady(struct Process* process){
-    processesReady = __sortProcessIntoList(processesReady, process);
+    if (!__processInList(processesReady, process)){
+        processesReady = __sortProcessIntoList(processesReady, process);
+    }
+}
+
+void __removeProcessFromReady(struct Process* process){
+    __removeProcessFromList(processesReady, process);
 }
 
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
@@ -100,6 +110,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 
 
 void __sleepProcessFunc(void* param){
+    UARTprintf("sleepProcessFunc!\r\n");
     while(1){
         waitForInterrupt();
     }

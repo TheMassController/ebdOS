@@ -41,4 +41,8 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 
 void __addProcessToReady(struct Process* process);
 
+void __removeProcessFromReady(struct Process* process);
+
+int __processInReadyList(struct Process* process);
+
 #endif

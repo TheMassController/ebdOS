@@ -8,6 +8,7 @@
 #include "threadsafeCalls.h" 
 #include "stdlib.h" 
 #include "utils.h"
+#include "sysSleep.h"
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
@@ -23,8 +24,7 @@ struct Process* popFromLockQueue(struct Process* listHead){
     if (listHead != NULL){
         struct Process* item = listHead;
         if (item->state & STATE_SLEEP){
-            //TODO remove from sleep list
-            //TODO update counter
+            __removeSleeperFromList(item); 
         }
         item->state = 0;
         item->blockAddress = NULL;
@@ -38,7 +38,7 @@ struct Process* popFromLockQueue(struct Process* listHead){
 void processBlockedSingleLock(void){
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
     if (!waitObject->lock) return;
-    processesReady = __removeProcessFromList(processesReady, currentProcess);
+    __removeProcessFromReady(currentProcess);
     waitObject->processWaitingQueue = __sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
     rescheduleImmediately();
 }
@@ -65,7 +65,7 @@ void multiLockDecrease(void){
 void multiLockIncreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
     if (multiLock->lock == 0) return;
-    processesReady = __removeProcessFromList(processesReady, currentProcess);
+    __removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueIncrease = __sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
     rescheduleImmediately();
 }
@@ -73,13 +73,22 @@ void multiLockIncreaseBlock(void){
 void multiLockDecreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
     if (multiLock->lock < multiLock->maxLockVal) return;
-    processesReady = __removeProcessFromList(processesReady, currentProcess);
+    __removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueDecrease = __sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
     rescheduleImmediately();
 }
 
 void setKernelPrioMax(void){
    kernel->priority = 255; 
+}
+
+void fallAsleep(void){
+    __addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    rescheduleImmediately();
+}
+
+void fallAsleepNoBlock(void){
+    __addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
 }
 
 #ifdef DEBUG
@@ -115,6 +124,11 @@ void svcHandler_main(char reqCode){
         case 7:
             setKernelPrioMax();
             break;
+        case 8:
+            fallAsleep();
+            break;
+        case 9:
+            fallAsleepNoBlock();
 #ifdef DEBUG
         case 255:
             sayHi();

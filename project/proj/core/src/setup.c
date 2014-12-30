@@ -91,18 +91,26 @@ void setupHardware(void){
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); //Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); //Setup wide timer 0, part A.
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); //Setup the pre-scaler
-    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); //Load it with initial value 0
-    ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); //Let it run until it reaches max
+    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); //Load it with initial value unsigned32_max
+    ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); //Let it run until it reaches 0
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Clear the correct interrupt
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
     ROM_IntEnable(INT_WTIMER0A);
     sleepClocksPerMS = 2;
+
+    //Configure timer B, the other vital timer in sleeping
+    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); //Setup wide timer 0, part A.
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, 40000); //Setup the pre-scaler
+    ROM_TimerIntClear(WTIMER0_BASE, TIMER_CAPB_MATCH); //Let it interrupt on match
+    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_CAPB_MATCH); //Enable the correct interrupt
+    ROM_IntEnable(INT_WTIMER0B);
  
     //Creat pid 1: the kernel
     currentProcess = (struct Process*)malloc(sizeof(struct Process));
     currentProcess->pid = 1;
-    __createNewProcess(0, 67, "Kernel", NULL, NULL, 254);
+    __createNewProcess(0, 67, "Kernel", NULL, NULL, 100);
     kernel = processesReady;
+    kernel->stackPointer = (int*)((((long)kernel->stack) + 67 - 4) & (long)0xFFFFFFFC );
     setPSP(kernel->stackPointer);
     free(currentProcess);
     currentProcess = kernel;
@@ -111,10 +119,11 @@ void setupHardware(void){
     //Create the other two special processes: sleep and hibernate
     __createNewProcess(0, MINSTACKLEN, "SleepProcess", &__sleepProcessFunc, NULL, 255);
     __createNewProcess(0, MINSTACKLEN, "HibernateProcess", &__hibernateProcessFunc, NULL, 255);
-    hibernateProcess = processesReady->nextProcess->nextProcess; //Order: kernel, sleepprocess, hibernateprocess
-    processesReady->nextProcess->nextProcess = NULL;
     sleepProcess = processesReady->nextProcess;
-    processesReady->nextProcess = NULL; 
+    sleepProcess->nextProcess = NULL;
+    hibernateProcess = processesReady;
+    hibernateProcess->nextProcess = NULL;
+    processesReady = kernel;
 
     //Create the kernelQueue
     kernelQueue = (struct KernelQueue*)malloc(sizeof(struct KernelQueue));

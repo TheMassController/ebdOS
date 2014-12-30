@@ -11,6 +11,9 @@
 
 #define SVC_setKernelPrioMax "7"
 
+#define SVC_sleep "8"
+#define SVC_sleepNoBlock "9"
+
 #ifdef DEBUG
 #define SVC_test "255"
 #endif //DEBUG

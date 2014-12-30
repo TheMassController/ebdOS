@@ -73,6 +73,12 @@ int mutexTest(void){
 }
 
 int main(void){
+    //TODO
+    //Test utils.c funcs
+    //Test sleep
+    //Test mutex
+    //rest semaphores
+    //Test the combination of sleep and mutex (blockandwait)
     Semaphore* semaphore = createSemaphore(3);
     UARTprintf("MaxVal: %d\r\n", getSemaphoreMaxval(semaphore));
     for (int i = 0; i < 5; ++i){

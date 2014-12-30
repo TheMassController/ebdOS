@@ -8,6 +8,8 @@ struct Process* __sortProcessIntoList(struct Process* listHead, struct Process* 
 
 struct Process* __removeProcessFromList(struct Process* listHead, struct Process* item);
 
+int __processInList(struct Process* listHead, struct Process* proc);
+
 int __inInterrupt(void);
 
 #endif //UTILS_H

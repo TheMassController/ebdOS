@@ -39,3 +39,11 @@ struct Process* __removeProcessFromList(struct Process* listHead, struct Process
     }
     return listHead;
 }
+
+int __processInList(struct Process* listHead, struct Process* proc){
+    while (listHead != NULL){
+        if (listHead == proc) return 1;
+        listHead = listHead->nextProcess; 
+    }
+    return 0; 
+}

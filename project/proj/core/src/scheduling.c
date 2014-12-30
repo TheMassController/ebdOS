@@ -39,8 +39,9 @@ void schedule(void){
     if (nextProcess == NULL){
         nextProcess = sleepProcess;
     } 
-    //Generate the correct interrupt to actually switch context
-    NVIC_INT_CTRL_R |= (1<<28);
+    if (nextProcess != currentProcess){
+        NVIC_INT_CTRL_R |= (1<<28);
+    }
 }
 
 //For future reference

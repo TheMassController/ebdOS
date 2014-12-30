@@ -5,6 +5,7 @@
 extern struct Process* currentProcess;
 
 void kernelMain(void){
+    currentProcess->state |= STATE_WAIT;
     while(1){
         
     } 

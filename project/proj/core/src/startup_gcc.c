@@ -61,6 +61,7 @@ void pendSVHandler(void);
 void svcHandler(void);
 //Sleep timer interrupt
 void sleepTimerWAInterrupt(void);
+void sleepTimerWBInterrupt(void);
 
 //*****************************************************************************
 //
@@ -183,7 +184,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 5 subtimer A
     IntDefaultHandler,                      // Timer 5 subtimer B
     sleepTimerWAInterrupt,                      // Wide Timer 0 subtimer A
-    IntDefaultHandler,                      // Wide Timer 0 subtimer B
+    sleepTimerWBInterrupt,                      // Wide Timer 0 subtimer B
     IntDefaultHandler,                      // Wide Timer 1 subtimer A
     IntDefaultHandler,                      // Wide Timer 1 subtimer B
     IntDefaultHandler,                      // Wide Timer 2 subtimer A

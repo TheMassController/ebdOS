@@ -11,8 +11,10 @@
 #include "supervisorCall.h"
 #include "mutex.h" 
 #include "semaphore.h"
+#include "validation.h"
 
 extern struct Process* currentProcess;
+extern struct Process* processesReady;
 
 int validationStuffz(void){
     int testRet = testUARTstdio();
@@ -74,20 +76,23 @@ int mutexTest(void){
 
 int main(void){
     //TODO
-    //Test utils.c funcs
     //Test sleep
     //Test mutex
     //rest semaphores
     //Test the combination of sleep and mutex (blockandwait)
-    Semaphore* semaphore = createSemaphore(3);
-    UARTprintf("MaxVal: %d\r\n", getSemaphoreMaxval(semaphore));
-    for (int i = 0; i < 5; ++i){
-        UARTprintf("semaphore increasing: %d\r\n", increaseSemaphoreNonBlocking(semaphore));
-        UARTprintf("Semaphore currentval: %d\r\n", getSemaphoreCurrentVal(semaphore));
-    }
-    for (int i = 4; i >=0 ; --i){
-        UARTprintf("Semaphore decreasing: %d\r\n", decreaseSemaphoreNonBlocking(semaphore));
-        UARTprintf("Semaphore currentval: %d\r\n", getSemaphoreCurrentVal(semaphore));
-    }
+    return testScheduler();
     
+    __createNewProcess(0, 300, "testProcess2", &testProcess1, NULL, 99);
+    __createNewProcess(0, 300, "testProcess1", &testProcess1, NULL, 100);  
+    __createNewProcess(0, 300, "testProcess4", &testProcess1, NULL, 96);
+    __createNewProcess(0, 300, "testProcess3", &testProcess1, NULL, 97);
+    struct Process* proc1 = processesReady->nextProcess;
+    struct Process* proc2 = proc1->nextProcess;
+    struct Process* proc3 = proc2->nextProcess;
+    //struct Process* proc4 = proc3->nextProcess;
+    __removeProcessFromReady(proc3);
+    UARTprintf("%d\r\n",__processInReadyList(proc1));
+    UARTprintf("%d\r\n",__processInReadyList(proc3));
+    __addProcessToReady(proc1);
+    while(1);
 }

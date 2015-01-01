@@ -83,6 +83,7 @@ void setKernelPrioMax(void){
 }
 
 void fallAsleep(void){
+    __removeProcessFromReady(currentProcess);
     __addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
     rescheduleImmediately();
 }
@@ -129,6 +130,7 @@ void svcHandler_main(char reqCode){
             break;
         case 9:
             fallAsleepNoBlock();
+            break;
 #ifdef DEBUG
         case 255:
             sayHi();

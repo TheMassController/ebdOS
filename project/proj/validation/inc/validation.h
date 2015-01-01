@@ -7,3 +7,4 @@ int heapTest(void);
 int testProcessStructure(void);
 int testGPIO(void);
 int testSVCcall(void);
+int testScheduler(void);

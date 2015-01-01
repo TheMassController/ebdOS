@@ -89,7 +89,7 @@ void setupHardware(void){
     //2 clocks is a ms, 2000 clocks is a second
     //The timer runs from high to low
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); //Enable the timer
-    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); //Setup wide timer 0, part A.
+    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); //Setup wide timer 0, part A.
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); //Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); //Load it with initial value unsigned32_max
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); //Let it run until it reaches 0
@@ -99,10 +99,9 @@ void setupHardware(void){
     sleepClocksPerMS = 2;
 
     //Configure timer B, the other vital timer in sleeping
-    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); //Setup wide timer 0, part A.
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, 40000); //Setup the pre-scaler
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_CAPB_MATCH); //Let it interrupt on match
-    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_CAPB_MATCH); //Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); //Let it interrupt on match
+    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); //Enable the correct interrupt
     ROM_IntEnable(INT_WTIMER0B);
  
     //Creat pid 1: the kernel

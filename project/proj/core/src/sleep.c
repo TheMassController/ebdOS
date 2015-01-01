@@ -15,6 +15,8 @@
 #include "stdlib.h"
 #include "utils.h"
 
+#include "stdint.h"
+
 #define MAXSLEEPTIMER 4294967295
 
 unsigned sleepClocksPerMS = 0;
@@ -45,6 +47,8 @@ void setSleepTimerWB(void){
                 __addProcessToReady(sleepProcessListHead->process);
                 sleepProcessListHead = sleepProcessListHead->nextPtr;
             } else {
+                UARTprintf("timer set!\r\n");
+                nextToWakeUp = sleepProcessListHead;
                 ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
                 ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepProcessListHead->sleepUntil);
                 ROM_TimerEnable(WTIMER0_BASE, TIMER_B); 
@@ -54,10 +58,15 @@ void setSleepTimerWB(void){
 }
 
 void sleepTimerWBInterrupt(void){
-    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPB_MATCH|TIMER_CAPB_EVENT|TIMER_TIMB_TIMEOUT);
+    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_TIMB_MATCH);
+    UARTprintf("Dikke interrupt, jonge!\r\n");
+    //TODO state test and clearance
     __addProcessToReady(nextToWakeUp->process);
     sleepProcessListHead = sleepProcessListHead->nextPtr;
+    nextToWakeUp = NULL;
     setSleepTimerWB();
+    NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
+    NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
 void __addSleeperToList(struct SleepingProcessStruct* ptr){
@@ -98,9 +107,10 @@ unsigned getCurrentSleepTimerValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }
 
-void prepareSleep(long sleepTicks){
+void prepareSleep(int64_t sleepTicks){
     unsigned overflows = 0;
-    sleepTicks = getCurrentSleepTimerValue() - sleepTicks;
+    int64_t curval = (int64_t)getCurrentSleepTimerValue();
+    sleepTicks = curval - sleepTicks;
     while(sleepTicks < 0){
         overflows++;
         sleepTicks += MAXSLEEPTIMER;
@@ -109,7 +119,7 @@ void prepareSleep(long sleepTicks){
     struct SleepingProcessStruct* sleepObj = (struct SleepingProcessStruct*)malloc(sizeof(struct SleepingProcessStruct));
     sleepObj->process = currentProcess;
     sleepObj->overflows = overflows;
-    sleepObj->sleepUntil = sleepTicks;
+    sleepObj->sleepUntil = (unsigned)sleepTicks;
     currentProcess->sleepObjAddress = (void*) sleepObj;
 }
 

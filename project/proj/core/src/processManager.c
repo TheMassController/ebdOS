@@ -32,6 +32,10 @@ void __processReturn(void){
     }
 }
 
+int __processInReadyList(struct Process* process){
+    return __processInList(processesReady, process);
+}
+
 void __addProcessToReady(struct Process* process){
     if (!__processInList(processesReady, process)){
         processesReady = __sortProcessIntoList(processesReady, process);

@@ -5,7 +5,7 @@
 struct Process* __sortProcessIntoList(struct Process* listHead, struct Process* item){
     struct Process* current = listHead;
     struct Process* previous = NULL;
-    while (current != NULL && current->priority > item->priority){
+    while (current != NULL && current->priority >= item->priority){
         previous = current;
         current = current->nextProcess;
     }

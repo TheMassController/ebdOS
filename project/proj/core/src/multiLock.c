@@ -47,7 +47,7 @@ int __increaseMultiLockObjectBlock(MultiLockObject* object){
    int retCode;
    while((retCode = increaseMultiLock(object)) == -1){
         currentProcess->blockAddress = object;
-        currentProcess->state |= STATE_WAIT;
+        currentProcess->state |= STATE_DEC_WAIT;
         //You want to increase, so you wait for a decrease
         CALLSUPERVISOR(SVC_multiObjectWaitForDecrease);
     } 
@@ -57,7 +57,7 @@ int __decreaseMultiLockObjectBlock(MultiLockObject* object){
    int retCode;
    while((retCode = decreaseMultiLock(object)) == -1){
         currentProcess->blockAddress = object;
-        currentProcess->state |= STATE_WAIT;
+        currentProcess->state |= STATE_INC_WAIT;
         //You want to decrease, so you wait for an increase
         CALLSUPERVISOR(SVC_multiObjectWaitForIncrease);
     } 
@@ -75,7 +75,7 @@ int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTi
    int retCode;
    if ((retCode = increaseMultiLock(object)) == -1){
         currentProcess->blockAddress = object;
-        currentProcess->state |= STATE_WAIT;
+        currentProcess->state |= STATE_DEC_WAIT;
         //You want to increase, so you wait for a decrease
         __sleepMSDelayBlock(msTimeout);
         CALLSUPERVISOR(SVC_multiObjectWaitForDecrease);
@@ -90,7 +90,7 @@ int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTi
    int retCode;
    if ((retCode = decreaseMultiLock(object)) == -1){
         currentProcess->blockAddress = object;
-        currentProcess->state |= STATE_WAIT;
+        currentProcess->state |= STATE_INC_WAIT;
         __sleepMSDelayBlock(msTimeout);
         CALLSUPERVISOR(SVC_multiObjectWaitForIncrease);
         __sleepDelayBlockWakeup();

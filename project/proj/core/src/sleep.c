@@ -14,6 +14,7 @@
 #include "sysSleep.h"
 #include "stdlib.h"
 #include "utils.h"
+#include "threadsafeCalls.h"
 
 #include "stdint.h"
 
@@ -30,6 +31,23 @@ void sleepTimerWAInterrupt(void){
     //TODO decrease overflows
 }
 
+void wakeupProcess(struct SleepingProcessStruct* ptr){
+    if (ptr->process->state & STATE_WAIT){
+        if (ptr->process->state & STATE_LOCKED){
+            __removeProcessFromList(((struct SingleLockObject*)ptr->process->blockAddress)->processWaitingQueue, ptr->process);
+        }
+        if (ptr->process->state & STATE_INC_WAIT){
+            __removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueIncrease, ptr->process);
+        }
+        if (ptr->process->state & STATE_DEC_WAIT){
+            __removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueDecrease, ptr->process);
+        }
+    }
+    ptr->process->state = STATE_READY;
+    __addProcessToReady(ptr->process);
+
+}
+
 void setSleepTimerWB(void){
     while (sleepProcessListHead != nextToWakeUp){
         if (sleepProcessListHead == NULL){
@@ -44,10 +62,9 @@ void setSleepTimerWB(void){
         } else {
             unsigned curValWTA = getCurrentSleepTimerValue();
             if (curValWTA <= sleepProcessListHead->sleepUntil){
-                __addProcessToReady(sleepProcessListHead->process);
+                wakeupProcess(sleepProcessListHead);
                 sleepProcessListHead = sleepProcessListHead->nextPtr;
             } else {
-                UARTprintf("timer set!\r\n");
                 nextToWakeUp = sleepProcessListHead;
                 ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
                 ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepProcessListHead->sleepUntil);
@@ -59,9 +76,7 @@ void setSleepTimerWB(void){
 
 void sleepTimerWBInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_TIMB_MATCH);
-    UARTprintf("Dikke interrupt, jonge!\r\n");
-    //TODO state test and clearance
-    __addProcessToReady(nextToWakeUp->process);
+    wakeupProcess(nextToWakeUp);
     sleepProcessListHead = sleepProcessListHead->nextPtr;
     nextToWakeUp = NULL;
     setSleepTimerWB();
@@ -72,7 +87,7 @@ void sleepTimerWBInterrupt(void){
 void __addSleeperToList(struct SleepingProcessStruct* ptr){
     struct SleepingProcessStruct* current = sleepProcessListHead;
     struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current->overflows < ptr->overflows && current->sleepUntil > ptr->sleepUntil){
+    while(current != NULL && current->overflows <= ptr->overflows && current->sleepUntil > ptr->sleepUntil){
         previous = current;
         current = current->nextPtr;
     }

@@ -10,6 +10,11 @@
 #include "utils.h"
 #include "lm4f120h5qr.h" //Hardware regs
 
+#ifdef DEBUG
+#include "malloc.h"
+#include "uartstdio.h"
+#endif //DEBUG
+
 //Responsible for creating and managing processes
 
 struct Process* processesReady = NULL;
@@ -78,6 +83,11 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     strcpy(newProc->name,name);
     //Create the stack.
     void* stack = malloc(stacklen);
+#ifdef DEBUG
+    struct mallinfo malstruct = mallinfo();
+    UARTprintf("arena: %d\r\nordblks: %d\r\nsmblks: %d\r\nhblks: %d\r\nhblkhd %d\r\n",malstruct.arena, malstruct.ordblks, malstruct.smblks, malstruct.hblks, malstruct.hblkhd);
+    UARTprintf("usmblks: %d\r\nfsmblks: %d\r\nuordblks: %d\r\nfordblks: %d\r\nkeepcost: %d\r\n",malstruct.usmblks, malstruct.fsmblks, malstruct.uordblks, malstruct.fordblks, malstruct.keepcost);
+#endif
     if (stack == NULL){
         free(newProc->name);
         free(newProc);
@@ -114,14 +124,12 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 
 
 void __sleepProcessFunc(void* param){
-    UARTprintf("sleepProcessFunc!\r\n");
     while(1){
         waitForInterrupt();
     }
 }
 
 void __hibernateProcessFunc(void* param){
-    UARTprintf("No more processes...\r\n");
     __sleepProcessFunc(NULL);
     //TODO make it, you know, hibernate
 }

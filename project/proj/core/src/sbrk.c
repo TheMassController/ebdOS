@@ -13,7 +13,7 @@ extern char _stack_buffer; //The minimal difference between stack and heap
 //Heap grows up, stack grows down
 
 caddr_t _sbrk(int incr){
-	char* returnVal = -1;	
+	char* returnVal = (char*)-1;	
 	if (heap_end == NULL){ //Init
 		heap_end = &_ebss;
 	}
@@ -28,7 +28,7 @@ caddr_t _sbrk(int incr){
 	} 
 #ifdef DEBUG
     UARTprintf("(F) MSP: 0x%X, heap_end 0x%X, diff %u\r\n", getMSP(), heap_end, (unsigned)getMSP() - (unsigned)heap_end);
-    if (returnVal == -1){
+    if (returnVal == (char*)-1){
         UARTprintf("Heap full\r\n");
     }
 #endif

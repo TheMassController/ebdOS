@@ -1,4 +1,6 @@
 //Queue source code
+
+//Just reference, this file is marked for deletion
 #include "queue.h" 
 #include "stdlib.h"
 
@@ -15,12 +17,12 @@ Queue* createQueue(void){
     return queue;
 }
 
-void deleteQueue(Queue* queue){
+//void deleteQueue(Queue* queue){
     //First: pop everything from the queue
     //Then: delete mutex
     //And at the very end: delete the qeue itself
     //TODO implement
-}
+//}
 
 //ONLY CALL THIS FUNCTION WHEN THE MUTEX IS LOCKED!!!
 void __addToQeue(Queue* queue, QueueItem* item){

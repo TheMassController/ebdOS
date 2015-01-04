@@ -3,7 +3,7 @@
 #include "uartstdio.h"
 #include "asmUtils.h"
 
-void faultISRHandler(unsigned int * hardfault_args){
+void faultISRHandler(void){
     UARTprintf("Hard fault\r\nReset the device to continue...\r\n");
     while(1);
 }

@@ -11,7 +11,11 @@
 
 #define STATE_READY 0x0
 #define STATE_SLEEP 0x1
-#define STATE_WAIT 0x2
+//Three wait states, to imply which type of object blockAddress is and which queue needs to be tuched when waking up from sleep
+#define STATE_WAIT 0xD //A flag to surround them all
+#define STATE_LOCKED 0x2
+#define STATE_INC_WAIT 0x4
+#define STATE_DEC_WAIT 0x8
 
 //The order of the first two is vital to make the assembly work correctly
 struct Process {

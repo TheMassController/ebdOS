@@ -1,4 +1,4 @@
-_stack_buffer = 1024; /*128 byte buffer between HEAP and STACK*/
+_stack_buffer = 128; /*128 byte buffer between HEAP and STACK*/
 
 MEMORY
 {
@@ -31,6 +31,7 @@ SECTIONS
         *(.bss*)
         *(COMMON)
         _ebss = .;
+        _start_heap = .;
     } > SRAM
 
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/

@@ -20,6 +20,7 @@
 #include "mutex.h" //Everything related to mutexes
 #include "reentrantMutex.h" //Everything related to mutexes
 #include "kernelQueue.h" //For the initialization of the kernelQueue
+#include "malloc.h"
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
 #define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
@@ -103,7 +104,7 @@ void setupHardware(void){
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); //Let it interrupt on match
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); //Enable the correct interrupt
     ROM_IntEnable(INT_WTIMER0B);
- 
+
     //Creat pid 1: the kernel
     currentProcess = (struct Process*)malloc(sizeof(struct Process));
     currentProcess->pid = 1;
@@ -132,7 +133,12 @@ void setupHardware(void){
     kernelQueue->firstItem = NULL;
 
     //Initialize malloc mutex
-    mallocMutex = createReentrantMutex();
+    //mallocMutex = createReentrantMutex();
+#ifdef DEBUG
+    struct mallinfo malstruct = mallinfo();
+    UARTprintf("arena: %d\r\nordblks: %d\r\nsmblks: %d\r\nhblks: %d\r\nhblkhd %d\r\n",malstruct.arena, malstruct.ordblks, malstruct.smblks, malstruct.hblks, malstruct.hblkhd);
+    UARTprintf("usmblks: %d\r\nfsmblks: %d\r\nuordblks: %d\r\nfordblks: %d\r\nkeepcost: %d\r\n",malstruct.usmblks, malstruct.fsmblks, malstruct.uordblks, malstruct.fordblks, malstruct.keepcost);
+#endif
 }
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
@@ -140,4 +146,9 @@ void finishBoot(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending: kick-off the scheduler
+#ifdef DEBUG
+    struct mallinfo malstruct = mallinfo();
+    UARTprintf("arena: %d\r\nordblks: %d\r\nsmblks: %d\r\nhblks: %d\r\nhblkhd %d\r\n",malstruct.arena, malstruct.ordblks, malstruct.smblks, malstruct.hblks, malstruct.hblkhd);
+    UARTprintf("usmblks: %d\r\nfsmblks: %d\r\nuordblks: %d\r\nfordblks: %d\r\nkeepcost: %d\r\n",malstruct.usmblks, malstruct.fsmblks, malstruct.uordblks, malstruct.fordblks, malstruct.keepcost);
+#endif
 }

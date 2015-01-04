@@ -29,7 +29,7 @@ int __lockObjectNoblock(SingleLockObject* object){
 void __lockObjectBlock(SingleLockObject* object){
    while(!__lockSingleLockObject(object)){
         currentProcess->blockAddress = object;
-        currentProcess->state |= STATE_WAIT;
+        currentProcess->state |= STATE_LOCKED;
         CALLSUPERVISOR(SVC_objectLock);
     } 
      //TODO maybe implement a way to increase the priority of the process that holds this mutex, if the prio of the current process is higher
@@ -38,7 +38,7 @@ void __lockObjectBlock(SingleLockObject* object){
 int __lockObjectBlockTimeout(SingleLockObject* object, unsigned msTimeout){
      if (!__lockObjectNoblock(object)){
         currentProcess->blockAddress = object;
-        currentProcess->state |= STATE_WAIT;
+        currentProcess->state |= STATE_LOCKED;
         __sleepMSDelayBlock(msTimeout);
         CALLSUPERVISOR(SVC_objectLock);
         __sleepDelayBlockWakeup();

@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "lm4f120h5qr.h" //Hardware regs
 
+#define UNUSED(x) (void)(x) //To suppress compiler warning
+
 #ifdef DEBUG
 #include "malloc.h"
 #include "uartstdio.h"
@@ -124,12 +126,14 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 
 
 void __sleepProcessFunc(void* param){
+    UNUSED(param);
     while(1){
         waitForInterrupt();
     }
 }
 
 void __hibernateProcessFunc(void* param){
+    UNUSED(param);
     __sleepProcessFunc(NULL);
     //TODO make it, you know, hibernate
 }

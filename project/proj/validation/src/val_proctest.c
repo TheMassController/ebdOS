@@ -6,16 +6,20 @@
 
 extern struct Process* processesReady;
 extern struct Process* kernel;
-volatile extern struct Process* nextProcess;
-volatile extern struct Process* currentProcess;
+extern struct Process* nextProcess;
+extern struct Process* currentProcess;
+
+#define UNUSED(x) (void)(x) //To suppress compiler warning
 
 void testFunction1(void* param){
+    UNUSED(param);
     UARTprintf("testFunction1 says hi!\r\n");
     nextProcess = processesReady->nextProcess;
     NVIC_INT_CTRL_R |= (1<<28);
 }
 
 void testFunction2(void* param){
+    UNUSED(param);
     UARTprintf("testFunction2 says hi!\r\n");
     nextProcess = kernel;
     NVIC_INT_CTRL_R |= (1<<28);

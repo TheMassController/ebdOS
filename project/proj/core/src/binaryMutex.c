@@ -21,9 +21,9 @@ BinaryMutex* createBinaryMutex(void){
     return mutex;
 }
 
-void deleteBinaryMutex(BinaryMutex* mutex){
-    //TODO call kernel to delete this mutex. If a resource was still waiting for it, kernel panic or some shit.
-}
+//void deleteBinaryMutex(BinaryMutex* mutex){
+//    //TODO call kernel to delete this mutex. If a resource was still waiting for it, kernel panic or some shit.
+//}
 
 void lockBinaryMutex(BinaryMutex* mutex){
     //TODO prevent locking when inside an interrupt    

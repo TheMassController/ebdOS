@@ -80,8 +80,9 @@ void sleepTimerWBInterrupt(void){
     sleepProcessListHead = sleepProcessListHead->nextPtr;
     nextToWakeUp = NULL;
     setSleepTimerWB();
-    NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
-    NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
+    CALLSUPERVISOR(SVC_reschedule);
+    //NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
+    //NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
 void __addSleeperToList(struct SleepingProcessStruct* ptr){

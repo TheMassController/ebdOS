@@ -47,6 +47,7 @@ pendSVHandler:
     @Then it does the inverse for the function that is being switched to.
 
     @Actual context switch
+    cpsid i         @Disables all interrupts
 	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
     mrs r0, psp     @Move the PSP to R0
 	ldr	r1, [r2]    @Deref (r1 = currentProcess)
@@ -65,10 +66,12 @@ pendSVHandler:
 	cmp	r3, #0      @Test if that var is 0
 	bne	.L2         @Branch if it is not 0
 	mvn	lr, #6  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
-    bx lr           @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
+    b .L3
 .L2:
 	mvn	lr, #2 @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
-    bx lr           @Branch to LR-addr (lr->pc)
+.L3:
+    cpsie i         @Reenable all interrupts
+    bx lr           @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
 .L5:
 	.align	2
 .L4:

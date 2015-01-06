@@ -14,6 +14,7 @@
 #include "lm4f120h5qr.h" //Hardware regs
 #include "timer.h" //The subaddresses of timers
 #include "hw_ints.h" //Memory addresses of hw interrupts
+#include "interrupt.h"
 
 #include "asmUtils.h" //setpsp function
 #include "process.h" //Everything related to the processes
@@ -49,6 +50,10 @@ void setupHardware(void){
     //                 Divide input by 2.5|Use the PLL |Use the main oscillator|Main oscillator is 16 Mhz
     ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL          |SYSCTL_OSC_MAIN        |SYSCTL_XTAL_16MHZ);
 
+    //Enable all possible sys interrupts
+    //Datasheer pp 168
+    NVIC_SYS_HND_CTRL_R |= 0x7<<16;
+
     //Setup the Debug UART out
     //Enable the correct interfaces: GPIOA for USB Debug, UART0 for USB Debug
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
@@ -74,14 +79,20 @@ void setupHardware(void){
                         //Datasheet pp 470                        
     
     //Setup the interrupt priorities
+    //System interrupt levels: debug, SVC, systick, pendSV
     //Reset both registers to all 0's
     NVIC_SYS_PRI2_R &= 0;
     NVIC_SYS_PRI3_R &= 0;     //Debug level is now 0.
-    NVIC_SYS_PRI2_R |= 1<<29; //SVC gets 1 (lower is higher). Datasheet pp 166
-    NVIC_SYS_PRI3_R |= 2<<29; //Systick gets 2. Datasheet pp 167
-    NVIC_SYS_PRI3_R |= 3<<21; //pendSV gets 3. Datasheet pp 167
+    NVIC_SYS_PRI2_R |= 0<<29; //SVC gets 0 (lower is higher, 7 is lowest). Datasheet pp 166
+    NVIC_SYS_PRI3_R |= 0<<29; //Systick gets 7. Datasheet pp 167
+    NVIC_SYS_PRI3_R |= 7<<21; //pendSV gets 7. Datasheet pp 167.
+    //The pendSV has this low priority so that context switches can be called from an interrupt (stack is in a wrong state when inside an interrupt)
+    //Systick has a high priority because else the state of the processesReady list can not be guaranteed not to change during the run. If it gets changed during the run all sorts of nasty things can happen
+    //So when you call the context switcher from an interrupt, the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled
+    //During the actual context switch all interupts are disabled
 
     //Enable all non-special interrupts
+    //With this thing disabled, the SVC, PendSV, Systick etc "faults" also wont run. Except Hard Fault and NMI, because they are badass like that. 
     ROM_IntMasterEnable();
 
     //Setup the sleep clock.    
@@ -97,6 +108,8 @@ void setupHardware(void){
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Clear the correct interrupt
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); //Enable the timeout interrupt
     ROM_IntEnable(INT_WTIMER0A);
+    ROM_IntPrioritySet(INT_WTIMER0A, 200);
+    
     sleepClocksPerMS = 2;
 
     //Configure timer B, the other vital timer in sleeping
@@ -104,6 +117,9 @@ void setupHardware(void){
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); //Let it interrupt on match
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); //Enable the correct interrupt
     ROM_IntEnable(INT_WTIMER0B);
+    IntPrioritySet(INT_WTIMER0B, 200);
+    //NVIC_PRI27_R |= 7<<5;
+    //UARTprintf("%d\r\n",NVIC_PRI27_R);
 
     //Creat pid 1: the kernel
     currentProcess = (struct Process*)malloc(sizeof(struct Process));
@@ -146,9 +162,5 @@ void finishBoot(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending: kick-off the scheduler
-#ifdef DEBUG
-    struct mallinfo malstruct = mallinfo();
-    UARTprintf("arena: %d\r\nordblks: %d\r\nsmblks: %d\r\nhblks: %d\r\nhblkhd %d\r\n",malstruct.arena, malstruct.ordblks, malstruct.smblks, malstruct.hblks, malstruct.hblkhd);
-    UARTprintf("usmblks: %d\r\nfsmblks: %d\r\nuordblks: %d\r\nfordblks: %d\r\nkeepcost: %d\r\n",malstruct.usmblks, malstruct.fsmblks, malstruct.uordblks, malstruct.fordblks, malstruct.keepcost);
-#endif
+    UARTprintf("Prios: SVC: %d, WTB: %d\r\n", ROM_IntPriorityGet(FAULT_SVCALL), ROM_IntPriorityGet(INT_WTIMER0B));
 }

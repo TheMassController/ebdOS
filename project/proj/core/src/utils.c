@@ -1,7 +1,9 @@
 #include "stdlib.h"
 #include "process.h"
+#include "hw_types.h" //Contains the types
+#include "rom_map.h"
+#include "rom.h"
 
-//TODO test
 struct Process* __sortProcessIntoList(struct Process* listHead, struct Process* item){
     struct Process* current = listHead;
     struct Process* previous = NULL;

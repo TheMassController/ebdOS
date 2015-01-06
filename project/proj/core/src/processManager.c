@@ -85,11 +85,6 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     strcpy(newProc->name,name);
     //Create the stack.
     void* stack = malloc(stacklen);
-#ifdef DEBUG
-    struct mallinfo malstruct = mallinfo();
-    UARTprintf("arena: %d\r\nordblks: %d\r\nsmblks: %d\r\nhblks: %d\r\nhblkhd %d\r\n",malstruct.arena, malstruct.ordblks, malstruct.smblks, malstruct.hblks, malstruct.hblkhd);
-    UARTprintf("usmblks: %d\r\nfsmblks: %d\r\nuordblks: %d\r\nfordblks: %d\r\nkeepcost: %d\r\n",malstruct.usmblks, malstruct.fsmblks, malstruct.uordblks, malstruct.fordblks, malstruct.keepcost);
-#endif
     if (stack == NULL){
         free(newProc->name);
         free(newProc);

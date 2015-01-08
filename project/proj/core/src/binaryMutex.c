@@ -7,8 +7,8 @@
 BinaryMutex* firstBinaryMutex = NULL;
 extern struct Process* currentProcess;
 
-BinaryMutex* createBinaryMutex(void){
-    BinaryMutex* mutex = (BinaryMutex*)malloc(sizeof(BinaryMutex));
+struct BinaryMutex* createBinaryMutex(void){
+    struct BinaryMutex* mutex = malloc(sizeof(BinaryMutex));
     if (mutex == NULL) return NULL;
     mutex->lock = 0;
     if (firstBinaryMutex == NULL){
@@ -25,22 +25,22 @@ BinaryMutex* createBinaryMutex(void){
 //    //TODO call kernel to delete this mutex. If a resource was still waiting for it, kernel panic or some shit.
 //}
 
-void lockBinaryMutex(BinaryMutex* mutex){
+void lockBinaryMutex(struct BinaryMutex* mutex){
     //TODO prevent locking when inside an interrupt    
     __lockObjectBlock((void*)mutex);
 }
 
-int lockBinaryMutexNoBlock(BinaryMutex* mutex){
+int lockBinaryMutexNoBlock(struct BinaryMutex* mutex){
     //TODO prevent locking when inside an interrupt 
     return __lockObjectNoblock((void*)mutex);
 }
 
-int lockBinaryMutexBlockWait(BinaryMutex* mutex, unsigned msWaitTime){
+int lockBinaryMutexBlockWait(struct BinaryMutex* mutex, unsigned msWaitTime){
     //TODO prevent locking when inside an interrupt 
     return __lockObjectBlockTimeout((void*)mutex, msWaitTime);
 }
 
-void releaseBinaryMutex(BinaryMutex* mutex){
+void releaseBinaryMutex(struct BinaryMutex* mutex){
     __releaseObject((void*)mutex); 
 }
 

@@ -51,8 +51,13 @@ void setupHardware(void){
     ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL          |SYSCTL_OSC_MAIN        |SYSCTL_XTAL_16MHZ);
 
     //Enable all possible sys interrupts
-    //Datasheer pp 168
-    NVIC_SYS_HND_CTRL_R |= 0x7<<16;
+    //Datasheet pp 168
+    //Enable the usage fault
+    NVIC_SYS_HND_CTRL_R |= 0x1<<18;
+    //Enable the bus fault
+    NVIC_SYS_HND_CTRL_R |= 0x1<<17;
+    //Enable the mem fault
+    NVIC_SYS_HND_CTRL_R |= 0x1<<16;
 
     //Setup the Debug UART out
     //Enable the correct interfaces: GPIOA for USB Debug, UART0 for USB Debug
@@ -142,7 +147,7 @@ void setupHardware(void){
     processesReady = kernel;
 
     //Create the kernelQueue
-    kernelQueue = (struct KernelQueue*)malloc(sizeof(struct KernelQueue));
+    kernelQueue = malloc(sizeof(struct KernelQueue));
     kernelQueue->existingItems = createSemaphore(255);
     kernelQueue->readyItems = createSemaphore(255);
     kernelQueue->listProtectionMutex = createMutex();

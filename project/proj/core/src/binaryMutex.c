@@ -4,20 +4,12 @@
 #include "process.h"
 #include "threadsafeCalls.h" 
 
-BinaryMutex* firstBinaryMutex = NULL;
 extern struct Process* currentProcess;
 
 struct BinaryMutex* createBinaryMutex(void){
-    struct BinaryMutex* mutex = malloc(sizeof(BinaryMutex));
+    struct BinaryMutex* mutex = malloc(sizeof(struct BinaryMutex));
     if (mutex == NULL) return NULL;
     mutex->lock = 0;
-    if (firstBinaryMutex == NULL){
-        firstBinaryMutex = mutex;
-    } else {
-        BinaryMutex* mut;
-        for(mut = firstBinaryMutex; mut->nextBinaryMutex == NULL; mut = mut->nextBinaryMutex);
-        mut->nextBinaryMutex = mutex;
-    }
     return mutex;
 }
 

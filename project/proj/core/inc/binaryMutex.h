@@ -14,7 +14,6 @@ You cannot grab it twice: if you try to grab it a second time, you will need to 
 
 struct BinaryMutex{
     unsigned lock;
-    struct BinaryMutex* nextBinaryMutex;
 };
 
 /**
@@ -45,7 +44,7 @@ int lockBinaryMutexNoBlock(struct BinaryMutex* mutex);
 
 void releaseBinaryMutex(struct BinaryMutex* mutex);
 
-BinaryMutex* createBinaryMutex(void);
+struct BinaryMutex* createBinaryMutex(void);
 
 void deleteBinaryMutex(struct BinaryMutex* mutex);
 

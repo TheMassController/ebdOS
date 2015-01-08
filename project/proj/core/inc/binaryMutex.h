@@ -17,15 +17,12 @@ struct BinaryMutex{
     struct BinaryMutex* nextBinaryMutex;
 };
 
-/** The actual BinaryMutex */
-typedef struct BinaryMutex BinaryMutex;
-
 /**
 Locks the binary mutex, blocks until the mutex is locked.
 
 @param mutex The mutex you want to block.
 */
-void lockBinaryMutexBlocking(BinaryMutex* mutex);
+void lockBinaryMutexBlocking(struct BinaryMutex* mutex);
 
 /**
 Tries to lock the binary mutex. If unsucsessfull, blocks until the mutex can be locked or timeout, whichever comes first.
@@ -35,7 +32,7 @@ Tries to lock the binary mutex. If unsucsessfull, blocks until the mutex can be 
 
 @return 1 if the mutex was sucsessfully locked, else 0.
 */
-int lockBinaryMutexBlockWait(BinaryMutex* mutex, unsigned msWaitTime);
+int lockBinaryMutexBlockWait(struct BinaryMutex* mutex, unsigned msWaitTime);
 
 /**
 Attemps one time to lock the binary mutex.
@@ -44,12 +41,12 @@ Attemps one time to lock the binary mutex.
 
 @return 1 if the mutex was sucsessfully locked, else 0.
 */
-int lockBinaryMutexNoBlock(BinaryMutex* mutex);
+int lockBinaryMutexNoBlock(struct BinaryMutex* mutex);
 
-void releaseBinaryMutex(BinaryMutex* mutex);
+void releaseBinaryMutex(struct BinaryMutex* mutex);
 
 BinaryMutex* createBinaryMutex(void);
 
-void deleteBinaryMutex(BinaryMutex* mutex);
+void deleteBinaryMutex(struct BinaryMutex* mutex);
 
 #endif //BINARYMUTEX_H

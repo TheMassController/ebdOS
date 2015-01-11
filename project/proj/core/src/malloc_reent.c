@@ -2,7 +2,7 @@
 #include "malloc.h"
 #include "reentrantMutex.h"
 
-ReentrantMutex* mallocMutex = NULL;
+struct ReentrantMutex* mallocMutex = NULL;
 
 #define UNUSED(x) (void)(x) //To suppress compiler warning
 

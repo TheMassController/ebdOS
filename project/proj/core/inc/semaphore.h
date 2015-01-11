@@ -7,19 +7,17 @@ struct Semaphore{
     struct MultiLockObject* multiLockObject;
 };
 
-typedef struct Semaphore Semaphore;
+struct Semaphore* createSemaphore(int maxval);
+void deleteSemaphore(struct Semaphore* semaphore);
 
-Semaphore* createSemaphore(int maxval);
-void deleteSemaphore(Semaphore* semaphore);
+void increaseSemaphoreBlocking(struct Semaphore* semaphore);
+int increaseSemaphoreNonBlocking(struct Semaphore* semaphore);
+int increaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout);
 
-void increaseSemaphoreBlocking(Semaphore* semaphore);
-int increaseSemaphoreNonBlocking(Semaphore* semaphore);
-int increaseSemaphoreBlockingTimeout(Semaphore* semaphore, unsigned timeout);
+void decreaseSemaphoreBlocking(struct Semaphore* semaphore);
+int decreaseSemaphoreNonBlocking(struct Semaphore* semaphore);
+int decreaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout);
 
-void decreaseSemaphoreBlocking(Semaphore* semaphore);
-int decreaseSemaphoreNonBlocking(Semaphore* semaphore);
-int decreaseSemaphoreBlockingTimeout(Semaphore* semaphore, unsigned timeout);
-
-int getSemaphoreMaxval(Semaphore* semaphore);
-int getSemaphoreCurrentVal(Semaphore* semaphore);
+int getSemaphoreMaxval(struct Semaphore* semaphore);
+int getSemaphoreCurrentVal(struct Semaphore* semaphore);
 #endif //SEMPAHORE_H

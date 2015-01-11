@@ -19,9 +19,9 @@ struct KernelQueueItem{
 };
 
 struct KernelQueue{
-    Semaphore* existingItems;
-    Semaphore* readyItems;
-    Mutex* listProtectionMutex;
+    struct Semaphore* existingItems;
+    struct Semaphore* readyItems;
+    struct Mutex* listProtectionMutex;
     struct KernelQueueItem* firstItem;
 };
 

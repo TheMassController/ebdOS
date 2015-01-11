@@ -6,8 +6,8 @@
 
 extern struct Process* currentProcess;
 
-Mutex* createMutex(void){
-    Mutex* mutex = (Mutex*)malloc(sizeof(Mutex));
+struct Mutex* createMutex(void){
+    struct Mutex* mutex = (struct Mutex*)malloc(sizeof(struct Mutex));
     if (mutex == NULL) return NULL;
     mutex->singleLockObject = __createSingleLockObject();
     if (mutex->singleLockObject == NULL){
@@ -18,7 +18,7 @@ Mutex* createMutex(void){
     return mutex;
 }
 
-int __alreadyOwnsMutex(Mutex* mutex){
+int __alreadyOwnsMutex(struct Mutex* mutex){
     //TODO act like it is already owned by given process when inside interrupt
     if (mutex->ownerPid == currentProcess->pid && __singleLockObjectIsLocked(mutex->singleLockObject)){
         return 1;
@@ -26,18 +26,18 @@ int __alreadyOwnsMutex(Mutex* mutex){
     return 0;
 }
 
-void deleteMutex(Mutex* mutex){
+void deleteMutex(struct Mutex* mutex){
     __deleteSingleLockObject(mutex->singleLockObject);
     free(mutex);
 }
 
-void lockMutex(Mutex* mutex){
+void lockMutex(struct Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return;
     __lockObjectBlock(mutex->singleLockObject);
     mutex->ownerPid = currentProcess->pid;
 }
 
-int lockMutexNoBlock(Mutex* mutex){
+int lockMutexNoBlock(struct Mutex* mutex){
     if (__alreadyOwnsMutex(mutex)) return 1;
     int retCode = __lockObjectNoblock(mutex->singleLockObject);
     if (retCode){
@@ -46,7 +46,7 @@ int lockMutexNoBlock(Mutex* mutex){
     return retCode;
 }
 
-int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime){
+int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime){
     if (__alreadyOwnsMutex(mutex)) return 1;
     int retCode = __lockObjectBlockTimeout(mutex->singleLockObject, msWaitTime);
     if (retCode){
@@ -55,7 +55,7 @@ int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime){
     return retCode;
 }
 
-void releaseMutex(Mutex* mutex){
+void releaseMutex(struct Mutex* mutex){
     //TODO do not release when inside an interrupt
     if (!__alreadyOwnsMutex(mutex)) return;
     __releaseObject(mutex->singleLockObject);

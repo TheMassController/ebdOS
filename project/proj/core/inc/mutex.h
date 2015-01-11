@@ -5,7 +5,7 @@
 #include "threadsafeCalls.h" 
 
 struct Mutex{
-    SingleLockObject* singleLockObject;
+    SingleLockObject singleLockObject;
     unsigned ownerPid;
 };
 

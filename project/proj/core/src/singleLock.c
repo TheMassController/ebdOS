@@ -10,16 +10,14 @@ extern struct Process* currentProcess;
 unsigned __lockSingleLockObject(SingleLockObject* addr);
 void __unlockSingleLockObject(SingleLockObject* addr);
 
-SingleLockObject* __createSingleLockObject(void){
-    SingleLockObject* object = (SingleLockObject*)malloc(sizeof(SingleLockObject));
+void __initSingleLockObject(SingleLockObject* object){
     object->lock = 0;
     object->processWaitingQueue = NULL;
-    return object;
 }
-
-void __deleteSingleLockObject(SingleLockObject* object){
-    //TODO notify supervisor that a singleLockObject will be cleaned up
-    free(object);
+void __cleanupSingleLockObject(SingleLockObject* object){
+    if (object->lock != 0 || object->processWaitingQueue != NULL){
+        //TODO raise hell (kernel panic?)
+    }
 }
 
 int __lockObjectNoblock(SingleLockObject* object){

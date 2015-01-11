@@ -1,8 +1,8 @@
 #include "reentrantMutex.h"
 #include "stdlib.h"
 
-ReentrantMutex* createReentrantMutex(void){
-    ReentrantMutex* mutex = (ReentrantMutex*)malloc(sizeof(ReentrantMutex));
+struct ReentrantMutex* createReentrantMutex(void){
+    struct ReentrantMutex* mutex = (struct ReentrantMutex*)malloc(sizeof(struct ReentrantMutex));
     if (mutex == NULL) return NULL;
     mutex->mutex = createMutex();
     if (mutex->mutex == NULL){
@@ -13,17 +13,17 @@ ReentrantMutex* createReentrantMutex(void){
     return mutex;
 }
 
-void deleteReentrantMutex(ReentrantMutex* mutex){
+void deleteReentrantMutex(struct ReentrantMutex* mutex){
     deleteMutex(mutex->mutex); 
     free(mutex);
 }
 
-void lockReentrantMutexBlocking(ReentrantMutex* mutex){
+void lockReentrantMutexBlocking(struct ReentrantMutex* mutex){
     lockMutexBlocking(mutex->mutex);
     mutex->value++;
 }
 
-int lockReentrantMutexNoBlock(ReentrantMutex* mutex){
+int lockReentrantMutexNoBlock(struct ReentrantMutex* mutex){
     if (!lockMutexNoBlock(mutex->mutex)){
         return 0;
     }
@@ -31,7 +31,7 @@ int lockReentrantMutexNoBlock(ReentrantMutex* mutex){
     return 1;
 }
 
-int lockReentrantMutexBlockWait(ReentrantMutex* mutex, unsigned msWaitTime){
+int lockReentrantMutexBlockWait(struct ReentrantMutex* mutex, unsigned msWaitTime){
     if (!lockMutexBlockWait(mutex->mutex, msWaitTime)){
         return 0;
     }
@@ -39,7 +39,7 @@ int lockReentrantMutexBlockWait(ReentrantMutex* mutex, unsigned msWaitTime){
     return 1;
 }
 
-void releaseReentrantMutex(ReentrantMutex* mutex){
+void releaseReentrantMutex(struct ReentrantMutex* mutex){
     if (!lockMutexNoBlock(mutex->mutex)) return;
     mutex->value--;
     if (mutex->value == 0){

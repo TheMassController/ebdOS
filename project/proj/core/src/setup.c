@@ -39,7 +39,7 @@ extern void __hibernateProcessFunc(void* param);
 
 extern unsigned sleepClocksPerMS;
 
-extern ReentrantMutex* mallocMutex;
+extern struct ReentrantMutex* mallocMutex;
 
 void setupHardware(void){
     //Setup the PLL

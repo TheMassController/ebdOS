@@ -45,7 +45,7 @@ int validationStuffz(void){
 }
 
 struct MutexStruct{
-    Mutex* mutex;
+    struct Mutex* mutex;
 };
 
 void testProcess1(void* mutexstruct){

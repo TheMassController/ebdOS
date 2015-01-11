@@ -3,9 +3,9 @@
 
 //TODO semaphore can not be locking-increased or decreased from interrupt
 
-Semaphore* createSemaphore(int maxval){
+struct Semaphore* createSemaphore(int maxval){
     if (maxval <= 0) maxval = 1;
-    Semaphore* semaphore = (Semaphore*)malloc(sizeof(Semaphore));
+    struct Semaphore* semaphore = (struct Semaphore*)malloc(sizeof(struct Semaphore));
     if (semaphore == NULL) return NULL;
     semaphore->multiLockObject = __createMultiLockObject(maxval);
     if (semaphore->multiLockObject == NULL){
@@ -15,47 +15,47 @@ Semaphore* createSemaphore(int maxval){
     return semaphore;
 }
 
-void deleteSemaphore(Semaphore* semaphore){
+void deleteSemaphore(struct Semaphore* semaphore){
     __deleteMultiLockObject(semaphore->multiLockObject);
     free(semaphore);
 }
 
-void increaseSemaphoreBlocking(Semaphore* semaphore){
+void increaseSemaphoreBlocking(struct Semaphore* semaphore){
     __increaseMultiLockObjectBlock(semaphore->multiLockObject);
 }
-int increaseSemaphoreNonBlocking(Semaphore* semaphore){
+int increaseSemaphoreNonBlocking(struct Semaphore* semaphore){
     if (__increaseMultiLockObjectNoBlock(semaphore->multiLockObject) == -1){
         return 0;
     }
     return 1;
 }
-int increaseSemaphoreBlockingTimeout(Semaphore* semaphore, unsigned timeout){
+int increaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout){
    if(__increaseMultiLockObjectBlockTimeout(semaphore->multiLockObject, timeout) == -1){
         return 0;
     }
     return 1;
 }
 
-void decreaseSemaphoreBlocking(Semaphore* semaphore){
+void decreaseSemaphoreBlocking(struct Semaphore* semaphore){
     __decreaseMultiLockObjectBlock(semaphore->multiLockObject);
 }
-int decreaseSemaphoreNonBlocking(Semaphore* semaphore){
+int decreaseSemaphoreNonBlocking(struct Semaphore* semaphore){
     if (__decreaseMultiLockObjectNoBlock(semaphore->multiLockObject) == -1){
         return 0;
     }
     return 1; 
 }
 
-int decreaseSemaphoreBlockingTimeout(Semaphore* semaphore, unsigned timeout){
+int decreaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout){
     if(__increaseMultiLockObjectBlockTimeout(semaphore->multiLockObject, timeout) == -1){
         return 0;
     }
     return 1;
 }
 
-int getSemaphoreMaxval(Semaphore* semaphore){
+int getSemaphoreMaxval(struct Semaphore* semaphore){
     return __getMultiLockMaxVal(semaphore->multiLockObject);
 }
-int getSemaphoreCurrentVal(Semaphore* semaphore){
+int getSemaphoreCurrentVal(struct Semaphore* semaphore){
     return __getMultiLockVal(semaphore->multiLockObject);
 }

@@ -9,22 +9,20 @@ struct Mutex{
     unsigned ownerPid;
 };
 
-typedef struct Mutex Mutex;
-
 #define lockMutex lockMutexBlocking
-void lockMutexBlocking(Mutex* mutex);
+void lockMutexBlocking(struct Mutex* mutex);
 
 //Returns 1 if successfull, 0 if not
-int lockMutexBlockWait(Mutex* mutex, unsigned msWaitTime);
+int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime);
 
 //Returns 1 if successfull, 0 if not
-int lockMutexNoBlock(Mutex* mutex);
+int lockMutexNoBlock(struct Mutex* mutex);
 
-void releaseMutex(Mutex* mutex);
+void releaseMutex(struct Mutex* mutex);
 
-Mutex* createMutex(void);
+struct Mutex* createMutex(void);
 
-void deleteMutex(Mutex* mutex);
+void deleteMutex(struct Mutex* mutex);
 
 //Binary mutex functions
 

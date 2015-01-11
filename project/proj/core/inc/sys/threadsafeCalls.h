@@ -20,8 +20,8 @@ typedef struct SingleLockObject SingleLockObject;
 typedef struct MultiLockObject MultiLockObject;
 
 //SingleLockObject
-SingleLockObject* __createSingleLockObject(void);
-void __deleteSingleLockObject(SingleLockObject* object);
+void __initSingleLockObject(SingleLockObject* object);
+void __cleanupSingleLockObject(SingleLockObject* object);
 
 int __lockObjectNoblock(SingleLockObject* object);
 void __lockObjectBlock(SingleLockObject* object);

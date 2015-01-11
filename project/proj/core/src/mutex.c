@@ -57,4 +57,3 @@ void releaseMutex(struct Mutex* mutex){
     __releaseObject(&(mutex->singleLockObject));
     mutex->ownerPid = 0;
 }
-

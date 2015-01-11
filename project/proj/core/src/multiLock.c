@@ -10,19 +10,18 @@ extern struct Process* currentProcess;
 int __increaseMultiLockObject(MultiLockObject* addr);
 int __decreaseMultiLockObject(MultiLockObject* addr);
 
-MultiLockObject* __createMultiLockObject(int maxval){
+void __initMultiLockObject(MultiLockObject* object, int maxval){
     if (maxval <= 0) maxval = 1;
-    MultiLockObject* object = (MultiLockObject*)malloc(sizeof(MultiLockObject));
     object->lock = 0;
     object->maxLockVal = maxval;
     object->processWaitingQueueIncrease = NULL;
     object->processWaitingQueueDecrease = NULL;
-    return object;
 }
 
-void __deleteMultiLockObject(MultiLockObject* object){
-    //TODO notify someone that this is happening
-    free(object);
+void __cleanupMultiLockObject(MultiLockObject* object){
+    if (object->lock != 0 || object->processWaitingQueueIncrease != NULL || object->processWaitingQueueDecrease != NULL){
+        //TODO kernel panic
+    }
 }
 
 int increaseMultiLock(MultiLockObject* object){

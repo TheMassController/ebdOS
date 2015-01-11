@@ -4,7 +4,7 @@
 #include "threadsafeCalls.h"
 
 struct Semaphore{
-    struct MultiLockObject* multiLockObject;
+    struct MultiLockObject multiLockObject;
 };
 
 struct Semaphore* createSemaphore(int maxval);

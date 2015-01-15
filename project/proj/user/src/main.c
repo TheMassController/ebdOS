@@ -45,28 +45,28 @@ int validationStuffz(void){
 }
 
 struct MutexStruct{
-    struct Mutex* mutex;
+    struct Mutex mutex;
 };
 
 void testProcess1(void* mutexstruct){
     struct MutexStruct* mutexStruct = (struct MutexStruct*)mutexstruct;
     UARTprintf("Process with pid %d and prio %d is trying to lock mutex.\r\n",currentProcess->pid, currentProcess->priority);
-    lockMutex(mutexStruct->mutex);
+    lockMutexBlocking(&(mutexStruct->mutex));
     UARTprintf("Process with pid %d and prio %d has locked mutex and is falling asleep for 2 seconds\r\n", currentProcess->pid, currentProcess->priority);
     sleepS(2);
-    releaseMutex(mutexStruct->mutex);
+    releaseMutex(&(mutexStruct->mutex));
     UARTprintf("Process with pid %d and prio %d has just released mutex\r\n", currentProcess->pid, currentProcess->priority);
 }
 
 void testProcess2(void* mutexstruct){
     struct MutexStruct* mutexStruct = (struct MutexStruct*)mutexstruct;
     UARTprintf("Process with pid %d is trying to lock mutex.\r\n",currentProcess->pid);
-    lockMutex(mutexStruct->mutex);
+    lockMutexBlocking(&(mutexStruct->mutex));
 }
 
 int mutexTest(void){
     struct MutexStruct* mutexS = (struct MutexStruct*)malloc(sizeof(struct MutexStruct));
-    mutexS->mutex = createMutex();
+    initMutex(&(mutexS->mutex));
     __createNewProcess(0, 300, "testProcess2", &testProcess1, mutexS, 99);
     __createNewProcess(0, 300, "testProcess4", &testProcess1, mutexS, 100);
     __createNewProcess(0, 300, "testProcess3", &testProcess1, mutexS, 97);

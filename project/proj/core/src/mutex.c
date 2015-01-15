@@ -6,12 +6,13 @@
 
 extern struct Process* currentProcess;
 
-struct Mutex* createMutex(void){
-    struct Mutex* mutex = (struct Mutex*)malloc(sizeof(struct Mutex));
-    if (mutex == NULL) return NULL;
+void initMutex(struct Mutex* mutex){
     __initSingleLockObject(&(mutex->singleLockObject));
     mutex->ownerPid = 0;
-    return mutex;
+}
+
+void cleanupMutex(struct Mutex* mutex){
+    __cleanupSingleLockObject(&(mutex->singleLockObject));
 }
 
 int __alreadyOwnsMutex(struct Mutex* mutex){
@@ -22,19 +23,16 @@ int __alreadyOwnsMutex(struct Mutex* mutex){
     return 0;
 }
 
-void deleteMutex(struct Mutex* mutex){
-    __cleanupSingleLockObject(&(mutex->singleLockObject));
-    free(mutex);
-}
-
-void lockMutex(struct Mutex* mutex){
-    if (__alreadyOwnsMutex(mutex)) return;
+void lockMutexBlocking(struct Mutex* mutex){
+    if (__alreadyOwnsMutex(mutex)){
+        return;
+    }
     __lockObjectBlock(&(mutex->singleLockObject));
     mutex->ownerPid = currentProcess->pid;
 }
 
 int lockMutexNoBlock(struct Mutex* mutex){
-    if (__alreadyOwnsMutex(mutex)) return 1;
+    if (__alreadyOwnsMutex(mutex)) return 0; //Return false immedeatly
     int retCode = __lockObjectNoblock(&(mutex->singleLockObject));
     if (retCode){
         mutex->ownerPid = currentProcess->pid;
@@ -43,7 +41,7 @@ int lockMutexNoBlock(struct Mutex* mutex){
 }
 
 int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime){
-    if (__alreadyOwnsMutex(mutex)) return 1;
+    if (__alreadyOwnsMutex(mutex)) return 0; //Return false immedeatly
     int retCode = __lockObjectBlockTimeout(&(mutex->singleLockObject), msWaitTime);
     if (retCode){
         mutex->ownerPid = currentProcess->pid;

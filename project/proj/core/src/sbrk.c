@@ -18,20 +18,10 @@ caddr_t _sbrk(int incr){
 		heap_end = &_ebss;
 	}
 
-#ifdef DEBUG
-    UARTprintf("(S) MSP: 0x%x, heap_end 0x%x, diff %u\r\n", getMSP(), heap_end, (unsigned)getMSP() - (unsigned)heap_end);
-#endif
-	
 	if (heap_end + incr <= (caddr_t)(((unsigned long)getMSP()) - ((unsigned long)(&_stack_buffer)))){ 
 		heap_end += incr;
 		returnVal = heap_end;	
 	} 
-#ifdef DEBUG
-    UARTprintf("(F) MSP: 0x%X, heap_end 0x%X, diff %u\r\n", getMSP(), heap_end, (unsigned)getMSP() - (unsigned)heap_end);
-    if (returnVal == (char*)-1){
-        UARTprintf("Heap full\r\n");
-    }
-#endif
     
 	return returnVal;
 }

@@ -4,27 +4,23 @@
 struct ReentrantMutex* createReentrantMutex(void){
     struct ReentrantMutex* mutex = (struct ReentrantMutex*)malloc(sizeof(struct ReentrantMutex));
     if (mutex == NULL) return NULL;
-    mutex->mutex = createMutex();
-    if (mutex->mutex == NULL){
-        free(mutex);
-        return NULL;
-    }
+    initMutex(&(mutex->mutex));
     mutex->value = 0;
     return mutex;
 }
 
 void deleteReentrantMutex(struct ReentrantMutex* mutex){
-    deleteMutex(mutex->mutex); 
+    cleanupMutex(&(mutex->mutex)); 
     free(mutex);
 }
 
 void lockReentrantMutexBlocking(struct ReentrantMutex* mutex){
-    lockMutexBlocking(mutex->mutex);
+    lockMutexBlocking(&(mutex->mutex));
     mutex->value++;
 }
 
 int lockReentrantMutexNoBlock(struct ReentrantMutex* mutex){
-    if (!lockMutexNoBlock(mutex->mutex)){
+    if (!lockMutexNoBlock(&(mutex->mutex))){
         return 0;
     }
     mutex->value++;
@@ -32,7 +28,7 @@ int lockReentrantMutexNoBlock(struct ReentrantMutex* mutex){
 }
 
 int lockReentrantMutexBlockWait(struct ReentrantMutex* mutex, unsigned msWaitTime){
-    if (!lockMutexBlockWait(mutex->mutex, msWaitTime)){
+    if (!lockMutexBlockWait(&(mutex->mutex), msWaitTime)){
         return 0;
     }
     mutex->value++;
@@ -40,10 +36,10 @@ int lockReentrantMutexBlockWait(struct ReentrantMutex* mutex, unsigned msWaitTim
 }
 
 void releaseReentrantMutex(struct ReentrantMutex* mutex){
-    if (!lockMutexNoBlock(mutex->mutex)) return;
+    if (!lockMutexNoBlock(&(mutex->mutex))) return;
     mutex->value--;
     if (mutex->value == 0){
-        releaseMutex(mutex->mutex);
+        releaseMutex(&(mutex->mutex));
     }
 }
 

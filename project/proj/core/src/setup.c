@@ -147,19 +147,14 @@ void setupHardware(void){
     processesReady = kernel;
 
     //Create the kernelQueue
-    kernelQueue = malloc(sizeof(struct KernelQueue));
-    kernelQueue->existingItems = createSemaphore(255);
-    kernelQueue->readyItems = createSemaphore(255);
-    kernelQueue->listProtectionMutex = createMutex();
-    kernelQueue->firstItem = NULL;
+    //kernelQueue = malloc(sizeof(struct KernelQueue));
+    //kernelQueue->existingItems = createSemaphore(255);
+    //kernelQueue->readyItems = createSemaphore(255);
+    //kernelQueue->listProtectionMutex = createMutex();
+    //kernelQueue->firstItem = NULL;
 
     //Initialize malloc mutex
     //mallocMutex = createReentrantMutex();
-#ifdef DEBUG
-    struct mallinfo malstruct = mallinfo();
-    UARTprintf("arena: %d\r\nordblks: %d\r\nsmblks: %d\r\nhblks: %d\r\nhblkhd %d\r\n",malstruct.arena, malstruct.ordblks, malstruct.smblks, malstruct.hblks, malstruct.hblkhd);
-    UARTprintf("usmblks: %d\r\nfsmblks: %d\r\nuordblks: %d\r\nfordblks: %d\r\nkeepcost: %d\r\n",malstruct.usmblks, malstruct.fsmblks, malstruct.uordblks, malstruct.fordblks, malstruct.keepcost);
-#endif
 }
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes

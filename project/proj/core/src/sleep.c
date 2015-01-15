@@ -131,7 +131,6 @@ void prepareSleep(int64_t sleepTicks){
         overflows++;
         sleepTicks += MAXSLEEPTIMER;
     }
-    currentProcess->state |= STATE_SLEEP;
     struct SleepingProcessStruct* sleepObj = (struct SleepingProcessStruct*)malloc(sizeof(struct SleepingProcessStruct));
     sleepObj->process = currentProcess;
     sleepObj->overflows = overflows;

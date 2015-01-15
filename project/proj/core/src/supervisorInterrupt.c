@@ -85,6 +85,7 @@ void setKernelPrioMax(void){
 void fallAsleep(void){
     __removeProcessFromReady(currentProcess);
     __addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    currentProcess->state |= STATE_SLEEP;
     rescheduleImmediately();
 }
 

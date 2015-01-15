@@ -7,7 +7,7 @@
 //Just a wrapper around the "real" mutex. If the process has or locks the mutex, the counter is increased. The mutex will be released if the counter is zero again.
 
 struct ReentrantMutex{
-    struct Mutex* mutex;
+    struct Mutex mutex;
     unsigned value;
 };
 

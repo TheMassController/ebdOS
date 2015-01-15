@@ -9,7 +9,6 @@ struct Mutex{
     unsigned ownerPid;
 };
 
-#define lockMutex lockMutexBlocking
 void lockMutexBlocking(struct Mutex* mutex);
 
 //Returns 1 if successfull, 0 if not
@@ -20,9 +19,9 @@ int lockMutexNoBlock(struct Mutex* mutex);
 
 void releaseMutex(struct Mutex* mutex);
 
-struct Mutex* createMutex(void);
+void initMutex(struct Mutex* mutex);
 
-void deleteMutex(struct Mutex* mutex);
+void cleanupMutex(struct Mutex* mutex);
 
 //Binary mutex functions
 

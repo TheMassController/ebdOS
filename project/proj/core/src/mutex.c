@@ -15,7 +15,7 @@ void cleanupMutex(struct Mutex* mutex){
     __cleanupSingleLockObject(&(mutex->singleLockObject));
 }
 
-int __alreadyOwnsMutex(struct Mutex* mutex){
+int ownsMutex(struct Mutex* mutex){
     //TODO act like it is already owned by given process when inside interrupt
     if (mutex->ownerPid == currentProcess->pid && __singleLockObjectIsLocked(&(mutex->singleLockObject))){
         return 1;
@@ -24,7 +24,7 @@ int __alreadyOwnsMutex(struct Mutex* mutex){
 }
 
 void lockMutexBlocking(struct Mutex* mutex){
-    if (__alreadyOwnsMutex(mutex)){
+    if (ownsMutex(mutex)){
         return;
     }
     __lockObjectBlock(&(mutex->singleLockObject));
@@ -32,7 +32,7 @@ void lockMutexBlocking(struct Mutex* mutex){
 }
 
 int lockMutexNoBlock(struct Mutex* mutex){
-    if (__alreadyOwnsMutex(mutex)) return 0; //Return false immedeatly
+    if (ownsMutex(mutex)) return 0; //Return false immedeatly
     int retCode = __lockObjectNoblock(&(mutex->singleLockObject));
     if (retCode){
         mutex->ownerPid = currentProcess->pid;
@@ -41,7 +41,7 @@ int lockMutexNoBlock(struct Mutex* mutex){
 }
 
 int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime){
-    if (__alreadyOwnsMutex(mutex)) return 0; //Return false immedeatly
+    if (ownsMutex(mutex)) return 0; //Return false immedeatly
     int retCode = __lockObjectBlockTimeout(&(mutex->singleLockObject), msWaitTime);
     if (retCode){
         mutex->ownerPid = currentProcess->pid;
@@ -51,7 +51,7 @@ int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime){
 
 void releaseMutex(struct Mutex* mutex){
     //TODO do not release when inside an interrupt
-    if (!__alreadyOwnsMutex(mutex)) return;
+    if (!ownsMutex(mutex)) return;
     __releaseObject(&(mutex->singleLockObject));
     mutex->ownerPid = 0;
 }

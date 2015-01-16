@@ -23,6 +23,8 @@ void initMutex(struct Mutex* mutex);
 
 void cleanupMutex(struct Mutex* mutex);
 
+int ownsMutex(struct Mutex* mutex);
+
 //Binary mutex functions
 
 #endif //MUTEX_H

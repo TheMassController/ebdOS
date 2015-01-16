@@ -36,10 +36,11 @@ int lockReentrantMutexBlockWait(struct ReentrantMutex* mutex, unsigned msWaitTim
 }
 
 void releaseReentrantMutex(struct ReentrantMutex* mutex){
-    if (!lockMutexNoBlock(&(mutex->mutex))) return;
-    mutex->value--;
-    if (mutex->value == 0){
-        releaseMutex(&(mutex->mutex));
+    if(ownsMutex(&(mutex->mutex))){
+        mutex->value--;
+        if (mutex->value == 0){
+            releaseMutex(&(mutex->mutex));
+        }
     }
 }
 

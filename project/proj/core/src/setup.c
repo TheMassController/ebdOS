@@ -39,7 +39,8 @@ extern void __hibernateProcessFunc(void* param);
 
 extern unsigned sleepClocksPerMS;
 
-extern struct ReentrantMutex* mallocMutex;
+extern struct ReentrantMutex mallocMutex;
+extern int initialized;
 
 void setupHardware(void){
     //Setup the PLL
@@ -126,6 +127,9 @@ void setupHardware(void){
     //NVIC_PRI27_R |= 7<<5;
     //UARTprintf("%d\r\n",NVIC_PRI27_R);
 
+    //Initialize malloc mutex
+    initReentrantMutex(&(mallocMutex));
+
     //Creat pid 1: the kernel
     currentProcess = (struct Process*)malloc(sizeof(struct Process));
     currentProcess->pid = 1;
@@ -152,9 +156,8 @@ void setupHardware(void){
     //kernelQueue->readyItems = createSemaphore(255);
     //kernelQueue->listProtectionMutex = createMutex();
     //kernelQueue->firstItem = NULL;
+    initialized = 1;
 
-    //Initialize malloc mutex
-    mallocMutex = createReentrantMutex();
 }
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes

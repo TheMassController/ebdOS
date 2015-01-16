@@ -1,17 +1,13 @@
 #include "reentrantMutex.h"
 #include "stdlib.h"
 
-struct ReentrantMutex* createReentrantMutex(void){
-    struct ReentrantMutex* mutex = (struct ReentrantMutex*)malloc(sizeof(struct ReentrantMutex));
-    if (mutex == NULL) return NULL;
+void initReentrantMutex(struct ReentrantMutex* mutex){
     initMutex(&(mutex->mutex));
     mutex->value = 0;
-    return mutex;
 }
 
-void deleteReentrantMutex(struct ReentrantMutex* mutex){
+void cleanupReentrantMutex(struct ReentrantMutex* mutex){
     cleanupMutex(&(mutex->mutex)); 
-    free(mutex);
 }
 
 void lockReentrantMutexBlocking(struct ReentrantMutex* mutex){

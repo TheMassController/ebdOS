@@ -2,19 +2,20 @@
 #include "malloc.h"
 #include "reentrantMutex.h"
 
-struct ReentrantMutex* mallocMutex = NULL;
+struct ReentrantMutex mallocMutex;
+volatile int initialized = 0;
 
 #define UNUSED(x) (void)(x) //To suppress compiler warning
 
 void __malloc_lock (struct _reent *reent ){ 
+    if (!initialized) return; 
     UNUSED(reent);
-    if (mallocMutex == NULL) return;
-    lockReentrantMutexBlocking(mallocMutex);
+    lockReentrantMutexBlocking(&(mallocMutex));
 } 
 
 void __malloc_unlock (struct _reent *reent ){ 
+    if (!initialized) return;
     UNUSED(reent);
-    if (mallocMutex == NULL) return;
-    releaseReentrantMutex(mallocMutex);
+    releaseReentrantMutex(&(mallocMutex));
 } 
 

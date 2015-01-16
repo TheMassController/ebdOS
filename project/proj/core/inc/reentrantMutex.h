@@ -16,6 +16,6 @@ int lockReentrantMutexNoBlock(struct ReentrantMutex* mutex);
 int lockReentrantMutexBlockWait(struct ReentrantMutex* mutex, unsigned msWaitTime);
 void releaseReentrantMutex(struct ReentrantMutex* mutex);
 
-struct ReentrantMutex* createReentrantMutex(void);
-void deleteReentrantMutex(struct ReentrantMutex* mutex);
+void initReentrantMutex(struct ReentrantMutex* mutex);
+void cleanupReentrantMutex(struct ReentrantMutex* mutex);
 #endif //REENTRANTMUTEX_H

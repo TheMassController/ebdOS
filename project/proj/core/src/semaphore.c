@@ -3,17 +3,13 @@
 
 //TODO semaphore can not be locking-increased or decreased from interrupt
 
-struct Semaphore* createSemaphore(int maxval){
+void initSemaphore(struct Semaphore* semaphore, int maxval){
     if (maxval <= 0) maxval = 1;
-    struct Semaphore* semaphore = (struct Semaphore*)malloc(sizeof(struct Semaphore));
-    if (semaphore == NULL) return NULL;
     __initMultiLockObject(&(semaphore->multiLockObject), maxval);
-    return semaphore;
 }
 
-void deleteSemaphore(struct Semaphore* semaphore){
+void cleanupSemaphore(struct Semaphore* semaphore){
     __cleanupMultiLockObject(&(semaphore->multiLockObject));
-    free(semaphore);
 }
 
 void increaseSemaphoreBlocking(struct Semaphore* semaphore){

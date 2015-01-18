@@ -28,7 +28,7 @@ static struct SleepingProcessStruct* nextToWakeUp = NULL;
 void sleepTimerWAInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
     UARTprintf("Apparently, almost 40 days have passed");
-    //TODO decrease overflows
+    
 }
 
 void wakeupProcess(struct SleepingProcessStruct* ptr){
@@ -81,8 +81,6 @@ void sleepTimerWBInterrupt(void){
     nextToWakeUp = NULL;
     setSleepTimerWB();
     CALLSUPERVISOR(SVC_reschedule);
-    //NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
-    //NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
 void __addSleeperToList(struct SleepingProcessStruct* ptr){

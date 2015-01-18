@@ -7,8 +7,8 @@ struct Semaphore{
     struct MultiLockObject multiLockObject;
 };
 
-struct Semaphore* createSemaphore(int maxval);
-void deleteSemaphore(struct Semaphore* semaphore);
+void initSemaphore(struct Semaphore* semaphore, int maxval);
+void cleanupSemaphore(struct Semaphore* semaphore);
 
 void increaseSemaphoreBlocking(struct Semaphore* semaphore);
 int increaseSemaphoreNonBlocking(struct Semaphore* semaphore);

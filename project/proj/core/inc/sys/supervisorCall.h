@@ -13,6 +13,9 @@
 
 #define SVC_sleep "8"
 #define SVC_sleepNoBlock "9"
+#define SVC_wakeup "10"
+
+#define SVC_processAdd
 
 #ifdef DEBUG
 #define SVC_test "255"

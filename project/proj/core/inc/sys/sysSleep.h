@@ -10,9 +10,6 @@ struct SleepingProcessStruct{
     unsigned sleepUntil;
 };
 
-void __addSleeperToList(struct SleepingProcessStruct* ptr);
-void __removeSleeperFromList(struct Process* proc);
-
 void __sleepMSDelayBlock(unsigned ms);
 void __sleepDelayBlockWakeup(void);
 

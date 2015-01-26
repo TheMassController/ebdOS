@@ -13,7 +13,6 @@
 #include "sleep.h"
 #include "sysSleep.h"
 #include "stdlib.h"
-#include "utils.h"
 #include "threadsafeCalls.h"
 
 #include "stdint.h"
@@ -22,8 +21,8 @@
 
 unsigned sleepClocksPerMS = 0;
 extern struct Process* currentProcess;
-static struct SleepingProcessStruct* sleepProcessListHead = NULL;
-static struct SleepingProcessStruct* nextToWakeUp = NULL;
+
+//----------- Interrupt related
 
 void sleepTimerWAInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
@@ -31,95 +30,13 @@ void sleepTimerWAInterrupt(void){
     
 }
 
-void wakeupProcess(struct SleepingProcessStruct* ptr){
-    if (ptr->process->state & STATE_WAIT){
-        if (ptr->process->state & STATE_LOCKED){
-            __removeProcessFromList(((struct SingleLockObject*)ptr->process->blockAddress)->processWaitingQueue, ptr->process);
-        }
-        if (ptr->process->state & STATE_INC_WAIT){
-            __removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueIncrease, ptr->process);
-        }
-        if (ptr->process->state & STATE_DEC_WAIT){
-            __removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueDecrease, ptr->process);
-        }
-    }
-    ptr->process->state = STATE_READY;
-    __addProcessToReady(ptr->process);
-
-}
-
-void setSleepTimerWB(void){
-    while (sleepProcessListHead != nextToWakeUp){
-        if (sleepProcessListHead == NULL){
-            ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
-            nextToWakeUp = NULL;
-        } else if (sleepProcessListHead->overflows != 0){
-            if (nextToWakeUp != NULL){
-                ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
-                nextToWakeUp = NULL;
-            }       
-            break;
-        } else {
-            unsigned curValWTA = getCurrentSleepTimerValue();
-            if (curValWTA <= sleepProcessListHead->sleepUntil){
-                wakeupProcess(sleepProcessListHead);
-                sleepProcessListHead = sleepProcessListHead->nextPtr;
-            } else {
-                nextToWakeUp = sleepProcessListHead;
-                ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
-                ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepProcessListHead->sleepUntil);
-                ROM_TimerEnable(WTIMER0_BASE, TIMER_B); 
-            }
-        }
-    }    
-}
-
 void sleepTimerWBInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_TIMB_MATCH);
-    wakeupProcess(nextToWakeUp);
-    sleepProcessListHead = sleepProcessListHead->nextPtr;
-    nextToWakeUp = NULL;
-    setSleepTimerWB();
-    CALLSUPERVISOR(SVC_reschedule);
+    CALLSUPERVISOR(SVC_wakeup);
 }
 
-void __addSleeperToList(struct SleepingProcessStruct* ptr){
-    struct SleepingProcessStruct* current = sleepProcessListHead;
-    struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current->overflows <= ptr->overflows && current->sleepUntil > ptr->sleepUntil){
-        previous = current;
-        current = current->nextPtr;
-    }
-    if (previous == NULL){
-        ptr->nextPtr = current;
-        sleepProcessListHead = ptr;
-        setSleepTimerWB();
-    } else {
-        previous->nextPtr = ptr;
-        ptr->nextPtr = current;
-    }
-}
+//----------- Sys functions (internals)
 
-void __removeSleeperFromList(struct Process* proc){
-    struct SleepingProcessStruct* current = sleepProcessListHead;
-    struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current->process != proc){
-        previous = current;
-        current = current->nextPtr;
-    }
-    if (current != NULL){
-        if (previous == NULL){
-            sleepProcessListHead = current->nextPtr;
-            setSleepTimerWB();
-        } else {
-            previous->nextPtr = current->nextPtr;
-        }
-    }
-}
-
-unsigned getCurrentSleepTimerValue(void){
-    return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
-}
 
 void prepareSleep(int64_t sleepTicks){
     unsigned overflows = 0;
@@ -136,22 +53,16 @@ void prepareSleep(int64_t sleepTicks){
     currentProcess->sleepObjAddress = (void*) sleepObj;
 }
 
-//Because a half ms is exactly 1 tick
 void sleepHalfMS(long sleepTicks){
+    //Because a half ms is exactly 1 tick
     prepareSleep(sleepTicks);
     CALLSUPERVISOR(SVC_sleep);
     free(currentProcess->sleepObjAddress); 
     currentProcess->sleepObjAddress = NULL;
 }
 
-//The millisecond sleeper
-void sleepMS(unsigned ms){
-    sleepHalfMS(ms*sleepClocksPerMS);
-}
-
-//The second sleeper
-void sleepS(unsigned seconds){
-    sleepHalfMS(seconds*1000*sleepClocksPerMS);
+unsigned getCurrentSleepTimerValue(void){
+    return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }
 
 void sleepHalfMSDelayBlock(long sleepticks){
@@ -159,6 +70,19 @@ void sleepHalfMSDelayBlock(long sleepticks){
     CALLSUPERVISOR(SVC_sleepNoBlock);
 }
 
+//----- User space sleep functions
+
+void sleepMS(unsigned ms){
+    //The millisecond sleeper
+    sleepHalfMS(ms*sleepClocksPerMS);
+}
+
+void sleepS(unsigned seconds){
+    //The second sleeper
+    sleepHalfMS(seconds*1000*sleepClocksPerMS);
+}
+
+//------- Sleep functions as used by the mutex functions
 void __sleepMSDelayBlock(unsigned ms){
     sleepHalfMSDelayBlock(ms*sleepClocksPerMS);    
 }

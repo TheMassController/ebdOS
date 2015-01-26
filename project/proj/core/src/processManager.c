@@ -7,7 +7,6 @@
 #include "uartstdio.h"
 #include "process.h"
 #include "supervisorCall.h" 
-#include "utils.h"
 #include "lm4f120h5qr.h" //Hardware regs
 
 #define UNUSED(x) (void)(x) //To suppress compiler warning
@@ -37,20 +36,6 @@ void __processReturn(void){
     while(1){
         CALLSUPERVISOR(SVC_reschedule);
     }
-}
-
-int __processInReadyList(struct Process* process){
-    return __processInList(processesReady, process);
-}
-
-void __addProcessToReady(struct Process* process){
-    if (!__processInList(processesReady, process)){
-        processesReady = __sortProcessIntoList(processesReady, process);
-    }
-}
-
-void __removeProcessFromReady(struct Process* process){
-    __removeProcessFromList(processesReady, process);
 }
 
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){

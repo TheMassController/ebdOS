@@ -1,4 +1,9 @@
 //Handles the supervisor interrupt call
+#include "hw_nvic.h"
+#include "hw_types.h"
+#include "uartstdio.h"
+#include "timer.h"
+#include "hw_memmap.h" //address of GPIO etc
 #include "uartstdio.h"
 #include "lm4f120h5qr.h" //Hardware regs
 #include "hw_types.h" //Contains the special types
@@ -7,39 +12,196 @@
 #include "process.h" 
 #include "threadsafeCalls.h" 
 #include "stdlib.h" 
-#include "utils.h"
 #include "sysSleep.h"
+#include "sleep.h"
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
 extern struct Process* sleepProcessList;
 extern struct Process* kernel;
 
+static struct SleepingProcessStruct* sleepProcessListHead = NULL;
+static struct SleepingProcessStruct* nextToWakeUp = NULL;
+
 void rescheduleImmediately(void){
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
     NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
+
+//----- Functions related to the moving of functions from one queue to another
+
+//Common
+int processInList(struct Process* listHead, struct Process* proc){
+    while (listHead != NULL){
+        if (listHead == proc) return 1;
+        listHead = listHead->nextProcess;
+    }
+    return 0;
+}
+
+struct Process* sortProcessIntoList(struct Process* listHead, struct Process* item){
+    struct Process* current = listHead;
+    struct Process* previous = NULL;
+    while (current != NULL && current->priority >= item->priority){
+        previous = current;
+        current = current->nextProcess;
+    }
+    //Needs to go between previous and current, unless previous is NULL. Then it becomes the new HEAD
+    if (previous == NULL){
+        item->nextProcess = current;
+        listHead = item;
+    } else {
+        previous->nextProcess = item;
+        item->nextProcess = current;
+    }
+    return listHead;
+}
+
+struct Process* removeProcessFromList(struct Process* listHead, struct Process* item){
+    struct Process* current = listHead;
+    struct Process* previous = NULL;
+    while (current != NULL && current != item){
+        previous = current;
+        current = current->nextProcess;
+    }
+    //If current is NULL, then it was not in the list
+    //If previous is NULL, then it is the head of the list
+    if (current != NULL){
+        if (previous == NULL){
+            listHead = current->nextProcess;
+        } else {
+            previous->nextProcess = current->nextProcess;
+        }
+
+    }
+    return listHead;
+}
+
+//Readylist related
+int processInReadyList(struct Process* process){
+    return processInList(processesReady, process);
+}
+
+void addProcessToReady(struct Process* process){
+    if (!processInList(processesReady, process)){
+        processesReady = sortProcessIntoList(processesReady, process);
+    }
+}
+
+void removeProcessFromReady(struct Process* process){
+    removeProcessFromList(processesReady, process);
+}
+
+//Sleep related
+void wakeupProcess(struct SleepingProcessStruct* ptr){
+    if (ptr->process->state & STATE_WAIT){
+        if (ptr->process->state & STATE_LOCKED){
+            removeProcessFromList(((struct SingleLockObject*)ptr->process->blockAddress)->processWaitingQueue, ptr->process);
+        }
+        if (ptr->process->state & STATE_INC_WAIT){
+            removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueIncrease, ptr->process);
+        }
+        if (ptr->process->state & STATE_DEC_WAIT){
+            removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueDecrease, ptr->process);
+        }
+    }
+    ptr->process->state = STATE_READY;
+    addProcessToReady(ptr->process);
+}   
+
+void setSleepTimerWB(void){
+    while (sleepProcessListHead != nextToWakeUp){
+        if (sleepProcessListHead == NULL){
+            ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
+            nextToWakeUp = NULL;
+        } else if (sleepProcessListHead->overflows != 0){
+            if (nextToWakeUp != NULL){
+                ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
+                nextToWakeUp = NULL;
+            }       
+            break;
+        } else {
+            unsigned curValWTA = getCurrentSleepTimerValue();
+            if (curValWTA <= sleepProcessListHead->sleepUntil){
+                wakeupProcess(sleepProcessListHead);
+                sleepProcessListHead = sleepProcessListHead->nextPtr;
+            } else {
+                nextToWakeUp = sleepProcessListHead;
+                ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
+                ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepProcessListHead->sleepUntil);
+                ROM_TimerEnable(WTIMER0_BASE, TIMER_B); 
+            }
+        }
+    }    
+}
+
+void wakeupFromWBInterrupt(void){
+    wakeupProcess(nextToWakeUp);
+    sleepProcessListHead = sleepProcessListHead->nextPtr;
+    nextToWakeUp = NULL;
+    setSleepTimerWB();
+}
+
+
+void addSleeperToList(struct SleepingProcessStruct* ptr){
+    struct SleepingProcessStruct* current = sleepProcessListHead;
+    struct SleepingProcessStruct* previous = NULL;
+    while(current != NULL && current->overflows <= ptr->overflows && current->sleepUntil > ptr->sleepUntil){
+        previous = current;
+        current = current->nextPtr;
+    }
+    if (previous == NULL){
+        ptr->nextPtr = current;
+        sleepProcessListHead = ptr;
+        setSleepTimerWB();
+    } else {
+        previous->nextPtr = ptr;
+        ptr->nextPtr = current;
+    }
+}
+
+void removeSleeperFromList(struct Process* proc){
+    struct SleepingProcessStruct* current = sleepProcessListHead;
+    struct SleepingProcessStruct* previous = NULL;
+    while(current != NULL && current->process != proc){
+        previous = current;
+        current = current->nextPtr;
+    }
+    if (current != NULL){
+        if (previous == NULL){
+            sleepProcessListHead = current->nextPtr;
+            setSleepTimerWB();
+        } else {
+            previous->nextPtr = current->nextPtr;
+        }
+    }
+}
+
+//LockQueue = mutex related
 struct Process* popFromLockQueue(struct Process* listHead){
     if (listHead != NULL){
         struct Process* item = listHead;
         if (item->state & STATE_SLEEP){
-            __removeSleeperFromList(item); 
+            removeSleeperFromList(item); 
         }
         item->state = 0;
         item->blockAddress = NULL;
         listHead = listHead->nextProcess;
-        __addProcessToReady(item);
+        addProcessToReady(item);
         rescheduleImmediately();
     }
     return listHead;
 }
 
+
+//----------------
+
 void processBlockedSingleLock(void){
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
     if (!waitObject->lock) return;
-    __removeProcessFromReady(currentProcess);
-    waitObject->processWaitingQueue = __sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
+    removeProcessFromReady(currentProcess);
+    waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
     rescheduleImmediately();
 }
 
@@ -66,7 +228,7 @@ void multiLockIncreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
     if (multiLock->lock == 0) return;
     __removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueIncrease = __sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+    multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
     rescheduleImmediately();
 }
 
@@ -74,7 +236,7 @@ void multiLockDecreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
     if (multiLock->lock < multiLock->maxLockVal) return;
     __removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueDecrease = __sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+    multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
     rescheduleImmediately();
 }
 
@@ -83,14 +245,14 @@ void setKernelPrioMax(void){
 }
 
 void fallAsleep(void){
-    __removeProcessFromReady(currentProcess);
-    __addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    removeProcessFromReady(currentProcess);
+    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
     currentProcess->state |= STATE_SLEEP;
     rescheduleImmediately();
 }
 
 void fallAsleepNoBlock(void){
-    __addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
 }
 
 #ifdef DEBUG
@@ -131,6 +293,9 @@ void svcHandler_main(char reqCode){
             break;
         case 9:
             fallAsleepNoBlock();
+            break;
+        case 10:
+            wakeupFromWBInterrupt();
             break;
 #ifdef DEBUG
         case 255:

@@ -43,10 +43,4 @@ struct Process {
 */
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority );
 
-void __addProcessToReady(struct Process* process);
-
-void __removeProcessFromReady(struct Process* process);
-
-int __processInReadyList(struct Process* process);
-
 #endif

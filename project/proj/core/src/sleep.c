@@ -14,7 +14,7 @@
 #include "sysSleep.h"
 #include "stdlib.h"
 #include "threadsafeCalls.h"
-
+#include "asmUtils.h"
 #include "stdint.h"
 
 #define MAXSLEEPTIMER 4294967295

@@ -5,6 +5,7 @@
 @ Description: Contains util functions that can only be implemented in assembly
 
     .global waitForInterrupt
+    .global isInInterrupt
     .global __lockSingleLockObject
     .global __unlockSingleLockObject
     .global __increaseMultiLockObject
@@ -13,7 +14,6 @@
 waitForInterrupt:
     WFI             @Wait for interrupt
     MOV     PC, LR  @Return by moving the link register to the program counter
-
 __lockSingleLockObject:
     MOV r1, #1              @Load R1 to be value 1
 L1:
@@ -41,7 +41,7 @@ L4:
     MVN r0, #0              @Store a not(0x0) into r0, which is -1 in int.
     B L3
 
-__increaseMultiLockObject:  @2 params: address of object. 
+__increaseMultiLockObject:  @params: address of object. 
     MOV r1, r0              @r1 = r0
     ADD r1, r1, #4          @increase the memaddr with 4. Memaddr is now &maxLockVal
     LDR r1, [r1]            @Deref r1, r1 is now maxLockVal 
@@ -55,7 +55,7 @@ __increaseMultiLockObject:  @2 params: address of object.
     MOV r0, r2              @If successful, store the new lock value (r2) to r0
     B L3
     
-__decreaseMultiLockObject:  @2 params: address of object.
+__decreaseMultiLockObject:  @params: address of object.
     MOV r1, r0              @r1 = r0
     ADD r1, r1, #4          @increase the memaddr with 4. Memaddr is now &maxLockVal
     LDR r1, [r1]            @Deref r1, r1 is now maxLockVal 
@@ -68,3 +68,8 @@ __decreaseMultiLockObject:  @2 params: address of object.
     BEQ __decreaseMultiLockObject   @If not, jump back to the beginning
     MOV r0, r2              @If successful, store the new lock value (r2) to r0
     B L3
+
+isInInterrupt:
+    MRS r0, psr
+    AND r0, r0, #0xFF      @PSR & 255 is the ISRNUM reg. If this is 0, then we are not in an interrupt
+    BX lr                   @return

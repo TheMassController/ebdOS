@@ -19,6 +19,7 @@ extern struct Process* currentProcess;
 extern struct Process* processesReady;
 extern struct Process* sleepProcessList;
 extern struct Process* kernel;
+extern struct Process* newProcess;
 
 static struct SleepingProcessStruct* sleepProcessListHead = NULL;
 static struct SleepingProcessStruct* nextToWakeUp = NULL;
@@ -197,6 +198,13 @@ struct Process* popFromLockQueue(struct Process* listHead){
 
 //----------------
 
+void addNewProcess(void){
+    if (newProcess != NULL){
+        addProcessToReady(newProcess);
+        newProcess = NULL;
+    }    
+}
+
 void processBlockedSingleLock(void){
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
     if (!waitObject->lock) return;
@@ -227,7 +235,7 @@ void multiLockDecrease(void){
 void multiLockIncreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
     if (multiLock->lock == 0) return;
-    __removeProcessFromReady(currentProcess);
+    removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
     rescheduleImmediately();
 }
@@ -235,7 +243,7 @@ void multiLockIncreaseBlock(void){
 void multiLockDecreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
     if (multiLock->lock < multiLock->maxLockVal) return;
-    __removeProcessFromReady(currentProcess);
+    removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
     rescheduleImmediately();
 }
@@ -296,6 +304,9 @@ void svcHandler_main(char reqCode){
             break;
         case 10:
             wakeupFromWBInterrupt();
+            break;
+        case 11:
+            addNewProcess();
             break;
 #ifdef DEBUG
         case 255:

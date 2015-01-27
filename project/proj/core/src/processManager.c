@@ -27,6 +27,7 @@ struct Process* hibernateProcess; //Runs when there are no other processes left 
 //Usefull for selecting the pids
 static unsigned char nextPid = 1; //Short, has to be able to become 256
 //TODO create system to find out which pids are in use and which not.
+struct Process* newProcess = NULL;
 #define MAX_PROCESSID (254)
 
 void __processReturn(void){
@@ -100,7 +101,8 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->stackPointer = (void*)stackPointer;
 
     //Add the new process to the list of processes
-    __addProcessToReady(newProc);
+    newProcess = newProc;
+    CALLSUPERVISOR(SVC_processAdd);
     return 0; 
 }
 

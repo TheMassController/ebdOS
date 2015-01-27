@@ -56,10 +56,14 @@ function launchGDB {
 function printUsageAndExit {
     echo "Usage: <script> params"
     echo "params:"
-    echo "all, clean, distclean, debug, flash, debugflash, echo, launchGDB" 
+    echo "all, clean, distclean, debug, flash, debugflash, echo, launchGDB, screen" 
     echo "debugflash implies debug and launchGDB"
     echo "flash implies all"
     exit
+}
+
+function launchScreen {
+    sudo screen /dev/ttyACM0 115200
 }
 
 function commandDistribution {
@@ -75,6 +79,9 @@ function commandDistribution {
             ;;
         launchGDB)
             launchGDB
+            ;;
+        screen)
+            launchScreen
             ;;
         *)
             echo "Unknown command $1"   

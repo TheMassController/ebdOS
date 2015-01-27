@@ -1,4 +1,6 @@
 #include "validation.h"
+#include "uartstdio.h"
+#include "asmUtils.h"
 
 int main(void){
     //TODO

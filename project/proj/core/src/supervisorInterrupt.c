@@ -213,6 +213,15 @@ void processBlockedSingleLock(void){
     rescheduleImmediately();
 }
 
+void lockAndSleep(void){
+    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
+    if (!waitObject->lock) return;
+    removeProcessFromReady(currentProcess);
+    waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
+    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    rescheduleImmediately();
+}
+
 void singleLockReleased(void){
     //The released mutex is in the currentProcess->blockAddress var
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
@@ -248,6 +257,24 @@ void multiLockDecreaseBlock(void){
     rescheduleImmediately();
 }
 
+void multiLockIncreaseBlockAndSleep(void){
+    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+    if (multiLock->lock < multiLock->maxLockVal) return;
+    removeProcessFromReady(currentProcess);
+    multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    rescheduleImmediately();
+}
+
+void multiLockDecreaseBlockAndSleep(void){
+    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+    if (multiLock->lock == 0) return;
+    removeProcessFromReady(currentProcess);
+    multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    rescheduleImmediately();
+}
+
 void setKernelPrioMax(void){
    kernel->priority = 255; 
 }
@@ -258,13 +285,6 @@ void fallAsleep(void){
     rescheduleImmediately();
 }
 
-void lockAndSleep(void){
-    removeProcessFromReady(currentProcess);
-    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
-    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-    rescheduleImmediately();
-}
 
 #ifdef DEBUG
 void sayHi(void){
@@ -300,15 +320,21 @@ void svcHandler_main(char reqCode){
             multiLockDecreaseBlock();
             break;
         case 8:
-            setKernelPrioMax();
+            multiLockIncreaseBlockAndSleep();
             break;
         case 9:
-            fallAsleep();
+            multiLockDecreaseBlockAndSleep();
             break;
         case 10:
-            wakeupFromWBInterrupt();
+            setKernelPrioMax();
             break;
         case 11:
+            fallAsleep();
+            break;
+        case 12:
+            wakeupFromWBInterrupt();
+            break;
+        case 13:
             addNewProcess();
             break;
 #ifdef DEBUG

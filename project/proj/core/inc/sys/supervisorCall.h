@@ -9,13 +9,15 @@
 #define SVC_multiObjectDecrease "5"
 #define SVC_multiObjectWaitForIncrease "6"
 #define SVC_multiObjectWaitForDecrease "7"
+#define SVC_multiObjectWaitForIncreaseAndSleep "8"
+#define SVC_multiObjectWaitForDecreaseAndSleep "9"
 
-#define SVC_setKernelPrioMax "8"
+#define SVC_setKernelPrioMax "10"
 
-#define SVC_sleep "9"
-#define SVC_wakeup "10"
+#define SVC_sleep "11"
+#define SVC_wakeup "12"
 
-#define SVC_processAdd "11"
+#define SVC_processAdd "13"
 
 #ifdef DEBUG
 #define SVC_test "255"

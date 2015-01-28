@@ -56,6 +56,7 @@ void prepareSleep(int64_t sleepTicks){
 void sleepHalfMS(long sleepTicks){
     //Because a half ms is exactly 1 tick
     prepareSleep(sleepTicks);
+    currentProcess->state |= STATE_SLEEP;
     CALLSUPERVISOR(SVC_sleep);
     free(currentProcess->sleepObjAddress); 
     currentProcess->sleepObjAddress = NULL;
@@ -66,8 +67,8 @@ unsigned getCurrentSleepTimerValue(void){
 }
 
 void sleepHalfMSDelayBlock(long sleepticks){
+    currentProcess->state |= STATE_SLEEP;
     prepareSleep(sleepticks);
-    CALLSUPERVISOR(SVC_sleepNoBlock);
 }
 
 //----- User space sleep functions

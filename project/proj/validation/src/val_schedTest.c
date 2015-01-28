@@ -6,6 +6,7 @@
 #include "string.h" 
 #include "semaphore.h"
 #include "mutex.h"
+#include "binaryMutex.h"
 
 extern struct Process* currentProcess;
 
@@ -87,11 +88,36 @@ void testSleep(void){
     }
 }
 
+void BinMutFunc(void* binMut){
+    struct BinaryMutex* binaryMutex = binMut;
+    while(1){
+        int i = lockBinaryMutexBlockWait(binaryMutex, 2000);
+        if (!i){
+            UARTprintf("Noes! :(\r\n");
+        } else {
+            UARTprintf("Yay! :)\r\n");
+        }
+    }
+}
+
+void testSleepAndMutex(void){
+    struct BinaryMutex* binaryMutex = malloc(sizeof(struct BinaryMutex));
+    initBinaryMutex(binaryMutex);
+    if (binaryMutex == NULL){
+        UARTprintf("FAILURE\r\n");
+        return;
+    }
+    if(__createNewProcess(0, 1024, "BinaryMutexTestProc", &BinMutFunc, binaryMutex, 4) == 2){
+        UARTprintf("FAILURE\r\n");
+    }    
+}
+
 
 
 int testScheduler(void){
-    testSleep();
-    testLocking();
+    //testSleep();
+    //testLocking();
+    testSleepAndMutex();
     UARTprintf("Test prepared\r\n");
     return 1;
 }

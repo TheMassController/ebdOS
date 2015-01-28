@@ -255,12 +255,15 @@ void setKernelPrioMax(void){
 void fallAsleep(void){
     removeProcessFromReady(currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-    currentProcess->state |= STATE_SLEEP;
     rescheduleImmediately();
 }
 
-void fallAsleepNoBlock(void){
+void lockAndSleep(void){
+    removeProcessFromReady(currentProcess);
+    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
+    waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    rescheduleImmediately();
 }
 
 #ifdef DEBUG
@@ -279,28 +282,28 @@ void svcHandler_main(char reqCode){
             processBlockedSingleLock();
             break;
         case 2:
-            singleLockReleased();
+            lockAndSleep();
             break;
         case 3:
-            multiLockIncrease();
+            singleLockReleased();
             break;
         case 4:
-            multiLockDecrease();
+            multiLockIncrease();
             break;
         case 5:
-            multiLockIncreaseBlock();
+            multiLockDecrease();
             break;
         case 6:
-            multiLockDecreaseBlock();
+            multiLockIncreaseBlock();
             break;
         case 7:
-            setKernelPrioMax();
+            multiLockDecreaseBlock();
             break;
         case 8:
-            fallAsleep();
+            setKernelPrioMax();
             break;
         case 9:
-            fallAsleepNoBlock();
+            fallAsleep();
             break;
         case 10:
             wakeupFromWBInterrupt();

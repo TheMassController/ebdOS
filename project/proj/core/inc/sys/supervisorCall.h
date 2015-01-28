@@ -2,17 +2,17 @@
 #define SVC_reschedule "0"
 
 #define SVC_objectLock "1"
-#define SVC_objectRelease "2"
+#define SVC_lockAndSleep "2"
+#define SVC_objectRelease "3"
 
-#define SVC_multiObjectIncrease "3"
-#define SVC_multiObjectDecrease "4"
-#define SVC_multiObjectWaitForIncrease "5"
-#define SVC_multiObjectWaitForDecrease "6"
+#define SVC_multiObjectIncrease "4"
+#define SVC_multiObjectDecrease "5"
+#define SVC_multiObjectWaitForIncrease "6"
+#define SVC_multiObjectWaitForDecrease "7"
 
-#define SVC_setKernelPrioMax "7"
+#define SVC_setKernelPrioMax "8"
 
-#define SVC_sleep "8"
-#define SVC_sleepNoBlock "9"
+#define SVC_sleep "9"
 #define SVC_wakeup "10"
 
 #define SVC_processAdd "11"

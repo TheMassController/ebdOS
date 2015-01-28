@@ -34,12 +34,15 @@ void __lockObjectBlock(SingleLockObject* object){
 }
 
 int __lockObjectBlockTimeout(SingleLockObject* object, unsigned msTimeout){
-     if (!__lockObjectNoblock(object)){
-        currentProcess->blockAddress = object;
+    int retCode = __lockObjectNoblock(object);
+     if (!retCode){
         currentProcess->state |= STATE_LOCKED;
         __sleepMSDelayBlock(msTimeout);
-        CALLSUPERVISOR(SVC_objectLock);
+        currentProcess->blockAddress = object;
+        CALLSUPERVISOR(SVC_lockAndSleep);
         __sleepDelayBlockWakeup();
+    } else {
+        return retCode;
     }
     return __lockObjectNoblock(object);
 }

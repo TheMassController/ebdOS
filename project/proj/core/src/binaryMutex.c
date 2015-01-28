@@ -3,36 +3,34 @@
 #include "stdlib.h"
 #include "process.h"
 #include "threadsafeCalls.h" 
+#include "asmUtils.h"
 
 extern struct Process* currentProcess;
 
-struct BinaryMutex* createBinaryMutex(void){
-    struct BinaryMutex* mutex = malloc(sizeof(struct BinaryMutex));
-    if (mutex == NULL) return NULL;
-    mutex->lock = 0;
-    return mutex;
+void initBinaryMutex(struct BinaryMutex* mutex){
+    __initSingleLockObject(&(mutex->singleLockObject));
 }
 
-//void deleteBinaryMutex(BinaryMutex* mutex){
-//    //TODO call kernel to delete this mutex. If a resource was still waiting for it, kernel panic or some shit.
-//}
+void uninitBinaryMutex(struct BinaryMutex* mutex){
+    __cleanupSingleLockObject(&(mutex->singleLockObject));
+}
 
 void lockBinaryMutex(struct BinaryMutex* mutex){
-    //TODO prevent locking when inside an interrupt    
-    __lockObjectBlock((void*)mutex);
+    if (isInInterrupt()) return; 
+    __lockObjectBlock(&(mutex->singleLockObject));
 }
 
 int lockBinaryMutexNoBlock(struct BinaryMutex* mutex){
-    //TODO prevent locking when inside an interrupt 
-    return __lockObjectNoblock((void*)mutex);
+    return __lockObjectNoblock(&(mutex->singleLockObject));
 }
 
+//Ret: 0 if failed
 int lockBinaryMutexBlockWait(struct BinaryMutex* mutex, unsigned msWaitTime){
-    //TODO prevent locking when inside an interrupt 
-    return __lockObjectBlockTimeout((void*)mutex, msWaitTime);
+    if (isInInterrupt()) return 0; 
+    return __lockObjectBlockTimeout(&(mutex->singleLockObject), msWaitTime);
 }
 
 void releaseBinaryMutex(struct BinaryMutex* mutex){
-    __releaseObject((void*)mutex); 
+    __releaseObject(&(mutex->singleLockObject)); 
 }
 

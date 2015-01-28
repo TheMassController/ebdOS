@@ -11,9 +11,11 @@ A binary mutex is anonymous: everyone can release it.
 You cannot grab it twice: if you try to grab it a second time, you will need to wait for a release first
 */
 
+#include "threadsafeCalls.h"
+
 
 struct BinaryMutex{
-    unsigned lock;
+   struct SingleLockObject singleLockObject; 
 };
 
 /**
@@ -44,8 +46,8 @@ int lockBinaryMutexNoBlock(struct BinaryMutex* mutex);
 
 void releaseBinaryMutex(struct BinaryMutex* mutex);
 
-struct BinaryMutex* createBinaryMutex(void);
+void initBinaryMutex(struct BinaryMutex* mutex);
 
-void deleteBinaryMutex(struct BinaryMutex* mutex);
+void cleanupBinaryMutex(struct BinaryMutex* mutex);
 
 #endif //BINARYMUTEX_H

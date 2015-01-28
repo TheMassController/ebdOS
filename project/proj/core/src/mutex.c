@@ -3,6 +3,7 @@
 #include "stdlib.h"
 #include "process.h"
 #include "threadsafeCalls.h" 
+#include "asmUtils.h"
 
 extern struct Process* currentProcess;
 
@@ -17,7 +18,7 @@ void cleanupMutex(struct Mutex* mutex){
 
 int ownsMutex(struct Mutex* mutex){
     //TODO act like it is already owned by given process when inside interrupt
-    if (mutex->ownerPid == currentProcess->pid && __singleLockObjectIsLocked(&(mutex->singleLockObject))){
+    if ((mutex->ownerPid == currentProcess->pid && __singleLockObjectIsLocked(&(mutex->singleLockObject))) || isInInterrupt()){
         return 1;
     }
     return 0;
@@ -50,8 +51,7 @@ int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime){
 }
 
 void releaseMutex(struct Mutex* mutex){
-    //TODO do not release when inside an interrupt
-    if (!ownsMutex(mutex)) return;
+    if (!ownsMutex(mutex) || isInInterrupt()) return;
     __releaseObject(&(mutex->singleLockObject));
     mutex->ownerPid = 0;
 }

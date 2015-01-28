@@ -165,5 +165,4 @@ void finishBoot(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending: kick-off the scheduler
-    UARTprintf("Prios: SVC: %d, WTB: %d\r\n", ROM_IntPriorityGet(FAULT_SVCALL), ROM_IntPriorityGet(INT_WTIMER0B));
 }

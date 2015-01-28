@@ -15,7 +15,7 @@ void uninitBinaryMutex(struct BinaryMutex* mutex){
     __cleanupSingleLockObject(&(mutex->singleLockObject));
 }
 
-void lockBinaryMutex(struct BinaryMutex* mutex){
+void lockBinaryMutexBlocking(struct BinaryMutex* mutex){
     if (isInInterrupt()) return; 
     __lockObjectBlock(&(mutex->singleLockObject));
 }

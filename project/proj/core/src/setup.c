@@ -68,6 +68,16 @@ void setupHardware(void){
     ROM_GPIOPinTypeUART(GPIO_PORTA_BASE,GPIO_PIN_0|GPIO_PIN_1); 
     //Start the UART0 with baud BAUD 
     UARTStdioInitExpClk(0,BAUDRATE);
+
+    //Enable other periphials
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);
+    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_FALLING_EDGE);
+    GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
+    GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_4);
+    ROM_IntPrioritySet(INT_GPIOF, 200);
+    IntEnable(INT_GPIOF);
     
     //For scheduling: systick
     //It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock
@@ -123,7 +133,7 @@ void setupHardware(void){
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); //Let it interrupt on match
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); //Enable the correct interrupt
     ROM_IntEnable(INT_WTIMER0B);
-    IntPrioritySet(INT_WTIMER0B, 200);
+    ROM_IntPrioritySet(INT_WTIMER0B, 200);
     //NVIC_PRI27_R |= 7<<5;
     //UARTprintf("%d\r\n",NVIC_PRI27_R);
 

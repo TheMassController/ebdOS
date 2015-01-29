@@ -8,6 +8,13 @@
 #include "mutex.h"
 #include "binaryMutex.h"
 
+#include "hw_types.h" //Contains the types
+#include "rom_map.h" //Call functions directly from the ROM if available
+#include "rom.h" //Declare ROM addresses for rom funcs
+#include "hw_memmap.h" //address of GPIO etc
+#include "gpio.h" //Address of GPIO stuff
+
+
 extern struct Process* currentProcess;
 
 struct SleepTimeStruct{
@@ -88,10 +95,17 @@ void testSleep(void){
     }
 }
 
-void BinMutFunc(void* binMut){
-    struct BinaryMutex* binaryMutex = binMut;
+struct BinaryMutex binaryMutex;
+
+void buttonInterrupt(void){
+    ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
+    releaseBinaryMutex(&binaryMutex);
+}
+
+void binMutFunc(void* binMut){
+    struct BinaryMutex* binMutex = binMut;
     while(1){
-        int i = lockBinaryMutexBlockWait(binaryMutex, 2000);
+        int i = lockBinaryMutexBlockWait(binMutex, 2000);
         if (!i){
             UARTprintf("Noes! :(\r\n");
         } else {
@@ -101,13 +115,8 @@ void BinMutFunc(void* binMut){
 }
 
 void testSleepAndMutex(void){
-    struct BinaryMutex* binaryMutex = malloc(sizeof(struct BinaryMutex));
-    initBinaryMutex(binaryMutex);
-    if (binaryMutex == NULL){
-        UARTprintf("FAILURE\r\n");
-        return;
-    }
-    if(__createNewProcess(0, 1024, "BinaryMutexTestProc", &BinMutFunc, binaryMutex, 4) == 2){
+    initBinaryMutex(&binaryMutex);
+    if(__createNewProcess(0, 1024, "BinaryMutexTestProc", binMutFunc, (void*)&binaryMutex, 4) == 2){
         UARTprintf("FAILURE\r\n");
     }    
 }

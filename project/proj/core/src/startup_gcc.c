@@ -62,9 +62,10 @@ void svcHandler(void);
 //Sleep timer interrupt
 void sleepTimerWAInterrupt(void);
 void sleepTimerWBInterrupt(void);
-//Usage fault handling
+//misc fault handling
 void usageFaultHandler(void);
-
+void mpuFaultHandler(void);
+void busFaultHandler(void);
 //TEMP
 void buttonInterrupt(void);
 
@@ -82,8 +83,8 @@ void (* const g_pfnVectors[])(void) =
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler
     faultISRHandler,                               // The hard fault handler
-    IntDefaultHandler,                      // The MPU fault handler
-    IntDefaultHandler,                      // The bus fault handler
+    mpuFaultHandler,                      // The MPU fault handler
+    busFaultHandler,                      // The bus fault handler
     usageFaultHandler,                      // The usage fault handler
     0,                                      // Reserved
     0,                                      // Reserved

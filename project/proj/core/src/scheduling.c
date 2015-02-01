@@ -31,9 +31,7 @@ void schedule(void){
     //The actual selection
     for (struct Process* proc = processesReady; proc != NULL; proc = proc->nextProcess ){
         if (nextProcess == NULL || proc->priority > nextProcess->priority){
-            if (proc->state == STATE_READY){
                 nextProcess = proc;
-            }
         }
     }
     if (nextProcess == NULL){

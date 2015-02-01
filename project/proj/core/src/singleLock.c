@@ -26,7 +26,8 @@ int __lockObjectNoblock(SingleLockObject* object){
 }
 
 void __lockObjectBlock(SingleLockObject* object){
-   while(!__lockSingleLockObject(object)){
+    if (isInInterrupt()) return;
+    while(!__lockSingleLockObject(object)){
         currentProcess->state |= STATE_LOCKED;
         currentProcess->blockAddress = object;
         CALLSUPERVISOR(SVC_objectLock);
@@ -35,17 +36,20 @@ void __lockObjectBlock(SingleLockObject* object){
 }
 
 int __lockObjectBlockTimeout(SingleLockObject* object, unsigned msTimeout){
+    if (isInInterrupt()) return 0;
     int retCode = __lockObjectNoblock(object);
      if (!retCode){
-        currentProcess->state |= STATE_LOCKED;
         __sleepMSDelayBlock(msTimeout);
-        currentProcess->blockAddress = object;
-        CALLSUPERVISOR(SVC_lockAndSleep);
+        while ((currentProcess->state & STATE_SLEEP) && retCode != 1){
+            currentProcess->state |= STATE_LOCKED;
+            currentProcess->blockAddress = object;
+            CALLSUPERVISOR(SVC_lockAndSleep);
+            retCode = __lockObjectNoblock(object); 
+        }
+        if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);
         __sleepDelayBlockWakeup();
-    } else {
-        return retCode;
     }
-    return __lockObjectNoblock(object);
+    return retCode;
 }
 
 //Th purpose of this function is to become "interrupt-safe"

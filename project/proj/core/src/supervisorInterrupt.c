@@ -26,7 +26,7 @@ static struct SleepingProcessStruct* nextToWakeUp = NULL;
 
 void rescheduleImmediately(void){
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
-    NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
+    //NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
 
 
@@ -87,11 +87,13 @@ int processInReadyList(struct Process* process){
 void addProcessToReady(struct Process* process){
     if (!processInList(processesReady, process)){
         processesReady = sortProcessIntoList(processesReady, process);
+        rescheduleImmediately();
     }
 }
 
 void removeProcessFromReady(struct Process* process){
-    removeProcessFromList(processesReady, process);
+    processesReady = removeProcessFromList(processesReady, process);
+    rescheduleImmediately();
 }
 
 //Sleep related
@@ -183,14 +185,10 @@ void removeSleeperFromList(struct Process* proc){
 struct Process* popFromLockQueue(struct Process* listHead){
     if (listHead != NULL){
         struct Process* item = listHead;
-        if (item->state & STATE_SLEEP){
-            removeSleeperFromList(item); 
-        }
-        item->state = 0;
+        item->state ^= STATE_LOCKED;
         item->blockAddress = NULL;
         listHead = listHead->nextProcess;
         addProcessToReady(item);
-        rescheduleImmediately();
     }
     return listHead;
 }
@@ -210,16 +208,14 @@ void processBlockedSingleLock(void){
     if (!waitObject->lock) return;
     removeProcessFromReady(currentProcess);
     waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
-    rescheduleImmediately();
 }
 
 void lockAndSleep(void){
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    if (!waitObject->lock) return;
+    if (!waitObject->lock && !(currentProcess->state & (STATE_SLEEP|STATE_LOCKED))) return;
     removeProcessFromReady(currentProcess);
     waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-    rescheduleImmediately();
 }
 
 void singleLockReleased(void){
@@ -246,7 +242,6 @@ void multiLockIncreaseBlock(void){
     if (multiLock->lock == 0) return;
     removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
-    rescheduleImmediately();
 }
 
 void multiLockDecreaseBlock(void){
@@ -254,7 +249,6 @@ void multiLockDecreaseBlock(void){
     if (multiLock->lock < multiLock->maxLockVal) return;
     removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
-    rescheduleImmediately();
 }
 
 void multiLockIncreaseBlockAndSleep(void){
@@ -263,7 +257,6 @@ void multiLockIncreaseBlockAndSleep(void){
     removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-    rescheduleImmediately();
 }
 
 void multiLockDecreaseBlockAndSleep(void){
@@ -272,17 +265,19 @@ void multiLockDecreaseBlockAndSleep(void){
     removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-    rescheduleImmediately();
 }
 
 void setKernelPrioMax(void){
    kernel->priority = 255; 
 }
 
+void wakeupCurrentProcess(void){
+   removeSleeperFromList(currentProcess); 
+}
+
 void fallAsleep(void){
     removeProcessFromReady(currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-    rescheduleImmediately();
 }
 
 
@@ -335,6 +330,9 @@ void svcHandler_main(char reqCode){
             wakeupFromWBInterrupt();
             break;
         case 13:
+            wakeupCurrentProcess();
+            break;
+        case 14:
             addNewProcess();
             break;
 #ifdef DEBUG

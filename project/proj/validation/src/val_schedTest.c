@@ -100,7 +100,7 @@ struct BinaryMutex binaryMutex;
 void buttonInterrupt(void){
     ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
     releaseBinaryMutex(&binaryMutex);
-    lockBinaryMutexNoBlock(&binaryMutex);
+    //lockBinaryMutexNoBlock(&binaryMutex);
 }
 
 void binMutFunc(void* binMut){

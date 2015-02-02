@@ -55,6 +55,7 @@ void prepareSleep(int64_t sleepTicks){
 
 void sleepHalfMS(long sleepTicks){
     //Because a half ms is exactly 1 tick
+    if (isInInterrupt()) return; //cannot sleep from an interrupt
     prepareSleep(sleepTicks);
     currentProcess->state |= STATE_SLEEP;
     CALLSUPERVISOR(SVC_sleep);

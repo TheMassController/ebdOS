@@ -240,7 +240,9 @@ void multiLockDecrease(void){
 
 void multiLockIncreaseBlock(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock == 0) return;
+    if (multiLock->lock != 0){
+        return;
+    }
     removeProcessFromReady(currentProcess);
     multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
 }

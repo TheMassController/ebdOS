@@ -108,6 +108,7 @@ int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTi
             CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
             retCode = increaseMultiLock(object);
         }
+        if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);
         __sleepDelayBlockWakeup();
     } 
     return retCode;  
@@ -125,6 +126,7 @@ int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTi
             CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
             retCode = decreaseMultiLock(object);
         }
+        if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);
         __sleepDelayBlockWakeup();
     } 
     return retCode;  

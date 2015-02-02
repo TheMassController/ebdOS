@@ -100,14 +100,19 @@ void removeProcessFromReady(struct Process* process){
 void wakeupProcess(struct SleepingProcessStruct* ptr){
     if (ptr->process->state & STATE_WAIT){
         if (ptr->process->state & STATE_LOCKED){
-            removeProcessFromList(((struct SingleLockObject*)ptr->process->blockAddress)->processWaitingQueue, ptr->process);
+            struct SingleLockObject* object = ptr->process->blockAddress;
+            object->processWaitingQueue = removeProcessFromList(object->processWaitingQueue, ptr->process);
+        } else {
+            struct MultiLockObject* object = ptr->process->blockAddress;
+            if (ptr->process->state & STATE_INC_WAIT){
+                object->processWaitingQueueIncrease = removeProcessFromList(object->processWaitingQueueIncrease, ptr->process);
+            }
+            if (ptr->process->state & STATE_DEC_WAIT){
+                object->processWaitingQueueDecrease = removeProcessFromList(object->processWaitingQueueDecrease, ptr->process);
+            
+            }
         }
-        if (ptr->process->state & STATE_INC_WAIT){
-            removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueIncrease, ptr->process);
-        }
-        if (ptr->process->state & STATE_DEC_WAIT){
-            removeProcessFromList(((struct MultiLockObject*)ptr->process->blockAddress)->processWaitingQueueDecrease, ptr->process);
-        }
+        ptr->process->blockAddress = NULL;
     }
     ptr->process->state = STATE_READY;
     addProcessToReady(ptr->process);
@@ -140,6 +145,7 @@ void setSleepTimerWB(void){
 }
 
 void wakeupFromWBInterrupt(void){
+    if (nextToWakeUp == NULL) return;
     wakeupProcess(nextToWakeUp);
     sleepProcessListHead = sleepProcessListHead->nextPtr;
     nextToWakeUp = NULL;
@@ -186,7 +192,8 @@ void removeSleeperFromList(struct Process* proc){
 struct Process* popFromLockQueue(struct Process* listHead){
     if (listHead != NULL){
         struct Process* item = listHead;
-        item->state ^= STATE_LOCKED;
+        item->state |= STATE_WAIT;
+        item->state ^= STATE_WAIT;
         item->blockAddress = NULL;
         listHead = listHead->nextProcess;
         addProcessToReady(item);
@@ -256,17 +263,17 @@ void multiLockDecreaseBlock(void){
 
 void multiLockIncreaseBlockAndSleep(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock < multiLock->maxLockVal) return;
+    if (multiLock->lock != 0) return;
     removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+    multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
 }
 
 void multiLockDecreaseBlockAndSleep(void){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock == 0) return;
+    if (multiLock->lock < multiLock->maxLockVal) return;
     removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+    multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
 }
 

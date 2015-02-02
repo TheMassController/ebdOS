@@ -25,18 +25,7 @@ struct Process* sleepProcess; //Runs when no other process wants to run
 struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
 
 void schedule(void){
-    //Actual scheduling.
-    nextProcess = NULL;
-    //If the kernel is ready, kernel is nextprocess
-    //The actual selection
-    for (struct Process* proc = processesReady; proc != NULL; proc = proc->nextProcess ){
-        if (nextProcess == NULL || proc->priority > nextProcess->priority){
-                nextProcess = proc;
-        }
-    }
-    if (nextProcess == NULL){
-        nextProcess = sleepProcess;
-    } 
+    nextProcess = processesReady;
     if (nextProcess != currentProcess){
         NVIC_INT_CTRL_R |= (1<<28);
     }

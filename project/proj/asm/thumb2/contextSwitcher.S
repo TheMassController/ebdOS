@@ -62,9 +62,9 @@ pendSVHandler:
 	str	r3, [r2] @currentProcess = nextProcess
     
     @Decide the returnvar and return
-	ldr	r3, [r3, #4]    @Get the second variable of nextProcess
-	cmp	r3, #0      @Test if that var is 0
-	bne	.L2         @Branch if it is not 0
+	ldr	r3, [r3, #4]    @Get the second variable of nextProcess. This is the pid and 1 for the kernel
+	cmp	r3, #1      @Test if that var is 1
+	bne	.L2         @Branch if it is not 1
 	mvn	lr, #6  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
     b .L3
 .L2:

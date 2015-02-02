@@ -15,20 +15,38 @@
 #include "malloc.h"
 #include "uartstdio.h"
 #endif //DEBUG
+#include "getSetRegisters.h"
 
 //Responsible for creating and managing processes
+
+#define STACKSAVEREGSIZE 64
 
 struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
 extern struct Process* currentProcess;
 extern struct Process* nextProcess;
-struct Process* sleepProcess; //Runs when no other process wants to run
-struct Process* hibernateProcess; //Runs when there are no other processes left and the kernel has nothing to do either
 //Usefull for selecting the pids
-static unsigned char nextPid = 1; //Short, has to be able to become 256
+static unsigned char nextPid = 3; //Short, has to be able to become 256
 //TODO create system to find out which pids are in use and which not.
 struct Process* newProcess = NULL;
 #define MAX_PROCESSID (254)
+
+struct Process persistentProcesses[2];
+
+#define KERNELSTACKLEN 67
+#define IDLEFUNCSTACKLEN 128
+
+char kernelPSPStack[KERNELSTACKLEN];
+char sleepFuncStack[IDLEFUNCSTACKLEN];
+char sleeperName[13] = "Idle Process"; 
+char kernelName[7] = "Kernel";
+
+void __sleepProcessFunc(void* param){
+    UNUSED(param);
+    while(1){
+        waitForInterrupt();
+    }
+}
 
 void __processReturn(void){
     UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
@@ -39,8 +57,62 @@ void __processReturn(void){
     }
 }
 
+void initializeProcesses(void){
+#ifdef DEBUG
+    if (processesReady != NULL){
+        UARTprintf("PANIC: second run of initilializeProcesses\r\n");
+    }
+#endif
+    //first: create the sleeper
+    persistentProcesses[0].pid = 2;
+    persistentProcesses[0].mPid = 1;
+    persistentProcesses[0].nextProcess = NULL;
+    persistentProcesses[0].priority = 0; 
+    persistentProcesses[0].state = STATE_READY;
+    persistentProcesses[0].blockAddress = NULL;
+    persistentProcesses[0].sleepObjAddress = NULL;
+    persistentProcesses[0].name = sleeperName;
+    persistentProcesses[0].stack = sleepFuncStack;
+    int* stackPointer = (int*)(((long)&sleepFuncStack[IDLEFUNCSTACKLEN - 1]) & (long)0xFFFFFFFC); 
+    *stackPointer-- = 0x01000000; //XPSR, standard stuff 
+    *stackPointer-- = (int)__sleepProcessFunc; //PC, initally points to start of function
+    *stackPointer-- = (int)&__processReturn; //LR, return func
+    *stackPointer-- = 12; // reg12, 12 for debug
+    *stackPointer-- = 3; // reg3, 3 for debug
+    *stackPointer-- = 2; // reg2, 2 for debug
+    *stackPointer-- = 1; // reg1, 1 for debug
+    *stackPointer-- = (int)0; // reg 0, first param
+    //The second set is the registers that we have to move manually between RAM and regs when switching contexts
+    //Order: R4, R5, R6, R7, R8, R9, R10, R11
+    for ( int u = 11; u > 4; u-- ){
+        *stackPointer-- = u; //Reg u, u for debug
+    }  
+    *stackPointer = 4;
+    persistentProcesses[0].stackPointer = stackPointer;
+    
+    //next: the kernel
+    persistentProcesses[1].pid = 1;
+    persistentProcesses[1].mPid = 0;
+    persistentProcesses[1].nextProcess = &persistentProcesses[0];
+    persistentProcesses[1].priority = 100;
+    persistentProcesses[1].state = STATE_READY;
+    persistentProcesses[1].blockAddress = NULL;
+    persistentProcesses[1].sleepObjAddress = NULL;
+    persistentProcesses[1].name = kernelName;
+    persistentProcesses[1].stack = kernelPSPStack;
+    persistentProcesses[1].stackPointer = (void*)((long)(&kernelPSPStack[3]) & (long)0xFFFFFFFC);
+    
+    //set some params 
+    processesReady = &persistentProcesses[1];
+    currentProcess = &persistentProcesses[1]; 
+    setPSP(currentProcess->stackPointer);
+    kernel = currentProcess;
+}
+
+
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
     if (priority == 255) priority = 254; //Max 254, 255 is kernel only
+    if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
     if (currentProcess->pid != 1) {
         return 3;
     } 
@@ -91,7 +163,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     *stackPointer-- = 1; // reg1, 1 for debug
     *stackPointer-- = (int)param; // reg 0, first param
 
-    //The second set is the registers that we have to move manually between RAM and regs when switching contextst
+    //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
     for ( int u = 11; u > 4; u-- ){
         *stackPointer-- = u; //Reg u, u for debug
@@ -107,12 +179,6 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 }
 
 
-void __sleepProcessFunc(void* param){
-    UNUSED(param);
-    while(1){
-        waitForInterrupt();
-    }
-}
 
 void __hibernateProcessFunc(void* param){
     UNUSED(param);

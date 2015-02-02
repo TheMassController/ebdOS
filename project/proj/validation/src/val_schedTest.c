@@ -6,7 +6,6 @@
 #include "string.h" 
 #include "semaphore.h"
 #include "mutex.h"
-#include "binaryMutex.h"
 
 #include "hw_types.h" //Contains the types
 #include "rom_map.h" //Call functions directly from the ROM if available
@@ -95,29 +94,46 @@ void testSleep(void){
     }
 }
 
-struct BinaryMutex binaryMutex;
+struct Semaphore firstSemaphore;
+struct Semaphore secondSemaphore;
 
 void buttonInterrupt(void){
     ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
-    releaseBinaryMutex(&binaryMutex);
-    //lockBinaryMutexNoBlock(&binaryMutex);
+    decreaseSemaphoreNonBlocking(&firstSemaphore);
+    increaseSemaphoreNonBlocking(&secondSemaphore);
 }
 
-void binMutFunc(void* binMut){
-    struct BinaryMutex* binMutex = binMut;
+void semFuncFirst(void* semaphore1){
+    struct Semaphore* semp = semaphore1;
     while(1){
-        int i = lockBinaryMutexBlockWait(binMutex, 2000);
+        int i = increaseSemaphoreBlockingTimeout(semp, 2000);
         if (!i){
-            UARTprintf("Noes! :(\r\n");
+            UARTprintf("1: Noes! :(\r\n");
         } else {
-            UARTprintf("Yay! :)\r\n");
+            UARTprintf("1: Yay! :)\r\n");
+        }
+    }
+}
+
+void semFuncSec(void* semaphore2){
+    struct Semaphore* semp = semaphore2;
+    while(1){
+        int i = decreaseSemaphoreBlockingTimeout(semp, 2000);
+        if (!i){
+            UARTprintf("2: Noes! :(\r\n");
+        } else {
+            UARTprintf("2: Yay! :)\r\n");
         }
     }
 }
 
 void testSleepAndMutex(void){
-    initBinaryMutex(&binaryMutex);
-    if(__createNewProcess(0, 1024, "BinaryMutexTestProc", binMutFunc, (void*)&binaryMutex, 4) == 2){
+    initSemaphore(&firstSemaphore,2);
+    initSemaphore(&secondSemaphore,2);
+    if(__createNewProcess(0, 512, "incrMutTest", semFuncFirst, (void*)&firstSemaphore, 4) == 2){
+        UARTprintf("FAILURE\r\n");
+    }    
+    if(__createNewProcess(0, 512, "decrMutTest", semFuncSec, (void*)&secondSemaphore, 4) == 2){
         UARTprintf("FAILURE\r\n");
     }    
 }

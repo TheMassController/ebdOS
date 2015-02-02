@@ -150,9 +150,10 @@ void wakeupFromWBInterrupt(void){
 void addSleeperToList(struct SleepingProcessStruct* ptr){
     struct SleepingProcessStruct* current = sleepProcessListHead;
     struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current->overflows <= ptr->overflows && current->sleepUntil > ptr->sleepUntil){
+    while(current != NULL && current->overflows <= ptr->overflows && current->sleepUntil >= ptr->sleepUntil){
         previous = current;
         current = current->nextPtr;
+        if (current == ptr) return;
     }
     if (previous == NULL){
         ptr->nextPtr = current;
@@ -212,7 +213,7 @@ void processBlockedSingleLock(void){
 
 void lockAndSleep(void){
     SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    if (!waitObject->lock && !(currentProcess->state & (STATE_SLEEP|STATE_LOCKED))) return;
+    if (!waitObject->lock || !(currentProcess->state & (STATE_SLEEP|STATE_LOCKED))) return;
     removeProcessFromReady(currentProcess);
     waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);

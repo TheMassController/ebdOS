@@ -42,6 +42,8 @@ extern unsigned sleepClocksPerMS;
 extern struct ReentrantMutex mallocMutex;
 extern int initialized;
 
+void initializeProcesses(void);
+
 void setupHardware(void){
     //Setup the PLL
     //Datasheet pp 217
@@ -138,27 +140,8 @@ void setupHardware(void){
     //UARTprintf("%d\r\n",NVIC_PRI27_R);
 
     //Initialize malloc mutex
+    initializeProcesses();
     initReentrantMutex(&(mallocMutex));
-
-    //Creat pid 1: the kernel
-    currentProcess = (struct Process*)malloc(sizeof(struct Process));
-    currentProcess->pid = 1;
-    __createNewProcess(0, 67, "Kernel", NULL, NULL, 100);
-    kernel = processesReady;
-    kernel->stackPointer = (int*)((((long)kernel->stack) + 67 - 4) & (long)0xFFFFFFFC );
-    setPSP(kernel->stackPointer);
-    free(currentProcess);
-    currentProcess = kernel;
-    kernel->priority = 100;
-    
-    //Create the other two special processes: sleep and hibernate
-    __createNewProcess(0, MINSTACKLEN, "SleepProcess", &__sleepProcessFunc, NULL, 255);
-    __createNewProcess(0, MINSTACKLEN, "HibernateProcess", &__hibernateProcessFunc, NULL, 255);
-    sleepProcess = processesReady->nextProcess;
-    sleepProcess->nextProcess = NULL;
-    hibernateProcess = processesReady;
-    hibernateProcess->nextProcess = NULL;
-    processesReady = kernel;
 
     //Create the kernelQueue
     //kernelQueue = malloc(sizeof(struct KernelQueue));
@@ -166,7 +149,6 @@ void setupHardware(void){
     //kernelQueue->readyItems = createSemaphore(255);
     //kernelQueue->listProtectionMutex = createMutex();
     //kernelQueue->firstItem = NULL;
-    initialized = 1;
 
 }
 

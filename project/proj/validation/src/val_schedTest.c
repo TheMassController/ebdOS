@@ -100,7 +100,7 @@ struct Semaphore secondSemaphore;
 void buttonInterrupt(void){
     ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
     decreaseSemaphoreNonBlocking(&firstSemaphore);
-    increaseSemaphoreNonBlocking(&secondSemaphore);
+    //increaseSemaphoreNonBlocking(&secondSemaphore);
 }
 
 void semFuncFirst(void* semaphore1){
@@ -133,9 +133,9 @@ void testSleepAndMutex(void){
     if(__createNewProcess(0, 512, "incrMutTest", semFuncFirst, (void*)&firstSemaphore, 4) == 2){
         UARTprintf("FAILURE\r\n");
     }    
-    if(__createNewProcess(0, 512, "decrMutTest", semFuncSec, (void*)&secondSemaphore, 4) == 2){
-        UARTprintf("FAILURE\r\n");
-    }    
+    //if(__createNewProcess(0, 512, "decrMutTest", semFuncSec, (void*)&secondSemaphore, 4) == 2){
+    //    UARTprintf("FAILURE\r\n");
+    //}    
 }
 
 

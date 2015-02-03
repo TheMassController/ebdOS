@@ -188,7 +188,6 @@ void removeSleeperFromList(struct Process* proc){
     }
 }
 
-//LockQueue = mutex related
 struct Process* popFromLockQueue(struct Process* listHead){
     if (listHead != NULL){
         struct Process* item = listHead;
@@ -200,7 +199,6 @@ struct Process* popFromLockQueue(struct Process* listHead){
     }
     return listHead;
 }
-
 
 //----------------
 
@@ -233,47 +231,31 @@ void singleLockReleased(void){
     currentProcess->blockAddress = NULL;
 }
 
-void multiLockIncrease(void){
+void multiLockModified(const char increase){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    multiLock->processWaitingQueueIncrease = popFromLockQueue(multiLock->processWaitingQueueIncrease);
-    currentProcess->blockAddress = NULL;
-}
-
-void multiLockDecrease(void){    
-    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    multiLock->processWaitingQueueDecrease = popFromLockQueue(multiLock->processWaitingQueueDecrease);
-    currentProcess->blockAddress = NULL;
-}
-
-void multiLockIncreaseBlock(void){
-    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock != 0){
-        return;
+    if (increase){
+        multiLock->processWaitingQueueIncrease = popFromLockQueue(multiLock->processWaitingQueueIncrease);
+    } else {
+        multiLock->processWaitingQueueDecrease = popFromLockQueue(multiLock->processWaitingQueueDecrease);
     }
-    removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+    currentProcess->blockAddress = NULL;
 }
 
-void multiLockDecreaseBlock(void){
+void multiLockBlock(const char increase){
     MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock < multiLock->maxLockVal) return;
-    removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+    if (increase){
+        if (multiLock->lock != 0) return;
+        removeProcessFromReady(currentProcess);
+        multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+    } else {
+        if (multiLock->lock < multiLock->maxLockVal) return;
+        removeProcessFromReady(currentProcess);
+        multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+    }
 }
 
-void multiLockIncreaseBlockAndSleep(void){
-    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock != 0) return;
-    removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
-    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-}
-
-void multiLockDecreaseBlockAndSleep(void){
-    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
-    if (multiLock->lock < multiLock->maxLockVal) return;
-    removeProcessFromReady(currentProcess);
-    multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+void multiLockBlockAndSleep(const char increase){
+    multiLockBlock(increase); 
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
 }
 
@@ -313,22 +295,22 @@ void svcHandler_main(char reqCode){
             singleLockReleased();
             break;
         case 4:
-            multiLockIncrease();
+            multiLockModified(1);
             break;
         case 5:
-            multiLockDecrease();
+            multiLockModified(0);
             break;
         case 6:
-            multiLockIncreaseBlock();
+            multiLockBlock(1);
             break;
         case 7:
-            multiLockDecreaseBlock();
+            multiLockBlock(0);
             break;
         case 8:
-            multiLockIncreaseBlockAndSleep();
+            multiLockBlockAndSleep(1);
             break;
         case 9:
-            multiLockDecreaseBlockAndSleep();
+            multiLockBlockAndSleep(0);
             break;
         case 10:
             setKernelPrioMax();

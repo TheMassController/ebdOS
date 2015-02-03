@@ -25,7 +25,6 @@ void __cleanupMultiLockObject(MultiLockObject* object){
     }
 }
 
-
 void intrModifyCall(void* oldBlockAddr, const char increase){
     if (increase){
         CALLSUPERVISOR(SVC_multiObjectIncrease);
@@ -49,7 +48,6 @@ int modifyMultiLockObject(MultiLockObject* object, const char increase){
     }
     return retCode;
 }
-
 
 int increaseMultiLock(MultiLockObject* object){
     return modifyMultiLockObject(object, 1);

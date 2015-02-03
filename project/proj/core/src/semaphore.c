@@ -39,7 +39,7 @@ int decreaseSemaphoreNonBlocking(struct Semaphore* semaphore){
 }
 
 int decreaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout){
-    if(__increaseMultiLockObjectBlockTimeout(&(semaphore->multiLockObject), timeout) == -1){
+    if(__decreaseMultiLockObjectBlockTimeout(&(semaphore->multiLockObject), timeout) == -1){
         return 0;
     }
     return 1;

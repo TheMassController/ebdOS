@@ -67,22 +67,33 @@ int __decreaseMultiLockObjectNoBlock(MultiLockObject* object){
     return decreaseMultiLock(object);
 }
 
+int blockWaitForIncrease(MultiLockObject* object){
+    currentProcess->state |= STATE_DEC_WAIT;
+    //You want to increase, so you wait for a decrease
+    currentProcess->blockAddress = object;
+    CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
+    return increaseMultiLock(object);
+}
+
+int blockWaitForDecrease(MultiLockObject* object){
+    currentProcess->state |= STATE_INC_WAIT;
+    currentProcess->blockAddress = object;
+    CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
+    return decreaseMultiLock(object);
+}
+
 int modifyMultiLockObjectBlock(MultiLockObject* object, const char increase){
     if (isInInterrupt()) return -1;
     int retCode;
     if (increase){
-        while((retCode = increaseMultiLock(object)) == -1){
-            currentProcess->blockAddress = object;
-            currentProcess->state |= STATE_DEC_WAIT;
-            //You want to increase, so you wait for a decrease
-            CALLSUPERVISOR(SVC_multiObjectWaitForDecrease);
+        retCode = increaseMultiLock(object);
+        while (retCode == -1){
+          retCode = blockWaitForIncrease(object);  
         }
     } else {
-        while((retCode = decreaseMultiLock(object)) == -1){
-            currentProcess->blockAddress = object;
-            currentProcess->state |= STATE_INC_WAIT;
-            //You want to decrease, so you wait for an increase
-            CALLSUPERVISOR(SVC_multiObjectWaitForIncrease);
+        retCode = decreaseMultiLock(object);
+        while (retCode == -1){
+          retCode = blockWaitForDecrease(object);  
         }
     }
     return retCode;
@@ -96,41 +107,35 @@ int __decreaseMultiLockObjectBlock(MultiLockObject* object){
     return modifyMultiLockObjectBlock(object, 0);
 }
 
-
-int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout){
+int modifyMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout, const char increase){
     if (isInInterrupt()) return -1;
     int retCode;
-    if ((retCode = increaseMultiLock(object)) == -1){
+    if (increase){
+        retCode = increaseMultiLock(object);
+    } else {
+        retCode = decreaseMultiLock(object);
+    }
+    if (retCode == -1){
         __sleepMSDelayBlock(msTimeout);
         while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){ 
-            currentProcess->state |= STATE_DEC_WAIT;
-            //You want to increase, so you wait for a decrease
-            currentProcess->blockAddress = object;
-            CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
-            retCode = increaseMultiLock(object);
+            if (increase){
+                retCode = blockWaitForIncrease(object);  
+            } else {
+                retCode = blockWaitForDecrease(object);  
+            }
         }
         if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);
         __sleepDelayBlockWakeup();
-    } 
-    return retCode;  
-    
+    }
+    return retCode;
+}
+
+int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout){
+    return modifyMultiLockObjectBlockTimeout(object, msTimeout, 1);
 }
 
 int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout){
-    if (isInInterrupt()) return -1;
-    int retCode;
-    if ((retCode = decreaseMultiLock(object)) == -1){
-        __sleepMSDelayBlock(msTimeout);
-        while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){ 
-            currentProcess->state |= STATE_INC_WAIT;
-            currentProcess->blockAddress = object;
-            CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
-            retCode = decreaseMultiLock(object);
-        }
-        if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);
-        __sleepDelayBlockWakeup();
-    } 
-    return retCode;  
+    return modifyMultiLockObjectBlockTimeout(object, msTimeout, 0);
 }
 
 int __getMultiLockVal(MultiLockObject* object){

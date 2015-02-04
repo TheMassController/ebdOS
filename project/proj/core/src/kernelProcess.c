@@ -1,15 +1,15 @@
 //The functions of the actual kernel: this is the kernel process
 #include "process.h"
 #include "kernelQueue.h"
-#include "binaryMutex.h"
+#include "binarySemaphore.h"
 #include "uartstdio.h"
 
 extern struct Process* currentProcess;
-struct BinaryMutex binMutKern;
+struct BinarySemaphore binSemKern;
 
 void kernelMain(void){
-    initBinaryMutex(&binMutKern);
-    lockBinaryMutexBlocking(&binMutKern);
-    lockBinaryMutexBlocking(&binMutKern);
+    initBinarySemaphore(&binSemKern);
+    lockBinarySemaphoreBlocking(&binSemKern);
+    lockBinarySemaphoreBlocking(&binSemKern);
     UARTprintf("Mine?\r\n");
 }

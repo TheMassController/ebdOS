@@ -2,56 +2,54 @@
 #include "mutex.h"
 #include "stdlib.h"
 #include "process.h"
-#include "threadsafeCalls.h" 
+#include "lockObject.h" 
 #include "asmUtils.h"
 
 extern struct Process* currentProcess;
 
 void initMutex(struct Mutex* mutex){
-    __initSingleLockObject(&(mutex->singleLockObject));
+    __initLockObject(&(mutex->lockObject), 1);
     mutex->ownerPid = 0;
 }
 
 void cleanupMutex(struct Mutex* mutex){
-    __cleanupSingleLockObject(&(mutex->singleLockObject));
+    __cleanupLockObject(&(mutex->lockObject));
 }
 
 int ownsMutex(struct Mutex* mutex){
-    //TODO act like it is already owned by given process when inside interrupt
-    if ((mutex->ownerPid == currentProcess->pid && __singleLockObjectIsLocked(&(mutex->singleLockObject))) || isInInterrupt()){
-        return 1;
-    }
-    return 0;
+    return (mutex->ownerPid == currentProcess->pid || isInInterrupt());
 }
 
 void lockMutexBlocking(struct Mutex* mutex){
-    if (ownsMutex(mutex)){
-        return;
-    }
-    __lockObjectBlock(&(mutex->singleLockObject));
+    if (ownsMutex(mutex)) return;
+    __increaseLockObjectBlock(&(mutex->lockObject));
     mutex->ownerPid = currentProcess->pid;
 }
 
 int lockMutexNoBlock(struct Mutex* mutex){
-    if (ownsMutex(mutex)) return 0; //Return false immedeatly
-    int retCode = __lockObjectNoblock(&(mutex->singleLockObject));
-    if (retCode){
+    if (ownsMutex(mutex)) return 0;
+    int retCode = __increaseLockObjectNoBlock(&(mutex->lockObject));
+    if (retCode != -1){
         mutex->ownerPid = currentProcess->pid;
+        return 1;
+    } else {
+        return 0;
     }
-    return retCode;
 }
 
 int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime){
     if (ownsMutex(mutex)) return 0; //Return false immedeatly
-    int retCode = __lockObjectBlockTimeout(&(mutex->singleLockObject), msWaitTime);
-    if (retCode){
+    int retCode = __increaseLockObjectBlockTimeout(&(mutex->lockObject), msWaitTime);
+    if (retCode != -1){
         mutex->ownerPid = currentProcess->pid;
+        return 1;
+    } else {
+        return 0;
     }
-    return retCode;
 }
 
 void releaseMutex(struct Mutex* mutex){
     if (!ownsMutex(mutex) || isInInterrupt()) return;
-    __releaseObject(&(mutex->singleLockObject));
+    __decreaseLockObjectNoBlock(&(mutex->lockObject));
     mutex->ownerPid = 0;
 }

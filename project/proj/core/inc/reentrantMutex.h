@@ -1,7 +1,5 @@
 #ifndef REENTRANTMUTEX_H
 #define REENTRANTMUTEX_H
-
-#include "threadsafeCalls.h"
 #include "mutex.h"
 
 //Just a wrapper around the "real" mutex. If the process has or locks the mutex, the counter is increased. The mutex will be released if the counter is zero again.

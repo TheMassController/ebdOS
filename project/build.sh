@@ -2,7 +2,7 @@
 
 source arm-gcc-locations
 
-MAKEFLAGS="-j8"
+MAKEFLAGS="-j10"
 MAKE=$(which make)
 FLASH=$(which lm4flash)
 OPENOCD=$(which openocd)

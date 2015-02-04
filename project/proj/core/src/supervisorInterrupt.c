@@ -10,7 +10,7 @@
 #include "rom_map.h" //Call functions directly from the ROM if available
 #include "rom.h" //Declare ROM addresses for rom funcs
 #include "process.h" 
-#include "threadsafeCalls.h" 
+#include "lockObject.h" 
 #include "stdlib.h" 
 #include "sysSleep.h"
 #include "sleep.h"
@@ -28,7 +28,6 @@ void rescheduleImmediately(void){
     NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
     //NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
 }
-
 
 //----- Functions related to the moving of functions from one queue to another
 
@@ -99,18 +98,13 @@ void removeProcessFromReady(struct Process* process){
 //Sleep related
 void wakeupProcess(struct SleepingProcessStruct* ptr){
     if (ptr->process->state & STATE_WAIT){
-        if (ptr->process->state & STATE_LOCKED){
-            struct SingleLockObject* object = ptr->process->blockAddress;
-            object->processWaitingQueue = removeProcessFromList(object->processWaitingQueue, ptr->process);
-        } else {
-            struct MultiLockObject* object = ptr->process->blockAddress;
-            if (ptr->process->state & STATE_INC_WAIT){
-                object->processWaitingQueueIncrease = removeProcessFromList(object->processWaitingQueueIncrease, ptr->process);
-            }
-            if (ptr->process->state & STATE_DEC_WAIT){
-                object->processWaitingQueueDecrease = removeProcessFromList(object->processWaitingQueueDecrease, ptr->process);
-            
-            }
+        struct LockObject* object = ptr->process->blockAddress;
+        if (ptr->process->state & STATE_INC_WAIT){
+            object->processWaitingQueueIncrease = removeProcessFromList(object->processWaitingQueueIncrease, ptr->process);
+        }
+        if (ptr->process->state & STATE_DEC_WAIT){
+            object->processWaitingQueueDecrease = removeProcessFromList(object->processWaitingQueueDecrease, ptr->process);
+        
         }
         ptr->process->blockAddress = NULL;
     }
@@ -151,7 +145,6 @@ void wakeupFromWBInterrupt(void){
     nextToWakeUp = NULL;
     setSleepTimerWB();
 }
-
 
 void addSleeperToList(struct SleepingProcessStruct* ptr){
     struct SleepingProcessStruct* current = sleepProcessListHead;
@@ -209,53 +202,31 @@ void addNewProcess(void){
     }    
 }
 
-void processBlockedSingleLock(void){
-    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    if (!waitObject->lock) return;
-    removeProcessFromReady(currentProcess);
-    waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
-}
-
-void lockAndSleep(void){
-    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    if (!waitObject->lock || !(currentProcess->state & (STATE_SLEEP|STATE_LOCKED))) return;
-    removeProcessFromReady(currentProcess);
-    waitObject->processWaitingQueue = sortProcessIntoList(waitObject->processWaitingQueue, currentProcess);
-    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
-}
-
-void singleLockReleased(void){
-    //The released mutex is in the currentProcess->blockAddress var
-    SingleLockObject* waitObject = (SingleLockObject*)currentProcess->blockAddress;
-    waitObject->processWaitingQueue = popFromLockQueue(waitObject->processWaitingQueue);
-    currentProcess->blockAddress = NULL;
-}
-
-void multiLockModified(const char increase){
-    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+void lockObjectModified(const char increase){
+    struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
-        multiLock->processWaitingQueueIncrease = popFromLockQueue(multiLock->processWaitingQueueIncrease);
+        lockObject->processWaitingQueueIncrease = popFromLockQueue(lockObject->processWaitingQueueIncrease);
     } else {
-        multiLock->processWaitingQueueDecrease = popFromLockQueue(multiLock->processWaitingQueueDecrease);
+        lockObject->processWaitingQueueDecrease = popFromLockQueue(lockObject->processWaitingQueueDecrease);
     }
     currentProcess->blockAddress = NULL;
 }
 
-void multiLockBlock(const char increase){
-    MultiLockObject* multiLock = (MultiLockObject*)currentProcess->blockAddress;
+void lockObjectBlock(const char increase){
+    struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
-        if (multiLock->lock != 0) return;
+        if (lockObject->lock != 0) return;
         removeProcessFromReady(currentProcess);
-        multiLock->processWaitingQueueIncrease = sortProcessIntoList(multiLock->processWaitingQueueIncrease, currentProcess);
+        lockObject->processWaitingQueueIncrease = sortProcessIntoList(lockObject->processWaitingQueueIncrease, currentProcess);
     } else {
-        if (multiLock->lock < multiLock->maxLockVal) return;
+        if (lockObject->lock < lockObject->maxLockVal) return;
         removeProcessFromReady(currentProcess);
-        multiLock->processWaitingQueueDecrease = sortProcessIntoList(multiLock->processWaitingQueueDecrease, currentProcess);
+        lockObject->processWaitingQueueDecrease = sortProcessIntoList(lockObject->processWaitingQueueDecrease, currentProcess);
     }
 }
 
-void multiLockBlockAndSleep(const char increase){
-    multiLockBlock(increase); 
+void lockObjectBlockAndSleep(const char increase){
+    lockObjectBlock(increase); 
     addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
 }
 
@@ -285,32 +256,23 @@ void svcHandler_main(char reqCode){
         case 0:
             rescheduleImmediately();
             break;
-        case 1:
-            processBlockedSingleLock();
-            break;
-        case 2:
-            lockAndSleep();
-            break;
-        case 3:
-            singleLockReleased();
-            break;
         case 4:
-            multiLockModified(1);
+            lockObjectModified(1);
             break;
         case 5:
-            multiLockModified(0);
+            lockObjectModified(0);
             break;
         case 6:
-            multiLockBlock(1);
+            lockObjectBlock(1);
             break;
         case 7:
-            multiLockBlock(0);
+            lockObjectBlock(0);
             break;
         case 8:
-            multiLockBlockAndSleep(1);
+            lockObjectBlockAndSleep(1);
             break;
         case 9:
-            multiLockBlockAndSleep(0);
+            lockObjectBlockAndSleep(0);
             break;
         case 10:
             setKernelPrioMax();

@@ -101,7 +101,7 @@ int __increaseLockObjectBlock(struct LockObject* object){
     return modifyLockObjectBlock(object, 1);
 }
 
-int __decreasLockObjectBlock(struct LockObject* object){
+int __decreaseLockObjectBlock(struct LockObject* object){
     return modifyLockObjectBlock(object, 0);
 }
 

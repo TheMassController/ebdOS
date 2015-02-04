@@ -24,7 +24,6 @@
 struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
 extern struct Process* currentProcess;
-extern struct Process* nextProcess;
 //Usefull for selecting the pids
 static unsigned char nextPid = 3; //Short, has to be able to become 256
 //TODO create system to find out which pids are in use and which not.

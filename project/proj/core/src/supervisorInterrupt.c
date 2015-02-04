@@ -226,7 +226,7 @@ void lockObjectBlock(const char increase){
 
 void lockObjectBlockAndSleep(const char increase){
     lockObjectBlock(increase); 
-    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    addSleeperToList(&(currentProcess->sleepObj));
 }
 
 void setKernelPrioMax(void){
@@ -239,7 +239,7 @@ void wakeupCurrentProcess(void){
 
 void fallAsleep(void){
     removeProcessFromReady(currentProcess);
-    addSleeperToList((struct SleepingProcessStruct*)currentProcess->sleepObjAddress);
+    addSleeperToList(&(currentProcess->sleepObj));
 }
 
 

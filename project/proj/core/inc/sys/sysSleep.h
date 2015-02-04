@@ -11,6 +11,5 @@ struct SleepingProcessStruct{
 };
 
 void __sleepMSDelayBlock(unsigned ms);
-void __sleepDelayBlockWakeup(void);
 
 #endif //SYSSLEEP_H

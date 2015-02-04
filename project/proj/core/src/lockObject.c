@@ -123,7 +123,6 @@ int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, 
             }
         }
         if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);
-        __sleepDelayBlockWakeup();
     }
     return retCode;
 }

@@ -6,6 +6,7 @@
 #include "string.h" 
 #include "semaphore.h"
 #include "mutex.h"
+#include "binarySemaphore.h"
 
 #include "hw_types.h" //Contains the types
 #include "rom_map.h" //Call functions directly from the ROM if available
@@ -96,11 +97,15 @@ void testSleep(void){
 
 struct Semaphore firstSemaphore;
 struct Semaphore secondSemaphore;
+struct BinarySemaphore binSem;
+struct Mutex mutex;
 
 void buttonInterrupt(void){
     ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
     decreaseSemaphoreNonBlocking(&firstSemaphore);
     increaseSemaphoreNonBlocking(&secondSemaphore);
+    releaseBinarySemaphore(&binSem);
+    releaseMutex(&mutex);
 }
 
 void semFuncFirst(void* semaphore1){
@@ -127,18 +132,45 @@ void semFuncSec(void* semaphore2){
     }
 }
 
+void binSemFuncTest(void* binSem){
+    struct BinarySemaphore* binSema = binSem;
+    while(1){
+        int retCode = lockBinarySemaphoreBlockWait(binSema, 2000);
+        if (retCode){
+            UARTprintf("I gots binSema!\r\n");
+        } else {
+            UARTprintf("I wants binSema:(\r\n");
+        }
+    }
+}
+
+void mutexFuncTest(void* mutex){
+    struct Mutex* mut = mutex;
+    while(1){
+        lockMutexBlocking(mut);
+        UARTprintf("The Mutex has been caught\r\n");
+        sleepMS(500);
+    }
+}
+
 void testSleepAndMutex(void){
     initSemaphore(&firstSemaphore,2);
     initSemaphore(&secondSemaphore,2);
-    if(__createNewProcess(0, 512, "incrMutTest", semFuncFirst, (void*)&firstSemaphore, 4) == 2){
+    initBinarySemaphore(&binSem);
+    initMutex(&mutex);
+    if(__createNewProcess(0, 512, "incrMutTest", semFuncFirst, (void*)&firstSemaphore, 5) == 2){
         UARTprintf("FAILURE\r\n");
     }    
-    if(__createNewProcess(0, 512, "decrMutTest", semFuncSec, (void*)&secondSemaphore, 4) == 2){
+    if(__createNewProcess(0, 512, "decrMutTest", semFuncSec, (void*)&secondSemaphore, 5) == 2){
+        UARTprintf("FAILURE\r\n");
+    }    
+    if(__createNewProcess(0, 512, "binSemTest", binSemFuncTest, (void*)&binSem, 5) == 2){
+        UARTprintf("FAILURE\r\n");
+    }    
+    if(__createNewProcess(0, 512, "mutTest", mutexFuncTest, (void*)&mutex, 4) == 2){
         UARTprintf("FAILURE\r\n");
     }    
 }
-
-
 
 int testScheduler(void){
     //testSleep();

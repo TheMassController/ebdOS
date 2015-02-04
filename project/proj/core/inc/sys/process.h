@@ -31,7 +31,7 @@ struct Process {
 
     //Block vars
     void* blockAddress;
-    void* sleepObjAddress;
+    struct SleepingProcessStruct sleepObj;
 };
 
 /*

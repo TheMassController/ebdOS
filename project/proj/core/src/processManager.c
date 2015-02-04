@@ -1,6 +1,5 @@
 #include "defenitions.h"
 #include "process.h"
-#include "processManagement.h"
 #include "string.h"
 #include "stdlib.h"
 #include "asmUtils.h"
@@ -69,7 +68,7 @@ void initializeProcesses(void){
     persistentProcesses[0].priority = 0; 
     persistentProcesses[0].state = STATE_READY;
     persistentProcesses[0].blockAddress = NULL;
-    persistentProcesses[0].sleepObjAddress = NULL;
+    persistentProcesses[0].sleepObj.process = &persistentProcesses[0];
     persistentProcesses[0].name = sleeperName;
     persistentProcesses[0].stack = sleepFuncStack;
     int* stackPointer = (int*)(((long)&sleepFuncStack[IDLEFUNCSTACKLEN - 1]) & (long)0xFFFFFFFC); 
@@ -96,7 +95,7 @@ void initializeProcesses(void){
     persistentProcesses[1].priority = 100;
     persistentProcesses[1].state = STATE_READY;
     persistentProcesses[1].blockAddress = NULL;
-    persistentProcesses[1].sleepObjAddress = NULL;
+    persistentProcesses[1].sleepObj.process = &persistentProcesses[1];
     persistentProcesses[1].name = kernelName;
     persistentProcesses[1].stack = kernelPSPStack;
     persistentProcesses[1].stackPointer = (void*)((long)(&kernelPSPStack[3]) & (long)0xFFFFFFFC);
@@ -133,7 +132,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->priority = priority;
     newProc->state = STATE_READY;
     newProc->blockAddress = NULL;
-    newProc->sleepObjAddress = NULL;
+    newProc->sleepObj.process = newProc;
     newProc->name = (char*)malloc(strlen(name)+1);
     if (newProc->name == NULL){
         free(newProc);

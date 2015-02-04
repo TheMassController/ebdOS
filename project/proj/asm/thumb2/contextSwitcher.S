@@ -41,8 +41,8 @@ pendSVHandler:
 	ldr	r1, [r2]    @Deref (r1 = currentProcess)
 	ldr	r3, .L4+4   @Load l4+4, which is processesReady (r3 = &processesReady)
 	ldr	r3, [r3]    @Deref r3 (r3 = processesReady)
-    cmp r1, r3
-    beq .L3 
+    cmp r1, r3      @If the next process is equal to the current one
+    beq .L3         @Do not switch context, but return
     
     @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
     @This function adds the other registers to the stack and then changes the stack.

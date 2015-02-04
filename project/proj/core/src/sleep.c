@@ -45,11 +45,8 @@ void prepareSleep(int64_t sleepTicks){
         overflows++;
         sleepTicks += MAXSLEEPTIMER;
     }
-    struct SleepingProcessStruct* sleepObj = (struct SleepingProcessStruct*)malloc(sizeof(struct SleepingProcessStruct));
-    sleepObj->process = currentProcess;
-    sleepObj->overflows = overflows;
-    sleepObj->sleepUntil = (unsigned)sleepTicks;
-    currentProcess->sleepObjAddress = (void*) sleepObj;
+    currentProcess->sleepObj.overflows = overflows;
+    currentProcess->sleepObj.sleepUntil = sleepTicks;
 }
 
 void sleepHalfMS(long sleepTicks){
@@ -58,8 +55,6 @@ void sleepHalfMS(long sleepTicks){
     prepareSleep(sleepTicks);
     currentProcess->state |= STATE_SLEEP;
     CALLSUPERVISOR(SVC_sleep);
-    free(currentProcess->sleepObjAddress); 
-    currentProcess->sleepObjAddress = NULL;
 }
 
 unsigned getCurrentSleepTimerValue(void){
@@ -86,9 +81,4 @@ void sleepS(unsigned seconds){
 //------- Sleep functions as used by the mutex functions
 void __sleepMSDelayBlock(unsigned ms){
     sleepHalfMSDelayBlock(ms*sleepClocksPerMS);    
-}
-
-void __sleepDelayBlockWakeup(void){
-    free(currentProcess->sleepObjAddress);
-    currentProcess->sleepObjAddress = NULL;
 }

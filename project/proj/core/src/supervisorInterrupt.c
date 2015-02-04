@@ -166,7 +166,7 @@ void addSleeperToList(struct SleepingProcessStruct* ptr){
 void removeSleeperFromList(struct Process* proc){
     struct SleepingProcessStruct* current = sleepProcessListHead;
     struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current->process != proc){
+    while(current != NULL && current != &(proc->sleepObj)){
         previous = current;
         current = current->nextPtr;
     }

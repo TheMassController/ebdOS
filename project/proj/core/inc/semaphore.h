@@ -1,10 +1,10 @@
 #ifndef SEMPAHORE_H
 #define SEMAPHORE_H
 
-#include "threadsafeCalls.h"
+#include "lockObject.h"
 
-struct Semaphore{
-    struct MultiLockObject multiLockObject;
+struct Semaphore {
+    struct LockObject lockObject;
 };
 
 void initSemaphore(struct Semaphore* semaphore, int maxval);

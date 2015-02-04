@@ -13,7 +13,6 @@
 #include "sleep.h"
 #include "sysSleep.h"
 #include "stdlib.h"
-#include "threadsafeCalls.h"
 #include "asmUtils.h"
 #include "stdint.h"
 

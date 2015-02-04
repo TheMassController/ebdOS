@@ -11,11 +11,11 @@ A binary mutex is anonymous: everyone can release it.
 You cannot grab it twice: if you try to grab it a second time, you will need to wait for a release first
 */
 
-#include "threadsafeCalls.h"
+#include "lockObject.h"
 
 
-struct BinaryMutex{
-   struct SingleLockObject singleLockObject; 
+struct BinarySemaphore{
+   struct LockObject lockObject; 
 };
 
 /**
@@ -23,7 +23,7 @@ Locks the binary mutex, blocks until the mutex is locked.
 
 @param mutex The mutex you want to block.
 */
-void lockBinaryMutexBlocking(struct BinaryMutex* mutex);
+void lockBinarySemaphoreBlocking(struct BinarySemaphore* mutex);
 
 /**
 Tries to lock the binary mutex. If unsucsessfull, blocks until the mutex can be locked or timeout, whichever comes first.
@@ -33,7 +33,7 @@ Tries to lock the binary mutex. If unsucsessfull, blocks until the mutex can be 
 
 @return 1 if the mutex was sucsessfully locked, else 0.
 */
-int lockBinaryMutexBlockWait(struct BinaryMutex* mutex, unsigned msWaitTime);
+int lockBinarySemaphoreBlockWait(struct BinarySemaphore* mutex, unsigned msWaitTime);
 
 /**
 Attemps one time to lock the binary mutex.
@@ -42,12 +42,12 @@ Attemps one time to lock the binary mutex.
 
 @return 1 if the mutex was sucsessfully locked, else 0.
 */
-int lockBinaryMutexNoBlock(struct BinaryMutex* mutex);
+int lockBinarySemaphoreNoBlock(struct BinarySemaphore* mutex);
 
-void releaseBinaryMutex(struct BinaryMutex* mutex);
+void releaseBinarySemaphore(struct BinarySemaphore* mutex);
 
-void initBinaryMutex(struct BinaryMutex* mutex);
+void initBinarySemaphore(struct BinarySemaphore* mutex);
 
-void cleanupBinaryMutex(struct BinaryMutex* mutex);
+void cleanupBinarySemaphore(struct BinarySemaphore* mutex);
 
 #endif //BINARYMUTEX_H

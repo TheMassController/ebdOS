@@ -1,4 +1,4 @@
-#include "threadsafeCalls.h"
+#include "lockObject.h"
 #include "process.h"
 #include "supervisorCall.h"
 #include "sysSleep.h"
@@ -8,10 +8,10 @@
 extern struct Process* currentProcess;
 
 //Returns new value of multilockobject, or -1 in case of failure
-int __increaseMultiLockObject(MultiLockObject* addr);
-int __decreaseMultiLockObject(MultiLockObject* addr);
+int __increaseLockObject(struct LockObject* addr);
+int __decreaseLockObject(struct LockObject* addr);
 
-void __initMultiLockObject(MultiLockObject* object, int maxval){
+void __initLockObject(struct LockObject* object, int maxval){
     if (maxval <= 0) maxval = 1;
     object->lock = 0;
     object->maxLockVal = maxval;
@@ -19,7 +19,7 @@ void __initMultiLockObject(MultiLockObject* object, int maxval){
     object->processWaitingQueueDecrease = NULL;
 }
 
-void __cleanupMultiLockObject(MultiLockObject* object){
+void __cleanupLockObject(struct LockObject* object){
     if (object->lock != 0 || object->processWaitingQueueIncrease != NULL || object->processWaitingQueueDecrease != NULL){
         //TODO kernel panic
     }
@@ -34,12 +34,12 @@ void intrModifyCall(void* oldBlockAddr, const char increase){
     currentProcess->blockAddress = oldBlockAddr;
 }
 
-int modifyMultiLockObject(MultiLockObject* object, const char increase){
+int modifyLockObject(struct LockObject* object, const char increase){
     int retCode;
     if (increase){
-        retCode = __increaseMultiLockObject(object);
+        retCode = __increaseLockObject(object);
     } else {
-        retCode = __decreaseMultiLockObject(object);
+        retCode = __decreaseLockObject(object);
     }
     if (retCode != -1){
         void* oldBlockAddress = currentProcess->blockAddress;
@@ -49,47 +49,47 @@ int modifyMultiLockObject(MultiLockObject* object, const char increase){
     return retCode;
 }
 
-int increaseMultiLock(MultiLockObject* object){
-    return modifyMultiLockObject(object, 1);
+int increaseLock(struct LockObject* object){
+    return modifyLockObject(object, 1);
 }
 
-int decreaseMultiLock(MultiLockObject* object){
-    return modifyMultiLockObject(object, 0);
+int decreaseLock(struct LockObject* object){
+    return modifyLockObject(object, 0);
 }
 
-int __increaseMultiLockObjectNoBlock(MultiLockObject* object){
-    return increaseMultiLock(object);
+int __increaseLockObjectNoBlock(struct LockObject* object){
+    return increaseLock(object);
 }
 
-int __decreaseMultiLockObjectNoBlock(MultiLockObject* object){
-    return decreaseMultiLock(object);
+int __decreaseLockObjectNoBlock(struct LockObject* object){
+    return decreaseLock(object);
 }
 
-int blockWaitForIncrease(MultiLockObject* object){
+int blockWaitForIncrease(struct LockObject* object){
     currentProcess->state |= STATE_DEC_WAIT;
     //You want to increase, so you wait for a decrease
     currentProcess->blockAddress = object;
     CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
-    return increaseMultiLock(object);
+    return increaseLock(object);
 }
 
-int blockWaitForDecrease(MultiLockObject* object){
+int blockWaitForDecrease(struct LockObject* object){
     currentProcess->state |= STATE_INC_WAIT;
     currentProcess->blockAddress = object;
     CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
-    return decreaseMultiLock(object);
+    return decreaseLock(object);
 }
 
-int modifyMultiLockObjectBlock(MultiLockObject* object, const char increase){
+int modifyLockObjectBlock(struct LockObject* object, const char increase){
     if (isInInterrupt()) return -1;
     int retCode;
     if (increase){
-        retCode = increaseMultiLock(object);
+        retCode = increaseLock(object);
         while (retCode == -1){
           retCode = blockWaitForIncrease(object);  
         }
     } else {
-        retCode = decreaseMultiLock(object);
+        retCode = decreaseLock(object);
         while (retCode == -1){
           retCode = blockWaitForDecrease(object);  
         }
@@ -97,21 +97,21 @@ int modifyMultiLockObjectBlock(MultiLockObject* object, const char increase){
     return retCode;
 }
 
-int __increaseMultiLockObjectBlock(MultiLockObject* object){
-    return modifyMultiLockObjectBlock(object, 1);
+int __increaseLockObjectBlock(struct LockObject* object){
+    return modifyLockObjectBlock(object, 1);
 }
 
-int __decreaseMultiLockObjectBlock(MultiLockObject* object){
-    return modifyMultiLockObjectBlock(object, 0);
+int __decreasLockObjectBlock(struct LockObject* object){
+    return modifyLockObjectBlock(object, 0);
 }
 
-int modifyMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout, const char increase){
+int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, const char increase){
     if (isInInterrupt()) return -1;
     int retCode;
     if (increase){
-        retCode = increaseMultiLock(object);
+        retCode = increaseLock(object);
     } else {
-        retCode = decreaseMultiLock(object);
+        retCode = decreaseLock(object);
     }
     if (retCode == -1){
         __sleepMSDelayBlock(msTimeout);
@@ -128,18 +128,26 @@ int modifyMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeou
     return retCode;
 }
 
-int __increaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout){
-    return modifyMultiLockObjectBlockTimeout(object, msTimeout, 1);
+int __increaseLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout){
+    return modifyLockObjectBlockTimeout(object, msTimeout, 1);
 }
 
-int __decreaseMultiLockObjectBlockTimeout(MultiLockObject* object, unsigned msTimeout){
-    return modifyMultiLockObjectBlockTimeout(object, msTimeout, 0);
+int __decreaseLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout){
+    return modifyLockObjectBlockTimeout(object, msTimeout, 0);
 }
 
-int __getMultiLockVal(MultiLockObject* object){
+int __getLockVal(struct LockObject* object){
     return object->lock;
 }
 
-int __getMultiLockMaxVal(MultiLockObject* object){
+int __getLockMaxVal(struct LockObject* object){
    return object->maxLockVal; 
+}
+
+int __LockIsMaxVal(struct LockObject* object){
+    return (object->lock == object->maxLockVal);
+}
+
+int __LockIsMinVal(struct LockObject* object){
+    return (!object->lock);
 }

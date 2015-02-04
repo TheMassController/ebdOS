@@ -25,13 +25,6 @@
     .size   currentProcess, 4
 currentProcess:
     .space  4
-    .global nextProcess
-    .section    .bss.nextProcess,"aw",%nobits
-    .align  2
-    .type   nextProcess, %object
-    .size   nextProcess, 4
-nextProcess:
-    .space  4
     .section    .text.pendSVHandler,"ax",%progbits
     .align  2
     .global pendSVHandler
@@ -41,34 +34,38 @@ nextProcess:
 pendSVHandler:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
+    cpsid i         @Disables all interrupts
+
+    @First: the check if we even need to context switch
+	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
+	ldr	r1, [r2]    @Deref (r1 = currentProcess)
+	ldr	r3, .L4+4   @Load l4+4, which is processesReady (r3 = &processesReady)
+	ldr	r3, [r3]    @Deref r3 (r3 = processesReady)
+    cmp r1, r3
+    beq .L3 
     
     @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
     @This function adds the other registers to the stack and then changes the stack.
     @Then it does the inverse for the function that is being switched to.
 
     @Actual context switch
-    cpsid i         @Disables all interrupts
-	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
     mrs r0, psp     @Move the PSP to R0
-	ldr	r1, [r2]    @Deref (r1 = currentProcess)
     stmdb r0!, {r4-r11}    @Move R4 to R11 to param R0, while decreasing R0
 	str	r0, [r1]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)
-	ldr	r3, .L4+4   @Load l4+4, which is nextProcess (r3 = &nextProcess)
-	ldr	r3, [r3]    @Deref r3 (r3 = nextProcess)
-	ldr	r0, [r3]    @Deref r3 (r0 = nextProcess->stackPointer)
+	ldr	r0, [r3]    @Deref r3 (r0 = processesReady->stackPointer)
     ldmfd   r0! , {r4-r11}      @Move from ram to regs while increasing R0
     msr psp, r0     @push r0 to psp
 
-	str	r3, [r2] @currentProcess = nextProcess
+	str	r3, [r2] @currentProcess = processesReady
     
     @Decide the returnvar and return
-	ldr	r3, [r3, #4]    @Get the second variable of nextProcess. This is the pid and 1 for the kernel
+	ldr	r3, [r3, #4]    @Get the second variable of processesReady. This is the pid and 1 for the kernel
 	cmp	r3, #1      @Test if that var is 1
-	bne	.L2         @Branch if it is not 1
-	mvn	lr, #6  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+	beq	.L2         @Branch if it is not 1
+	mvn	lr, #2 @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
     b .L3
 .L2:
-	mvn	lr, #2 @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
+	mvn	lr, #6  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
 .L3:
     cpsie i         @Reenable all interrupts
     bx lr           @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
@@ -76,5 +73,5 @@ pendSVHandler:
 	.align	2
 .L4:
 	.word	currentProcess
-	.word	nextProcess
+	.word	processesReady
 	.size	pendSVHandler, .-pendSVHandler

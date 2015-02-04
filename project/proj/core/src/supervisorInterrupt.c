@@ -25,8 +25,7 @@ static struct SleepingProcessStruct* sleepProcessListHead = NULL;
 static struct SleepingProcessStruct* nextToWakeUp = NULL;
 
 void rescheduleImmediately(void){
-    NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending (Datasheet pp 156)
-    //NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
+    NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending (Datasheet pp 156)
 }
 
 //----- Functions related to the moving of functions from one queue to another

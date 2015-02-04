@@ -155,6 +155,5 @@ void setupHardware(void){
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
 void finishBoot(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
-    NVIC_ST_CTRL_R = 0x3; //Run from PIOSC, generate interrupt, start running (datasheet pp 133) 
-    NVIC_INT_CTRL_R |= (1<<26); //Set the SysTick to pending: kick-off the scheduler
+    NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
 }

@@ -71,16 +71,6 @@ void setupHardware(void){
     //Start the UART0 with baud BAUD 
     UARTStdioInitExpClk(0,BAUDRATE);
 
-    //Enable other periphials
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-    GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);
-    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_FALLING_EDGE);
-    GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
-    GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_4);
-    ROM_IntPrioritySet(INT_GPIOF, 200);
-    IntEnable(INT_GPIOF);
-    
     //For scheduling: systick
     //It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock
     //Initially configured as 1 tick per ms. This is equal to 4000 ticks on the 4 Mhz clock.

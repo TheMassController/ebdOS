@@ -64,7 +64,8 @@ void usageFaultHandler(void);
 void mpuFaultHandler(void);
 void busFaultHandler(void);
 //TEMP
-void buttonInterrupt(void);
+void button2Interrupt(void);
+void gpioBInterrup(void);
 
 //*****************************************************************************
 //
@@ -93,7 +94,7 @@ void (* const g_pfnVectors[])(void) =
     pendSVHandler,                      // The PendSV handler
     IntDefaultHandler,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
-    IntDefaultHandler,                      // GPIO Port B
+    gpioBInterrup,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
@@ -122,7 +123,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Analog Comparator 2
     IntDefaultHandler,                      // System Control (PLL, OSC, BO)
     IntDefaultHandler,                      // FLASH Control
-    buttonInterrupt,                      // GPIO Port F
+    button2Interrupt,                      // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
     IntDefaultHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx

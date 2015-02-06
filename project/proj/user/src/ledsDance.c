@@ -50,7 +50,8 @@ void gpioBInterrup(void){
 }
 
 void button2Interrupt(void){
-     ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
+    ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
+    increaseSemaphoreNonBlocking(&sem); 
 }
 
 void ledsFlicker(void* un){

@@ -3,60 +3,158 @@
 #include "kernelQueue.h"
 #include "string.h"
 #include "supervisorCall.h"
+#include "process.h"
+#include "semaphore.h"
+#include "mutex.h"
+#include "binarySemaphore.h"
 
-struct KernelQueue* kernelQueue = NULL;
+#ifdef DEBUG
+#include "uartstdio.h"
+#endif //DEBUG
+
 extern struct Process* currentProcess;
-//static struct kernelQueueItem items[MAXTOTALPROCESSES];
 
-void pushItem(struct KernelQueueItem* item){
-    lockMutexBlocking(kernelQueue->listProtectionMutex);
-    struct KernelQueueItem* currentItem = kernelQueue->firstItem;
+#define DEFKQPOOLSIZE 5
+
+enum KQITEMTYPE
+{
+    newprocess,
+    deleteprocess,
+};
+
+struct KernelQueueItem{
+    enum KQITEMTYPE itemtype;
+    void* item;
+    struct KernelQueueItem* nextItem;
+    int retCode;
+    struct BinarySemaphore responseWaiter;
+};
+
+static struct Semaphore readyKQItems;
+static struct Semaphore existingKQItems;
+static struct Mutex kQListProtectionMutex;
+static struct KernelQueueItem kernelQueueItemPool[MAXTOTALPROCESSES];
+static struct KernelQueueItem* kQIListHead = NULL;
+
+struct NewProcess{
+    unsigned mPid;
+    unsigned long stacklen;
+    char name[21];
+    void (*procFunc)(void*);
+    void* param;
+    char priority;
+};
+
+struct NewProcess newProcessPool[DEFKQPOOLSIZE];
+struct Semaphore newProcessPoolSem;
+struct Mutex newProcessPoolMut;
+
+struct DeleteProcess{
+    struct Process* processToDelete;
+};
+
+struct DeleteProcess deleteProcessPool[DEFKQPOOLSIZE];
+struct Semaphore deleteProcessPoolSem;
+struct Mutex deleteProcessPoolMut;
+
+void initKernelQueue(void){
+    initSemaphore(&readyKQItems, MAXTOTALPROCESSES);
+    initSemaphore(&existingKQItems, MAXTOTALPROCESSES);
+    initSemaphore(&newProcessPoolSem, DEFKQPOOLSIZE);
+    initSemaphore(&deleteProcessPoolSem, DEFKQPOOLSIZE);
+    initMutex(&(kQListProtectionMutex));
+    initMutex(&newProcessPoolMut);
+    initMutex(&deleteProcessPoolMut);
+    for (int i = 0; i < MAXTOTALPROCESSES; ++i){
+        kernelQueueItemPool[i].item = NULL;
+        kernelQueueItemPool[i].nextItem = NULL;
+        initBinarySemaphore(&(kernelQueueItemPool[i].responseWaiter));
+    }
+    for (int i = 0; i < DEFKQPOOLSIZE; ++i){
+        newProcessPool[i].procFunc = NULL;
+        deleteProcessPool[i].processToDelete = NULL;
+    }
+}
+
+int pushItem(struct KernelQueueItem* item){
+    lockMutexBlocking(&kQListProtectionMutex);
+    struct KernelQueueItem* currentItem = kQIListHead;
     struct KernelQueueItem* prevItem = NULL;
     while(currentItem != NULL){
         prevItem = currentItem;
         currentItem = currentItem->nextItem;
     }
     if (prevItem == NULL){
-        kernelQueue->firstItem = item;
+        kQIListHead = item;
     } else {
         prevItem->nextItem = item;
         item->nextItem = currentItem;
     }
-    releaseMutex(kernelQueue->listProtectionMutex);
-    increaseSemaphoreBlocking(kernelQueue->readyItems);
+    releaseMutex(&(kQListProtectionMutex));
+    if (takeBinarySemaphore(&(item->responseWaiter), 0) == -1){
+        releaseSemaphore(&existingKQItems, MAXWAITTIME);
+        return 2;
+    }
+    increaseSemaphoreBlocking(&(readyKQItems));
+    takeBinarySemaphore(&(item->responseWaiter), MAXWAITTIME);
+    return item->retCode;
 }
 
-void createProcess(unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
-    increaseSemaphoreBlocking(kernelQueue->existingItems);
-    //Try to create all necessary datastructures
-    struct KernelQueueItem* item = (struct KernelQueueItem*)malloc(sizeof(struct KernelQueueItem));
-    struct NewProcess* newProcess = NULL;
-    if (item != NULL){
-        newProcess = (struct NewProcess*)malloc(sizeof(struct NewProcess));
-        if (newProcess != NULL){
-            newProcess->name = (char*)malloc(strlen(name)+1);
-            if (newProcess->name == NULL){
-                free(newProcess);
-                free(item);
-                item = NULL;
-            }
-        } else {
-                free(item);
-                item = NULL;
-        }
-        if (item == NULL){
-            decreaseSemaphoreBlocking(kernelQueue->existingItems);
-            return;
+int createAndProcessKernelCall(void* item, enum KQITEMTYPE itemtype){
+    takeSemaphore(&(existingKQItems), MAXWAITTIME);
+    for (int i = 0; i < MAXTOTALPROCESSES; ++i){
+        if (kernelQueueItemPool[i].item == NULL){
+            kernelQueueItemPool[i].item = item;
+            kernelQueueItemPool[i].itemtype = itemtype;
+            int retCode = pushItem(&kernelQueueItemPool[i]);
+            releaseBinarySemaphore(&(kernelQueueItemPool[i].responseWaiter));
+            kernelQueueItemPool[i].item = NULL;
+            kernelQueueItemPool[i].nextItem = NULL;
+            return retCode;
         }
     }
-
-    newProcess->mPid = currentProcess->pid;
-    newProcess->stacklen = stacklen;
-    strcpy(newProcess->name, name);
-    newProcess->procFunc = procFunc;
-    newProcess->param = param;
-    newProcess->priority = priority;
-    item->itemtype = newprocess;
-    item->item = (void*) newProcess;
-    pushItem(item);
+#ifdef DEBUG
+    UARTprintf("existingKQItems and kernelQueueItemPool are out of sync!\r\n");
+#endif
+    return 2;
 }
+
+int createProcess(unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
+    takeSemaphore(&newProcessPoolSem, MAXWAITTIME);
+    takeMutex(&newProcessPoolMut, MAXWAITTIME);
+    struct NewProcess* newProc = NULL;
+    for (int i = 0; i < DEFKQPOOLSIZE; ++i){
+        if (newProcessPool[i].procFunc == NULL){
+            newProc = &newProcessPool[i];
+        }
+    }
+#ifdef DEBUG 
+    if (newProc == NULL) UARTprintf("WARNING: semaphore of newProcessPool is out of sync\r\n");
+#endif
+    if (newProc == NULL){
+        releaseMutex(&newProcessPoolMut);
+        //Do not release the semaphore: there were no free items
+        return 2;
+    }
+    newProc->stacklen = stacklen;
+    if (strlen(name) > 20){
+        memcpy(name, newProc->name, 20);
+        newProc->name[20] = 0;
+    } else {
+        strcpy(name, newProc->name);
+    }
+    newProc->mPid = currentProcess->pid;
+    newProc->procFunc = procFunc;
+    newProc->param = param;
+    newProc->priority = priority;
+    releaseMutex(&newProcessPoolMut);
+    int retCode = createAndProcessKernelCall(newProc, newprocess);
+    releaseSemaphore(&newProcessPoolSem, MAXWAITTIME);
+    return retCode;
+}
+
+//void deleteCurrentProcess(){
+//    takeSemaphore(&deleteProcessPoolSem, MAXWAITTIME);
+//    takeMutex(&deleteProcessPoolMut, MAXWAITTIME);
+//    for (int i = 0; i < DEFKQPOOLSIZE; ++i
+//}

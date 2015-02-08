@@ -36,8 +36,7 @@ struct Process processPool[MAXTOTALPROCESSES + 2];
 
 char kernelPSPStack[KERNELSTACKLEN];
 
-void __sleepProcessFunc(void* param){
-    UNUSED(param);
+void __sleepProcessFunc(void){
     while(1){
         waitForInterrupt();
     }
@@ -95,7 +94,7 @@ void initializeProcesses(void){
 }
 
 
-int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
+int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority){
     if (priority == 255) priority = 254; //Max 254, 255 is kernel only
     if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
     if (currentProcess->pid != 1) {
@@ -158,12 +157,4 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProcess = newProc;
     CALLSUPERVISOR(SVC_processAdd);
     return 0; 
-}
-
-
-
-void __hibernateProcessFunc(void* param){
-    UNUSED(param);
-    __sleepProcessFunc(NULL);
-    //TODO make it, you know, hibernate
 }

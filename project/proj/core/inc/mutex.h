@@ -19,6 +19,8 @@ int lockMutexNoBlock(struct Mutex* mutex);
 
 void releaseMutex(struct Mutex* mutex);
 
+int takeMutex(struct Mutex* mutex, unsigned msTimeOut);
+
 void initMutex(struct Mutex* mutex);
 
 void cleanupMutex(struct Mutex* mutex);

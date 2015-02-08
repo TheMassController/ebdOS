@@ -51,3 +51,25 @@ int getSemaphoreMaxval(struct Semaphore* semaphore){
 int getSemaphoreCurrentVal(struct Semaphore* semaphore){
     return __getLockVal(&(semaphore->lockObject));
 }
+
+int takeSemaphore(struct Semaphore* semaphore, unsigned waitTime){
+    if (waitTime == MAXWAITTIME){
+        increaseSemaphoreBlocking(semaphore);
+        return 1;
+    } else if (waitTime == 0){
+        return increaseSemaphoreNonBlocking(semaphore);
+    } else {
+        return increaseSemaphoreBlockingTimeout(semaphore, waitTime);
+    }
+}
+
+int releaseSemaphore(struct Semaphore* semaphore, unsigned waitTime){
+    if (waitTime == MAXWAITTIME){
+        decreaseSemaphoreBlocking(semaphore);
+        return 1;
+    } else if (waitTime == 0){
+        return decreaseSemaphoreNonBlocking(semaphore);
+    } else {
+        return decreaseSemaphoreBlockingTimeout(semaphore, waitTime);
+    }
+}

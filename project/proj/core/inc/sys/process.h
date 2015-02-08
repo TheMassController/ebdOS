@@ -17,13 +17,18 @@
 #define STATE_INC_WAIT 0x4
 #define STATE_DEC_WAIT 0x8
 
+//The next var is only about user processes, the kernel-based processes (kernel itself and idle) are counted seperately
+#define MAXTOTALPROCESSES 10
+
+
 //The order of the first two is vital to make the assembly work correctly
 struct Process {
     void* stackPointer; //The actual stackpointer
     unsigned pid;
 
     unsigned mPid;
-    char* name;
+    char containsProcess;
+    char name[21];
     struct Process* nextProcess;
     void* stack; //refers to the address returned by Malloc
     char state; //Set of 1 bit flags

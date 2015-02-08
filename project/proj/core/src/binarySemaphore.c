@@ -32,3 +32,13 @@ void releaseBinarySemaphore(struct BinarySemaphore* mutex){
     __decreaseLockObjectNoBlock(&(mutex->lockObject)); 
 }
 
+int takeBinarySemaphore(struct BinarySemaphore* sem, unsigned waitTime){
+    if (waitTime == MAXWAITTIME){
+        lockBinarySemaphoreBlocking(sem);
+        return 1;
+    } else if (waitTime == 0){
+        return lockBinarySemaphoreNoBlock(sem);
+    } else {
+        return lockBinarySemaphoreBlockWait(sem, waitTime);
+    }
+}

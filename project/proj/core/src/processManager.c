@@ -7,6 +7,7 @@
 #include "process.h"
 #include "supervisorCall.h" 
 #include "lm4f120h5qr.h" //Hardware regs
+#include "semaphore.h"
 
 #define UNUSED(x) (void)(x) //To suppress compiler warning
 
@@ -18,26 +19,22 @@
 
 //Responsible for creating and managing processes
 
+//Stack save reg size: the total amount of bytes that needs to be written from regs to stack.
 #define STACKSAVEREGSIZE 64
 
 struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
 extern struct Process* currentProcess;
 //Usefull for selecting the pids
-static unsigned char nextPid = 3; //Short, has to be able to become 256
-//TODO create system to find out which pids are in use and which not.
-struct Process* newProcess = NULL;
-#define MAX_PROCESSID (254)
 
-struct Process persistentProcesses[2];
+struct Process* newProcess = NULL;
+
+struct Process processPool[MAXTOTALPROCESSES + 2];
 
 #define KERNELSTACKLEN 67
 #define IDLEFUNCSTACKLEN 128
 
 char kernelPSPStack[KERNELSTACKLEN];
-char sleepFuncStack[IDLEFUNCSTACKLEN];
-char sleeperName[13] = "Idle Process"; 
-char kernelName[7] = "Kernel";
 
 void __sleepProcessFunc(void* param){
     UNUSED(param);
@@ -55,56 +52,46 @@ void __processReturn(void){
     }
 }
 
+struct Process* getProcessFromPool(void){
+    for (int i = 0; i < MAXTOTALPROCESSES + 2; ++i){
+        if (!processPool[i].containsProcess){
+            return &processPool[i];
+        }
+    }
+    return NULL;
+}
+
 void initializeProcesses(void){
 #ifdef DEBUG
     if (processesReady != NULL){
         UARTprintf("PANIC: second run of initilializeProcesses\r\n");
     }
 #endif
-    //first: create the sleeper
-    persistentProcesses[0].pid = 2;
-    persistentProcesses[0].mPid = 1;
-    persistentProcesses[0].nextProcess = NULL;
-    persistentProcesses[0].priority = 0; 
-    persistentProcesses[0].state = STATE_READY;
-    persistentProcesses[0].blockAddress = NULL;
-    persistentProcesses[0].sleepObj.process = &persistentProcesses[0];
-    persistentProcesses[0].name = sleeperName;
-    persistentProcesses[0].stack = sleepFuncStack;
-    int* stackPointer = (int*)(((long)&sleepFuncStack[IDLEFUNCSTACKLEN - 1]) & (long)0xFFFFFFFC); 
-    *stackPointer-- = 0x01000000; //XPSR, standard stuff 
-    *stackPointer-- = (int)__sleepProcessFunc; //PC, initally points to start of function
-    *stackPointer-- = (int)&__processReturn; //LR, return func
-    *stackPointer-- = 12; // reg12, 12 for debug
-    *stackPointer-- = 3; // reg3, 3 for debug
-    *stackPointer-- = 2; // reg2, 2 for debug
-    *stackPointer-- = 1; // reg1, 1 for debug
-    *stackPointer-- = (int)0; // reg 0, first param
-    //The second set is the registers that we have to move manually between RAM and regs when switching contexts
-    //Order: R4, R5, R6, R7, R8, R9, R10, R11
-    for ( int u = 11; u > 4; u-- ){
-        *stackPointer-- = u; //Reg u, u for debug
-    }  
-    *stackPointer = 4;
-    persistentProcesses[0].stackPointer = stackPointer;
-    
-    //next: the kernel
-    persistentProcesses[1].pid = 1;
-    persistentProcesses[1].mPid = 0;
-    persistentProcesses[1].nextProcess = &persistentProcesses[0];
-    persistentProcesses[1].priority = 100;
-    persistentProcesses[1].state = STATE_READY;
-    persistentProcesses[1].blockAddress = NULL;
-    persistentProcesses[1].sleepObj.process = &persistentProcesses[1];
-    persistentProcesses[1].name = kernelName;
-    persistentProcesses[1].stack = kernelPSPStack;
-    persistentProcesses[1].stackPointer = (void*)((long)(&kernelPSPStack[3]) & (long)0xFFFFFFFC);
+    for (int i = 0; i < MAXTOTALPROCESSES + 2; ++i){
+        processPool[i].containsProcess = 0;
+        processPool[i].pid = i+1;
+    }
+    //Create the kernel
+    processPool[0].mPid = 0;
+    processPool[0].containsProcess = 1;
+    processPool[0].nextProcess = NULL;
+    processPool[0].priority = 100;
+    processPool[0].state = STATE_READY;
+    processPool[0].blockAddress = NULL;
+    processPool[0].sleepObj.process = &processPool[0];
+    strcpy(processPool[0].name, "Kernel");
+    processPool[0].stack = kernelPSPStack;
+    processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[3]) & (long)0xFFFFFFFC);
     
     //set some params 
-    processesReady = &persistentProcesses[1];
-    currentProcess = &persistentProcesses[1]; 
+    processesReady = &processPool[0];
+    currentProcess = &processPool[0]; 
     setPSP(currentProcess->stackPointer);
     kernel = currentProcess;
+
+    //Create the sleeper
+    __createNewProcess(1, IDLEFUNCSTACKLEN, "Idle Process", __sleepProcessFunc, NULL, 0);
+    kernel->nextProcess->priority = 0; //Set the priority of the sleep process to min.
 }
 
 
@@ -114,31 +101,27 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     if (currentProcess->pid != 1) {
         return 3;
     } 
-    if ( nextPid > MAX_PROCESSID ) {
-        return 1;
-    }
-    //Create the process on the heap
-    struct Process* newProc = (struct Process*)malloc(sizeof(struct Process)); 
+    struct Process* newProc = getProcessFromPool();
     if ( newProc == NULL) { //Insufficient mem
-       return 2; 
+       return 1; 
     }
     if (stacklen < 67){
         return 4;
     }
     //Set some vars
-    newProc->pid = nextPid++;
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
     newProc->priority = priority;
     newProc->state = STATE_READY;
     newProc->blockAddress = NULL;
     newProc->sleepObj.process = newProc;
-    newProc->name = (char*)malloc(strlen(name)+1);
-    if (newProc->name == NULL){
-        free(newProc);
-        return 2;
+    if (strlen(name) > 20){
+        //Name too long, only copy first 20 characters
+        memcpy(newProc->name, name, 20);
+        newProc->name[20] = 0;
+    } else {
+        strcpy(newProc->name, name);
     }
-    strcpy(newProc->name,name);
     //Create the stack.
     void* stack = malloc(stacklen);
     if (stack == NULL){
@@ -169,6 +152,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     *stackPointer = 4;
     //Save the stackpointer to the struct
     newProc->stackPointer = (void*)stackPointer;
+    newProc->containsProcess = 1;
 
     //Add the new process to the list of processes
     newProcess = newProc;

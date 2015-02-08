@@ -40,7 +40,7 @@ struct NewProcess{
     unsigned mPid;
     unsigned long stacklen;
     char name[21];
-    void (*procFunc)(void*);
+    void (*procFunc)();
     void* param;
     char priority;
 };
@@ -119,7 +119,7 @@ int createAndProcessKernelCall(void* item, enum KQITEMTYPE itemtype){
     return 2;
 }
 
-int createProcess(unsigned long stacklen, char* name, void (*procFunc)(void*), void* param, char priority){
+int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority){
     takeSemaphore(&newProcessPoolSem, MAXWAITTIME);
     takeMutex(&newProcessPoolMut, MAXWAITTIME);
     struct NewProcess* newProc = NULL;

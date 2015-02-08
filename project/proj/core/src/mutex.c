@@ -53,3 +53,14 @@ void releaseMutex(struct Mutex* mutex){
     __decreaseLockObjectNoBlock(&(mutex->lockObject));
     mutex->ownerPid = 0;
 }
+
+int takeMutex(struct Mutex* mutex, unsigned msTimeOut){
+    if (msTimeOut == MAXWAITTIME){
+        lockMutexBlocking(mutex);
+        return 1;
+    } else if (msTimeOut == 0){
+        return lockMutexNoBlock(mutex);
+    } else {
+        return lockMutexBlockWait(mutex, msTimeOut);
+    }
+}

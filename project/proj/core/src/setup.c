@@ -130,8 +130,8 @@ void setupHardware(void){
     //UARTprintf("%d\r\n",NVIC_PRI27_R);
 
     //Initialize malloc mutex
-    initializeProcesses();
     initReentrantMutex(&(mallocMutex));
+    initializeProcesses();
 
     //Create the kernelQueue
     //kernelQueue = malloc(sizeof(struct KernelQueue));

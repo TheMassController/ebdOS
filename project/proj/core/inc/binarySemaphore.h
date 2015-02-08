@@ -50,4 +50,6 @@ void initBinarySemaphore(struct BinarySemaphore* mutex);
 
 void cleanupBinarySemaphore(struct BinarySemaphore* mutex);
 
+int takeBinarySemaphore(struct BinarySemaphore* sem, unsigned waitTime);
+
 #endif //BINARYMUTEX_H

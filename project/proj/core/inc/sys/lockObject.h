@@ -3,6 +3,7 @@
 #define LOCKOBJECT_H
 
 #include "process.h" 
+#define MAXWAITTIME 0xFFFFFFFF
 
 struct LockObject{
     unsigned lock;

@@ -20,4 +20,7 @@ int decreaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeo
 
 int getSemaphoreMaxval(struct Semaphore* semaphore);
 int getSemaphoreCurrentVal(struct Semaphore* semaphore);
+
+int takeSemaphore(struct Semaphore* semaphore, unsigned waitTime);
+int releaseSemaphore(struct Semaphore* semaphore, unsigned waitTime);
 #endif //SEMPAHORE_H

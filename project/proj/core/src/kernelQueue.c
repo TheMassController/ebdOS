@@ -6,6 +6,7 @@
 
 struct KernelQueue* kernelQueue = NULL;
 extern struct Process* currentProcess;
+//static struct kernelQueueItem items[MAXTOTALPROCESSES];
 
 void pushItem(struct KernelQueueItem* item){
     lockMutexBlocking(kernelQueue->listProtectionMutex);
@@ -45,7 +46,6 @@ void createProcess(unsigned long stacklen, char* name, void (*procFunc)(void*), 
         }
         if (item == NULL){
             decreaseSemaphoreBlocking(kernelQueue->existingItems);
-            //TODO notify supervisor
             return;
         }
     }

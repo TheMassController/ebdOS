@@ -45,17 +45,16 @@ struct NewProcess{
     char priority;
 };
 
-struct NewProcess newProcessPool[DEFKQPOOLSIZE];
-struct Semaphore newProcessPoolSem;
-struct Mutex newProcessPoolMut;
-
 struct DeleteProcess{
     struct Process* processToDelete;
 };
 
-struct DeleteProcess deleteProcessPool[DEFKQPOOLSIZE];
-struct Semaphore deleteProcessPoolSem;
-struct Mutex deleteProcessPoolMut;
+static struct DeleteProcess deleteProcessPool[DEFKQPOOLSIZE];
+static struct Semaphore deleteProcessPoolSem;
+static struct Mutex deleteProcessPoolMut;
+static struct NewProcess newProcessPool[DEFKQPOOLSIZE];
+static struct Semaphore newProcessPoolSem;
+static struct Mutex newProcessPoolMut;
 
 void initKernelQueue(void){
     initSemaphore(&readyKQItems, MAXTOTALPROCESSES);
@@ -74,6 +73,25 @@ void initKernelQueue(void){
         newProcessPool[i].procFunc = NULL;
         deleteProcessPool[i].processToDelete = NULL;
     }
+}
+
+void popAndProcessItem(void){
+    if (currentProcess->pid != 1){
+        return;
+    }
+    lockMutexBlocking(&kQListProtectionMutex);
+    struct KernelQueueItem* item = kQIListHead;
+    kQListHead = kQListHead->nextItem;
+    releaseMutex(&(kQListProtectionMutex));
+    releaseSemaphore(&existingKQItems, 0);
+    switch(item->itemtype){
+        case newprocess:
+            processNewProcess((struct NewProcess*)item->item);
+            break;
+        default:
+            break;
+    }
+    item->item = NULL;
 }
 
 int pushItem(struct KernelQueueItem* item){
@@ -102,6 +120,8 @@ int pushItem(struct KernelQueueItem* item){
 
 int createAndProcessKernelCall(void* item, enum KQITEMTYPE itemtype){
     takeSemaphore(&(existingKQItems), MAXWAITTIME);
+    //TODO: fix
+    takeMutex(&kQListProtectionMutex, MAXWAITTIME);
     for (int i = 0; i < MAXTOTALPROCESSES; ++i){
         if (kernelQueueItemPool[i].item == NULL){
             kernelQueueItemPool[i].item = item;

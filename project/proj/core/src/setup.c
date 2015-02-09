@@ -20,7 +20,6 @@
 #include "process.h" //Everything related to the processes
 #include "mutex.h" //Everything related to mutexes
 #include "reentrantMutex.h" //Everything related to mutexes
-#include "kernelQueue.h" //For the initialization of the kernelQueue
 #include "malloc.h"
 
 #define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
@@ -43,6 +42,7 @@ extern struct ReentrantMutex mallocMutex;
 extern int initialized;
 
 void initializeProcesses(void);
+void initKernelQueue(void);
 
 void setupHardware(void){
     //Setup the PLL
@@ -132,6 +132,7 @@ void setupHardware(void){
     //Initialize malloc mutex
     initReentrantMutex(&(mallocMutex));
     initializeProcesses();
+    initKernelQueue();
 
     //Create the kernelQueue
     //kernelQueue = malloc(sizeof(struct KernelQueue));

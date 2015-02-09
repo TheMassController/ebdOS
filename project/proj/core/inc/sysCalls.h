@@ -1,5 +1,5 @@
-#ifndef KERNELQUEUE_H
-#define KERNELQUEUE_h
+#ifndef SYSCALLS_H
+#define SYSCALLS_H
 
 /**
     RETCODES:
@@ -7,7 +7,5 @@
     2: unknown error
 **/
 
-struct KernelQueueItem* __popItem(void);
 int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority);
-int __deleteProcess(struct Process* processToDelete);
-#endif //KERNELQUEUE_h
+endif //SYSCALLS_H

@@ -13,6 +13,7 @@
 #include "process.h"
 #include "stdlib.h"
 #include "semaphore.h"
+#include "sysCalls.h"
 
 #define UNUSED(x) (void)(x) //To suppress compiler warning
 
@@ -54,8 +55,7 @@ void button2Interrupt(void){
     increaseSemaphoreNonBlocking(&sem); 
 }
 
-void ledsFlicker(void* un){
-    UNUSED(un);
+void ledsFlicker(void){
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);
         decreaseSemaphoreBlocking(&sem);
@@ -68,8 +68,10 @@ void ledsFlicker(void* un){
     } 
 }
 
-void ledsDance(void* un){
-    UNUSED(un);
+void ledsDance(void){
+    if (createProcess(256, "ledsFlicker", ledsFlicker, NULL, 20) != 0){
+        UARTprintf("My child did not spawn :(\r\n");
+    }
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTB_BASE,GPIO_PIN_0,GPIO_PIN_0);
         sleepMS(500);
@@ -89,7 +91,6 @@ void ledsDance(void* un){
 void ledsDanceMain(void){
     prepareHardware();
     initSemaphore(&sem, 4);
-    __createNewProcess(0, 256, "ledsFlicker", ledsFlicker, NULL, 6);
     if(__createNewProcess(0, 256, "ledsDance", ledsDance, NULL, 5) == 2){
         UARTprintf("FAILURE\r\n");
     } else {

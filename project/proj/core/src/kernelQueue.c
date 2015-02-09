@@ -1,6 +1,6 @@
 #include "process.h"
 #include "stdlib.h"
-#include "kernelQueue.h"
+#include "sysCalls.h"
 #include "string.h"
 #include "supervisorCall.h"
 #include "process.h"
@@ -30,8 +30,8 @@ struct KernelQueueItem{
     struct BinarySemaphore responseWaiter;
 };
 
-static struct Semaphore readyKQItems;
-static struct Semaphore existingKQItems;
+static struct Semaphore readyKQItemsSem;
+static struct Semaphore existingKQItemsSem;
 static struct Mutex kQListProtectionMutex;
 static struct KernelQueueItem kernelQueueItemPool[MAXTOTALPROCESSES];
 static struct KernelQueueItem* kQIListHead = NULL;
@@ -57,8 +57,8 @@ static struct Semaphore newProcessPoolSem;
 static struct Mutex newProcessPoolMut;
 
 void initKernelQueue(void){
-    initSemaphore(&readyKQItems, MAXTOTALPROCESSES);
-    initSemaphore(&existingKQItems, MAXTOTALPROCESSES);
+    initSemaphore(&readyKQItemsSem, MAXTOTALPROCESSES);
+    initSemaphore(&existingKQItemsSem, MAXTOTALPROCESSES);
     initSemaphore(&newProcessPoolSem, DEFKQPOOLSIZE);
     initSemaphore(&deleteProcessPoolSem, DEFKQPOOLSIZE);
     initMutex(&(kQListProtectionMutex));
@@ -75,23 +75,28 @@ void initKernelQueue(void){
     }
 }
 
+int processNewProcess(struct NewProcess* newProc){
+    return __createNewProcess(newProc->mPid, newProc->stacklen, newProc->name, newProc->procFunc, newProc->param, newProc->priority);
+}
+
 void popAndProcessItem(void){
     if (currentProcess->pid != 1){
         return;
     }
+    decreaseSemaphoreBlocking(&readyKQItemsSem);
     lockMutexBlocking(&kQListProtectionMutex);
     struct KernelQueueItem* item = kQIListHead;
-    kQListHead = kQListHead->nextItem;
+    kQIListHead = kQIListHead->nextItem;
     releaseMutex(&(kQListProtectionMutex));
-    releaseSemaphore(&existingKQItems, 0);
+    releaseSemaphore(&existingKQItemsSem, 0);
     switch(item->itemtype){
         case newprocess:
-            processNewProcess((struct NewProcess*)item->item);
+            item->retCode = processNewProcess((struct NewProcess*)item->item);
             break;
         default:
             break;
     }
-    item->item = NULL;
+    releaseBinarySemaphore(&(item->responseWaiter));
 }
 
 int pushItem(struct KernelQueueItem* item){
@@ -110,33 +115,40 @@ int pushItem(struct KernelQueueItem* item){
     }
     releaseMutex(&(kQListProtectionMutex));
     if (takeBinarySemaphore(&(item->responseWaiter), 0) == -1){
-        releaseSemaphore(&existingKQItems, MAXWAITTIME);
         return 2;
     }
-    increaseSemaphoreBlocking(&(readyKQItems));
+    increaseSemaphoreBlocking(&(readyKQItemsSem));
     takeBinarySemaphore(&(item->responseWaiter), MAXWAITTIME);
     return item->retCode;
 }
 
 int createAndProcessKernelCall(void* item, enum KQITEMTYPE itemtype){
-    takeSemaphore(&(existingKQItems), MAXWAITTIME);
-    //TODO: fix
+    takeSemaphore(&(existingKQItemsSem), MAXWAITTIME);
     takeMutex(&kQListProtectionMutex, MAXWAITTIME);
+    struct KernelQueueItem* kQItem = NULL;
     for (int i = 0; i < MAXTOTALPROCESSES; ++i){
         if (kernelQueueItemPool[i].item == NULL){
-            kernelQueueItemPool[i].item = item;
-            kernelQueueItemPool[i].itemtype = itemtype;
-            int retCode = pushItem(&kernelQueueItemPool[i]);
-            releaseBinarySemaphore(&(kernelQueueItemPool[i].responseWaiter));
-            kernelQueueItemPool[i].item = NULL;
-            kernelQueueItemPool[i].nextItem = NULL;
-            return retCode;
+            kQItem = &kernelQueueItemPool[i];
         }
     }
 #ifdef DEBUG
-    UARTprintf("existingKQItems and kernelQueueItemPool are out of sync!\r\n");
+    if (kQItem == NULL)UARTprintf("existingKQItemsSem and kernelQueueItemPool are out of sync!\r\n");
 #endif
-    return 2;
+    if(kQItem == NULL) {
+        releaseMutex(&kQListProtectionMutex);
+        return 2;
+    }
+    kQItem->item = item;
+    releaseMutex(&kQListProtectionMutex);
+
+    kQItem->itemtype = itemtype;
+    int retCode = pushItem(kQItem);
+    releaseBinarySemaphore(&(kQItem->responseWaiter));
+    kQItem->nextItem = NULL;
+    kQItem->item = NULL;
+
+    releaseSemaphore(&existingKQItemsSem, MAXWAITTIME);
+    return retCode;
 }
 
 int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority){
@@ -156,6 +168,8 @@ int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* 
         //Do not release the semaphore: there were no free items
         return 2;
     }
+    newProc->procFunc = procFunc;
+    releaseMutex(&newProcessPoolMut);
     newProc->stacklen = stacklen;
     if (strlen(name) > 20){
         memcpy(name, newProc->name, 20);
@@ -164,10 +178,8 @@ int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* 
         strcpy(name, newProc->name);
     }
     newProc->mPid = currentProcess->pid;
-    newProc->procFunc = procFunc;
     newProc->param = param;
     newProc->priority = priority;
-    releaseMutex(&newProcessPoolMut);
     int retCode = createAndProcessKernelCall(newProc, newprocess);
     releaseSemaphore(&newProcessPoolSem, MAXWAITTIME);
     return retCode;

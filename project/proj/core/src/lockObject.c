@@ -69,16 +69,17 @@ int blockWaitForIncrease(struct LockObject* object){
     currentProcess->state |= STATE_DEC_WAIT;
     //You want to increase, so you wait for a decrease
     currentProcess->blockAddress = object;
-    CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
+    CALLSUPERVISOR(SVC_multiObjectWaitForDecrease);
     return increaseLock(object);
 }
 
 int blockWaitForDecrease(struct LockObject* object){
     currentProcess->state |= STATE_INC_WAIT;
     currentProcess->blockAddress = object;
-    CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
+    CALLSUPERVISOR(SVC_multiObjectWaitForIncrease);
     return decreaseLock(object);
 }
+
 
 int modifyLockObjectBlock(struct LockObject* object, const char increase){
     if (isInInterrupt()) return -1;
@@ -105,6 +106,21 @@ int __decreaseLockObjectBlock(struct LockObject* object){
     return modifyLockObjectBlock(object, 0);
 }
 
+int blockWaitForIncreaseAndSleep(struct LockObject* object){
+    currentProcess->state |= STATE_DEC_WAIT;
+    //You want to increase, so you wait for a decrease
+    currentProcess->blockAddress = object;
+    CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
+    return increaseLock(object);
+}
+
+int blockWaitForDecreaseAndSleep(struct LockObject* object){
+    currentProcess->state |= STATE_INC_WAIT;
+    currentProcess->blockAddress = object;
+    CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
+    return decreaseLock(object);
+}
+
 int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, const char increase){
     if (isInInterrupt()) return -1;
     int retCode;
@@ -117,9 +133,9 @@ int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, 
         __sleepMSDelayBlock(msTimeout);
         while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){ 
             if (increase){
-                retCode = blockWaitForIncrease(object);  
+                retCode = blockWaitForIncreaseAndSleep(object);  
             } else {
-                retCode = blockWaitForDecrease(object);  
+                retCode = blockWaitForDecreaseAndSleep(object);  
             }
         }
         if (currentProcess->state & STATE_SLEEP) CALLSUPERVISOR(SVC_wakeupCurrent);

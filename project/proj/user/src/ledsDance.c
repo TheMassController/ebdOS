@@ -69,11 +69,12 @@ void ledsFlicker(void){
 }
 
 void ledsDance(void){
-    if (createProcess(256, "ledsFlicker", ledsFlicker, NULL, 20) != 0){
+    if (createProcess(1024, "ledsFlicker", ledsFlicker, NULL, 20) != 0){
         UARTprintf("My child did not spawn :(\r\n");
     }
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTB_BASE,GPIO_PIN_0,GPIO_PIN_0);
+        sleepS(200000);
         sleepMS(500);
         ROM_GPIOPinWrite(GPIO_PORTB_BASE,GPIO_PIN_0,0);
         ROM_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
@@ -91,7 +92,7 @@ void ledsDance(void){
 void ledsDanceMain(void){
     prepareHardware();
     initSemaphore(&sem, 4);
-    if(__createNewProcess(0, 256, "ledsDance", ledsDance, NULL, 5) == 2){
+    if(__createNewProcess(0, 1024, "ledsDance", ledsDance, NULL, 5) == 2){
         UARTprintf("FAILURE\r\n");
     } else {
         UARTprintf("Leds Dance!!\r\n");

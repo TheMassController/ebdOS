@@ -88,7 +88,6 @@ void popAndProcessItem(void){
     struct KernelQueueItem* item = kQIListHead;
     kQIListHead = kQIListHead->nextItem;
     releaseMutex(&(kQListProtectionMutex));
-    releaseSemaphore(&existingKQItemsSem, 0);
     switch(item->itemtype){
         case newprocess:
             item->retCode = processNewProcess((struct NewProcess*)item->item);
@@ -172,10 +171,10 @@ int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* 
     releaseMutex(&newProcessPoolMut);
     newProc->stacklen = stacklen;
     if (strlen(name) > 20){
-        memcpy(name, newProc->name, 20);
+        memcpy(newProc->name,name, 20);
         newProc->name[20] = 0;
     } else {
-        strcpy(name, newProc->name);
+        strcpy(newProc->name, name);
     }
     newProc->mPid = currentProcess->pid;
     newProc->param = param;

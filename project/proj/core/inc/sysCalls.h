@@ -8,4 +8,4 @@
 **/
 
 int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority);
-endif //SYSCALLS_H
+#endif //SYSCALLS_H

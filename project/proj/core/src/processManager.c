@@ -80,7 +80,7 @@ void initializeProcesses(void){
     processPool[0].sleepObj.process = &processPool[0];
     strcpy(processPool[0].name, "Kernel");
     processPool[0].stack = kernelPSPStack;
-    processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[3]) & (long)0xFFFFFFFC);
+    processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[KERNELSTACKLEN - 1]) & (long)0xFFFFFFFC);
     
     //set some params 
     processesReady = &processPool[0];

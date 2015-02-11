@@ -74,7 +74,6 @@ void ledsDance(void){
     }
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTB_BASE,GPIO_PIN_0,GPIO_PIN_0);
-        sleepS(200000);
         sleepMS(500);
         ROM_GPIOPinWrite(GPIO_PORTB_BASE,GPIO_PIN_0,0);
         ROM_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_1, GPIO_PIN_1);
@@ -91,7 +90,7 @@ void ledsDance(void){
 
 void ledsDanceMain(void){
     prepareHardware();
-    initSemaphore(&sem, 4);
+    initSemaphore(&sem, 1);
     if(__createNewProcess(0, 1024, "ledsDance", ledsDance, NULL, 5) == 2){
         UARTprintf("FAILURE\r\n");
     } else {

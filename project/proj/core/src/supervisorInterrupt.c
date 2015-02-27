@@ -94,6 +94,13 @@ void removeProcessFromReady(struct Process* process){
     rescheduleImmediately();
 }
 
+void addNewProcess(void){
+    if (newProcess != NULL){
+        addProcessToReady(newProcess);
+        newProcess = NULL;
+    }    
+}
+
 //Sleep related
 void wakeupProcess(struct SleepingProcessStruct* ptr){
     if (ptr->process->state & STATE_WAIT){
@@ -103,7 +110,6 @@ void wakeupProcess(struct SleepingProcessStruct* ptr){
         }
         if (ptr->process->state & STATE_DEC_WAIT){
             object->processWaitingQueueDecrease = removeProcessFromList(object->processWaitingQueueDecrease, ptr->process);
-        
         }
         ptr->process->blockAddress = NULL;
     }
@@ -180,8 +186,13 @@ void removeSleeperFromList(struct Process* proc){
     }
 }
 
+//----------------
+
 struct Process* popFromLockQueue(struct Process* listHead){
     if (listHead != NULL){
+        //Fully ignore the fact that the process might also be sleeping.
+        //This would indicate a block and wait and we only want this process to stop sleeping (waiting) when it has the mutex
+        //So the process itself will check wether or not it is still "sleeping"
         struct Process* item = listHead;
         item->state |= STATE_WAIT;
         item->state ^= STATE_WAIT;
@@ -190,15 +201,6 @@ struct Process* popFromLockQueue(struct Process* listHead){
         addProcessToReady(item);
     }
     return listHead;
-}
-
-//----------------
-
-void addNewProcess(void){
-    if (newProcess != NULL){
-        addProcessToReady(newProcess);
-        newProcess = NULL;
-    }    
 }
 
 void lockObjectModified(const char increase){

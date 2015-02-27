@@ -1,10 +1,6 @@
 //The codes
 #define SVC_reschedule "0"
 
-#define SVC_objectLock "1"
-#define SVC_lockAndSleep "2"
-#define SVC_objectRelease "3"
-
 #define SVC_multiObjectIncrease "4"
 #define SVC_multiObjectDecrease "5"
 #define SVC_multiObjectWaitForIncrease "6"

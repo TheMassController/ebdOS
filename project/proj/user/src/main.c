@@ -11,5 +11,6 @@ int main(void){
     //rest semaphores
     //Test the combination of sleep and mutex (blockandwait)
     //return testScheduler();
+    UARTprintf("%u\n", sizeof(unsigned));
     ledsDanceMain();
 }

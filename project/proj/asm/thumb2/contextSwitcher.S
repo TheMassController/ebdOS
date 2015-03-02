@@ -2,7 +2,6 @@
 @The assembly is manually optimized
 @This file contains the defs of the following global vars:
 @   struct Process* currentProcess = NULL
-@   struct Process* nextProcess = NULL
 	.syntax unified
 	.cpu cortex-m4
 	.eabi_attribute 27, 3
@@ -38,10 +37,8 @@ pendSVHandler:
 
     @First: the check if we even need to context switch
 	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
-	ldr	r1, [r2]    @Deref (r1 = currentProcess)
 	ldr	r3, .L4+4   @Load l4+4, which is processesReady (r3 = &processesReady)
-	ldr	r3, [r3]    @Deref r3 (r3 = processesReady)
-    cmp r1, r3      @If the next process is equal to the current one
+    cmp r2, r3      @If the next process is equal to the current one
     beq .L3         @Do not switch context, but return
     
     @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
@@ -49,6 +46,8 @@ pendSVHandler:
     @Then it does the inverse for the function that is being switched to.
 
     @Actual context switch
+	ldr	r1, [r2]    @Deref (r1 = currentProcess)
+	ldr	r3, [r3]    @Deref r3 (r3 = processesReady)
     mrs r0, psp     @Move the PSP to R0
     stmdb r0!, {r4-r11}    @Move R4 to R11 to param R0, while decreasing R0
 	str	r0, [r1]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)

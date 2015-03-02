@@ -12,8 +12,7 @@
 #define STATE_READY 0x0
 #define STATE_SLEEP 0x1
 //Three wait states, to imply which type of object blockAddress is and which queue needs to be tuched when waking up from sleep
-#define STATE_WAIT 0xE //A flag to surround them all
-#define STATE_LOCKED 0x2
+#define STATE_WAIT 0xC //A flag to surround them all
 #define STATE_INC_WAIT 0x4
 #define STATE_DEC_WAIT 0x8
 

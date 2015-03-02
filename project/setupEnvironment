@@ -1,6 +1,7 @@
 Compiler:
 ARM-GCC-None-EABI. Download it and extract the folder somewhere. Then set the parameters in arm-gcc-locations. BASH+Make will handle the rest
 Download location: https://launchpad.net/gcc-arm-embedded/
+Extract somewhere and update the arm-gcc-locations file in this folder to point to the correct location
 
 Debugging:
 Half of the debugging is included in the above: GDB. This will also be handled by BASH and Make
@@ -33,3 +34,15 @@ Screen command:
 screen /dev/ttyACM0 115200
 
 The 0 can be something else, 115200 is the baudrate.
+
+Well, after everything above is done the file build.sh can handle everything for you. Including:
+-make
+-make debug
+-make clean/distclean
+-flash
+-debugflash
+-launch openOCD
+-connect GDB
+-and some more
+
+just type ./build.sh to see all commands. Make sure the arm-gcc-locations file contains the correct paths though. Unless the toolchain is in your PATH, running make directly from proj will not work.

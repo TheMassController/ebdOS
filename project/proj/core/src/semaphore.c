@@ -1,8 +1,6 @@
 #include "semaphore.h"
 #include "stdlib.h"
 
-//TODO semaphore can not be locking-increased or decreased from interrupt
-
 void initSemaphore(struct Semaphore* semaphore, int maxval){
     if (maxval <= 0) maxval = 1;
     __initLockObject(&(semaphore->lockObject), maxval);

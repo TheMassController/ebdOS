@@ -36,12 +36,12 @@ pendSVHandler:
     cpsid i         @Disables all interrupts
 
     @First: the check if we even need to context switch
-	ldr	r2, .L4     @Load L4+0, which is currentprocess (r2 = &currentProcess)
-	ldr	r3, .L4+4   @Load l4+4, which is processesReady (r3 = &processesReady)
-	ldr	r1, [r2]    @Deref (r1 = currentProcess)
-	ldr	r3, [r3]    @Deref r3 (r3 = processesReady)
-    cmp r1, r3      @If the next process is equal to the current one
-    beq .L3         @Do not switch context, but return
+	ldr	r2, .L4                 @Load L4+0, which is currentprocess (r2 = &currentProcess)
+	ldr	r3, .L4+4               @Load l4+4, which is processesReady (r3 = &processesReady)
+	ldr	r1, [r2]                @Deref (r1 = currentProcess)
+	ldr	r3, [r3]                @Deref r3 (r3 = processesReady)
+    cmp r1, r3                  @If the next process is equal to the current one
+    beq .L3                     @Do not switch context, but return
     
     @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
     @This function adds the other registers to the stack and then changes the stack.
@@ -57,7 +57,7 @@ pendSVHandler:
     ldmfd   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     ldr r12, [r3]               @Load the sp of the new process
     str r0, [r3, #8]            @Store the moved savedRegsPointer
-    msr psp, r12                @push r0 to psp
+    msr psp, r12                @push r12 to psp
 
     @Update pointers
 	str	r3, [r2]                @currentProcess = top of processesReady

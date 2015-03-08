@@ -29,12 +29,14 @@ extern struct Process* currentProcess;
 
 struct Process* newProcess = NULL;
 
-struct Process processPool[MAXTOTALPROCESSES + 2];
+#define DEFAULT_KERNEL_PROCESSES 2
+
+struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
 
 #define KERNELSTACKLEN 67
 #define IDLEFUNCSTACKLEN 128
 
-char kernelPSPStack[KERNELSTACKLEN];
+//char kernelPSPStack[KERNELSTACKLEN];
 
 void __sleepProcessFunc(void){
     while(1){
@@ -52,7 +54,8 @@ void __processReturn(void){
 }
 
 struct Process* getProcessFromPool(void){
-    for (int i = 0; i < MAXTOTALPROCESSES + 2; ++i){
+    //Starts at one because process zero is always the kernel. If that process does not exist then something real is going on.
+    for (int i = 1; i < MAXTOTALPROCESSES + 2; ++i){
         if (!processPool[i].containsProcess){
             return &processPool[i];
         }
@@ -66,7 +69,7 @@ void initializeProcesses(void){
         UARTprintf("PANIC: second run of initilializeProcesses\r\n");
     }
 #endif
-    for (int i = 0; i < MAXTOTALPROCESSES + 2; ++i){
+    for (int i = 0; i < MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES; ++i){
         processPool[i].containsProcess = 0;
         processPool[i].pid = i+1;
     }
@@ -79,13 +82,16 @@ void initializeProcesses(void){
     processPool[0].blockAddress = NULL;
     processPool[0].sleepObj.process = &processPool[0];
     strcpy(processPool[0].name, "Kernel");
-    processPool[0].stack = kernelPSPStack;
-    processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[KERNELSTACKLEN - 1]) & (long)0xFFFFFFFC);
+    //processPool[0].stack = kernelPSPStack;
+    //processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[KERNELSTACKLEN - 1]) & (long)0xFFFFFFFC);
+    processPool[0].stack = NULL;
+    processPool[0].stackPointer = NULL;
+    processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[8]); //Because of decrement before write, set this pointer at the very end
     
     //set some params 
     processesReady = &processPool[0];
     currentProcess = &processPool[0]; 
-    setPSP(currentProcess->stackPointer);
+    setPSP(currentProcess->stackPointer); //For safety, do set the PSP to zero when the kernel runs. This way, when an error is made a segfault happens and not random memory overwrite
     kernel = currentProcess;
 
     //Create the sleeper
@@ -130,27 +136,36 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     }
     newProc->stack = stack;
     //Because a stack moves up (from high to low) move the pointer to the last address and then move it back up to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
-    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); 
+    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); //TODO is the -4 necessary?
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
     *stackPointer-- = 0x01000000; //XPSR, standard stuff 
     *stackPointer-- = (int)procFunc; //PC, initally points to start of function
     *stackPointer-- = (int)&__processReturn; //LR, return func
+#ifdef DEBUG
     *stackPointer-- = 12; // reg12, 12 for debug
     *stackPointer-- = 3; // reg3, 3 for debug
     *stackPointer-- = 2; // reg2, 2 for debug
     *stackPointer-- = 1; // reg1, 1 for debug
+#else
+    stackPointer -= 4;      //If not debugging, just decrease the stackptr    
+#endif //DEBUG
     *stackPointer-- = (int)param; // reg 0, first param
-
-    //The second set is the registers that we have to move manually between RAM and regs when switching contexts
-    //Order: R4, R5, R6, R7, R8, R9, R10, R11
-    for ( int u = 11; u > 4; u-- ){
-        *stackPointer-- = u; //Reg u, u for debug
-    }  
-    *stackPointer = 4;
     //Save the stackpointer to the struct
     newProc->stackPointer = (void*)stackPointer;
+
+    //Init the saved temp reg space
+    newProc->savedRegsPointer = newProcess->savedRegSpace;
+#ifdef DEBUG
+    //The second set is the registers that we have to move manually between RAM and regs when switching contexts
+    //Order: R4, R5, R6, R7, R8, R9, R10, R11
+    unsigned it = 0;
+    for ( int u = 11; u > 4; u-- ){
+        newProcess->savedRegSpace[it] = u;
+        ++it;
+    }  
+#endif //DEBUG
     newProc->containsProcess = 1;
 
     //Add the new process to the list of processes

@@ -48,26 +48,31 @@ pendSVHandler:
     @Then it does the inverse for the function that is being switched to.
 
     @Actual context switch
-    mrs r0, psp     @Move the PSP to R0
-    stmdb r0!, {r4-r11}    @Move R4 to R11 to param R0, while decreasing R0
-	str	r0, [r1]    @Update the stackpointer of currentProcess (currentProcess->stackPointer = r0)
-	ldr	r0, [r3]    @Deref r3 (r0 = processesReady->stackPointer)
-    ldmfd   r0! , {r4-r11}      @Move from ram to regs while increasing R0
-    msr psp, r0     @push r0 to psp
+    mrs r0, psp                 @Move the PSP to R0
+    ldr r12, [r1, #8]           @r2 = savedRegsPointer of currentProcess
+	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
+    stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
+	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
+    str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
+    ldmfd   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
+    ldr r12, [r3]               @Load the sp of the new process
+    str r0, [r3, #8]            @Store the moved savedRegsPointer
+    msr psp, r12                @push r0 to psp
 
-	str	r3, [r2] @currentProcess = processesReady
+    @Update pointers
+	str	r3, [r2]                @currentProcess = top of processesReady
     
     @Decide the returnvar and return
-	ldr	r3, [r3, #4]    @Get the second variable of processesReady. This is the pid and 1 for the kernel
-	cmp	r3, #1      @Test if that var is 1
-	beq	.L2         @Branch if it is not 1
-	mvn	lr, #2 @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
+	ldr	r1, [r1, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
+	cmp	r1, #1                  @Test if that var is 1
+	beq	.L2                     @Branch if it is not 1
+	mvn	lr, #2                  @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
     b .L3
 .L2:
-	mvn	lr, #6  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+	mvn	lr, #6                  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
 .L3:
-    cpsie i         @Reenable all interrupts
-    bx lr           @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
+    cpsie i                     @Reenable all interrupts
+    bx lr                       @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
 .L5:
 	.align	2
 .L4:

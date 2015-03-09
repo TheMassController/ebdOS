@@ -15,6 +15,8 @@
 #include "semaphore.h"
 #include "sysCalls.h"
 
+extern struct Process* currentProcess;
+
 #define UNUSED(x) (void)(x) //To suppress compiler warning
 
 struct Semaphore sem;
@@ -55,7 +57,12 @@ void button2Interrupt(void){
     increaseSemaphoreNonBlocking(&sem); 
 }
 
+void printProcessInfo(void){
+    UARTprintf("My name is: %s, my PID is %u, my mPid is: %u\r\n", currentProcess->name, currentProcess->pid, currentProcess->mPid);
+}
+
 void ledsFlicker(void){
+    printProcessInfo();
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);
         decreaseSemaphoreBlocking(&sem);
@@ -69,6 +76,7 @@ void ledsFlicker(void){
 }
 
 void ledsDance(void){
+    printProcessInfo();
     if (createProcess(1024, "ledsFlicker", ledsFlicker, NULL, 20) != 0){
         UARTprintf("My child did not spawn :(\r\n");
     }
@@ -89,6 +97,7 @@ void ledsDance(void){
 }
 
 void ledsDanceMain(void){
+    printProcessInfo();
     prepareHardware();
     initSemaphore(&sem, 1);
     if(__createNewProcess(0, 1024, "ledsDance", ledsDance, NULL, 5) == 2){

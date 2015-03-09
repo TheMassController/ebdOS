@@ -151,18 +151,18 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 #else
     stackPointer -= 4;      //If not debugging, just decrease the stackptr    
 #endif //DEBUG
-    *stackPointer-- = (int)param; // reg 0, first param
+    *stackPointer = (int)param; // reg 0, first param
     //Save the stackpointer to the struct
     newProc->stackPointer = (void*)stackPointer;
 
     //Init the saved temp reg space
-    newProc->savedRegsPointer = newProcess->savedRegSpace;
+    newProc->savedRegsPointer = &(newProc->savedRegSpace);
 #ifdef DEBUG
     //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
     unsigned it = 0;
-    for ( int u = 11; u > 4; u-- ){
-        newProcess->savedRegSpace[it] = u;
+    for ( int u = 11; u >= 4; u-- ){
+        newProc->savedRegSpace[it] = u;
         ++it;
     }  
 #endif //DEBUG

@@ -63,7 +63,7 @@ pendSVHandler:
 	str	r3, [r2]                @currentProcess = top of processesReady
     
     @Decide the returnvar and return
-	ldr	r1, [r1, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
+	ldr	r1, [r3, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
 	cmp	r1, #1                  @Test if that var is 1
 	beq	.L2                     @Branch if it is not 1
 	mvn	lr, #2                  @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)

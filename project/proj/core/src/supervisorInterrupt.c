@@ -25,7 +25,7 @@ static struct SleepingProcessStruct* sleepProcessListHead = NULL;
 static struct SleepingProcessStruct* nextToWakeUp = NULL;
 
 void rescheduleImmediately(void){
-    NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending (Datasheet pp 156)
+    if (currentProcess != processesReady) NVIC_INT_CTRL_R |= (2<<28); //Set the pendSV to pending (Datasheet pp 156)
 }
 
 //----- Functions related to the moving of functions from one queue to another

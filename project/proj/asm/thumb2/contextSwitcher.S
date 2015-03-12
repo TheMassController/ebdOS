@@ -49,13 +49,25 @@ pendSVHandler:
 
     @Actual context switch
     mrs r0, psp                 @Move the PSP to R0
-    ldr r12, [r1, #8]           @r2 = savedRegsPointer of currentProcess
+    mrs lr, control             @Move control to LR
+    ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
+    and lr, lr, #0x4            @test if the fp flag is set
+    str lr, [r1, #16]           @write the data about the fp flag
 	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
+    cmp lr, #0x4                @test if we need to save the fp regs
+    bne .L6                     @Skip fp saving
+    vstmdb.f32 r12!, {s16-s31}  @Move FP regs to mem. Decrement before
+.L6:
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
-    ldmfd   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
+    ldr lr, [r3, #16]           @Load the "use FP" flag
+    ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     ldr r12, [r3]               @Load the sp of the new process
+    cmp lr, #0x4                @test if we need to load the fp regs
+    bne .L7                     @if not, skip
+    vldmia.f32 r0!, {s16-s31}   @Load the fp regs
+.L7:
     str r0, [r3, #8]            @Store the moved savedRegsPointer
     msr psp, r12                @push r12 to psp
 
@@ -66,10 +78,20 @@ pendSVHandler:
 	ldr	r1, [r3, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
 	cmp	r1, #1                  @Test if that var is 1
 	beq	.L2                     @Branch if it is not 1
+    cmp lr, #0x4                @Test if we need FP after context switch
+    beq .L8
 	mvn	lr, #2                  @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
     b .L3
+.L8:
+    mvn lr, #0x12               @lr = 0xFFFFFFED (Continue from PSP, enable hw FP)
+    b .L3
 .L2:
+    cmp lr, #0x4                @Test if we need FP after context switch
+    beq .L9
 	mvn	lr, #6                  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+    b .L3
+.L9:
+    mvn lr, #0x16               @lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
 .L3:
     cpsie i                     @Reenable all interrupts
     bx lr                       @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)

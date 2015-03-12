@@ -297,10 +297,10 @@ ResetISR(void)
 
 	//DISABLED FOR SIMPLICITY
 
-//    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
-//                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
-//                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
-//
+    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
+                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
+                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
+
 	//Call the hardware init
 	setupHardware();
     //

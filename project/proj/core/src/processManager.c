@@ -118,6 +118,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->nextProcess = NULL;
     newProc->priority = priority;
     newProc->state = STATE_READY;
+    newProc->hwFlags = 0;
     newProc->blockAddress = NULL;
     newProc->sleepObj.process = newProc;
     if (strlen(name) > 20){
@@ -160,11 +161,16 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
 #ifdef DEBUG
     //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
+    //FP: S16, S17, S18, S19, S20, S21, S22, S23, S24, s25, S26, S27, S28, S29, S30, S31
     unsigned it = 0;
-    for ( int u = 11; u >= 4; u-- ){
+    for ( int u = 4; u <= 11; u++ ){
         newProc->savedRegSpace[it] = u;
         ++it;
     }  
+    for ( int u = 31; u >= 16; u--){
+        newProc->savedRegSpace[it] = u;
+        ++it;
+    }
 #endif //DEBUG
     newProc->containsProcess = 1;
 

@@ -1,5 +1,6 @@
 //This file makes sure all the default settings are set
 
+#include "hw_nvic.h"
 #include "hw_types.h" //Contains the types
 #include "sysctl.h"     //Contains defines for PLL regs
 #include "rom_map.h" //Call functions directly from the ROM if available
@@ -61,6 +62,13 @@ void setupHardware(void){
     NVIC_SYS_HND_CTRL_R |= 0x1<<17;
     //Enable the mem fault
     NVIC_SYS_HND_CTRL_R |= 0x1<<16;
+
+    //Enable the floating point unit
+    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
+                     ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
+                    NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
+    //Enable lazy stacking
+    HWREG(NVIC_FPCC) |= NVIC_FPCC_ASPEN | NVIC_FPCC_LSPEN;
 
     //Setup the Debug UART out
     //Enable the correct interfaces: GPIOA for USB Debug, UART0 for USB Debug

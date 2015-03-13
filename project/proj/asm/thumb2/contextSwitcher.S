@@ -52,7 +52,7 @@ pendSVHandler:
     mrs lr, control             @Move control to LR
     ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
     and lr, lr, #0x4            @test if the fp flag is set
-    str lr, [r1, #16]           @write the data about the fp flag
+    str lr, [r1, #12]           @write the data about the fp flag
 	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
     cmp lr, #0x4                @test if we need to save the fp regs
@@ -61,7 +61,7 @@ pendSVHandler:
 .L6:
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
-    ldr lr, [r3, #16]           @Load the "use FP" flag
+    ldr lr, [r3, #12]           @Load the "use FP" flag
     ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     ldr r12, [r3]               @Load the sp of the new process
     cmp lr, #0x4                @test if we need to load the fp regs

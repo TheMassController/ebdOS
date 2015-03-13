@@ -17,7 +17,7 @@
 #define STATE_DEC_WAIT 0x4
 
 #define CS_SAVEDREGSPACE 8
-#define CS_FPSAVEDREGSPACE 17
+#define CS_FPSAVEDREGSPACE 16
 #define CS_USING_FP 0x4
 
 //The next var is only about user processes, the kernel-based processes (kernel itself and idle) are counted seperately

@@ -167,7 +167,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
         newProc->savedRegSpace[it] = u;
         ++it;
     }  
-    for ( int u = 31; u >= 16; u--){
+    for ( int u = 16; u <= 31; u++){
         newProc->savedRegSpace[it] = u;
         ++it;
     }

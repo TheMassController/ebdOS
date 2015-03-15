@@ -64,11 +64,10 @@ void setupHardware(void){
     NVIC_SYS_HND_CTRL_R |= 0x1<<16;
 
     //Enable the floating point unit
-    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
-                     ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
-                    NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
+    NVIC_CPAC_R |= 0x3 << 20; //Enable full access to coprocessor 10
+    NVIC_CPAC_R |= 0x3 << 22; //Enable full access to coprocessor 11
     //Enable lazy stacking
-    HWREG(NVIC_FPCC) |= NVIC_FPCC_ASPEN | NVIC_FPCC_LSPEN;
+    NVIC_FPCC_R |= 0x3 << 30; //Enables the ASPEN (automatic state preservation) bit and the LSPEN (Lazy stacking state preservation)
 
     //Setup the Debug UART out
     //Enable the correct interfaces: GPIOA for USB Debug, UART0 for USB Debug

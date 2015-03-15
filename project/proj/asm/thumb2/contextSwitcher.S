@@ -3,18 +3,6 @@
 @This file contains the defs of the following global vars:
 @   struct Process* currentProcess = NULL
 	.syntax unified
-	.cpu cortex-m4
-	.eabi_attribute 27, 3
-	.fpu vfp
-	.eabi_attribute 20, 1
-	.eabi_attribute 21, 1
-	.eabi_attribute 23, 3
-	.eabi_attribute 24, 1
-	.eabi_attribute 25, 1
-	.eabi_attribute 26, 1
-	.eabi_attribute 30, 6
-	.eabi_attribute 34, 1
-	.eabi_attribute 18, 4
     .thumb
     .file   "scheduling.c"
     .global currentProcess
@@ -57,7 +45,7 @@ pendSVHandler:
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
     cmp lr, #0x4                @test if we need to save the fp regs
     bne .L6                     @Skip fp saving
-    vstmdb.f32 r12!, {s16-s31}  @Move FP regs to mem. Decrement before
+    vstmdb.f32.s32 r12!, {s16-s31}  @Move FP regs to mem. Decrement before
 .L6:
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
@@ -66,7 +54,7 @@ pendSVHandler:
     ldr r12, [r3]               @Load the sp of the new process
     cmp lr, #0x4                @test if we need to load the fp regs
     bne .L7                     @if not, skip
-    vldmia.f32 r0!, {s16-s31}   @Load the fp regs
+    vldmia.f32.s32 r0!, {s16-s31}   @Load the fp regs
 .L7:
     str r0, [r3, #8]            @Store the moved savedRegsPointer
     msr psp, r12                @push r12 to psp

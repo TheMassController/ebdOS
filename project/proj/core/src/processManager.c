@@ -86,7 +86,7 @@ void initializeProcesses(void){
     //processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[KERNELSTACKLEN - 1]) & (long)0xFFFFFFFC);
     processPool[0].stack = NULL;
     processPool[0].stackPointer = NULL;
-    processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[8]); //Because of decrement before write, set this pointer at the very end
+    processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
     
     //set some params 
     processesReady = &processPool[0];
@@ -118,7 +118,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->nextProcess = NULL;
     newProc->priority = priority;
     newProc->state = STATE_READY;
-    newProc->hwFlags = 0;
+    newProc->hwFlags = 16; //Disable FPU context switching on process creation, it will be enabled when the process calls a FP instruction
     newProc->blockAddress = NULL;
     newProc->sleepObj.process = newProc;
     if (strlen(name) > 20){
@@ -157,20 +157,20 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->stackPointer = (void*)stackPointer;
 
     //Init the saved temp reg space
-    newProc->savedRegsPointer = &(newProc->savedRegSpace);
+    newProc->savedRegsPointer = &(newProc->savedRegSpace[16]); //Let it point to the first GP space.
 #ifdef DEBUG
     //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
     //FP: S16, S17, S18, S19, S20, S21, S22, S23, S24, s25, S26, S27, S28, S29, S30, S31
     unsigned it = 0;
-    for ( int u = 4; u <= 11; u++ ){
-        newProc->savedRegSpace[it] = u;
-        ++it;
-    }  
     for ( int u = 16; u <= 31; u++){
         newProc->savedRegSpace[it] = u;
         ++it;
     }
+    for ( int u = 4; u <= 11; u++ ){
+        newProc->savedRegSpace[it] = u;
+        ++it;
+    }  
 #endif //DEBUG
     newProc->containsProcess = 1;
 

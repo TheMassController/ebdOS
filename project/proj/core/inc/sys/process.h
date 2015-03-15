@@ -32,11 +32,11 @@ struct Process {
 
     unsigned savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  //Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
     unsigned mPid;                                                  //Mother pid
-    char containsProcess;                                           //Flag used for mempooling
-    char name[21];                                                  //The name can be 20 chars max, the last char is a /0
     void* stack;                                                    //refers to the address returned by Malloc
+    char name[21];                                                  //The name can be 20 chars max, the last char is a /0
     char state;                                                     //Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
     char priority;                                                  //Higher is higher: 255 is highest  
+    char containsProcess;                                           //Flag used for mempooling
 
     void* blockAddress;                                             //The multilockobject this process is waiting for
     struct SleepingProcessStruct sleepObj;                          //The sleepobject, contains all data necessary for sleeping

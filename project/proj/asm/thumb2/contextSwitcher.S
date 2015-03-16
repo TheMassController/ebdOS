@@ -49,14 +49,14 @@ pendSVHandler:
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     ldr lr, [r3, #12]           @Load the "use FP" flag
-    ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
-    ldr r12, [r3]               @Load the sp of the new process
     cmp lr, #0x0                @test if we need to load the fp regs
     bne .L7                     @if not, skip
     vldmia.f32 r0!, {s16-s31}   @Load the fp regs
 .L7:
-    str r0, [r3, #8]            @Store the moved savedRegsPointer
+    ldr r12, [r3]               @Load the sp of the new process
+    ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     msr psp, r12                @push r12 to psp
+    str r0, [r3, #8]            @Store the moved savedRegsPointer
 
     @Update pointers
 	str	r3, [r2]                @currentProcess = top of processesReady

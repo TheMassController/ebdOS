@@ -2,6 +2,7 @@
 #include "uartstdio.h"
 #include "sleep.h"
 #include <stdlib.h>
+#include "sysCalls.h"
 
 void itoa(int n, char s[])
 {
@@ -156,17 +157,49 @@ void ftoa(float Value, char* Buffer)
      Buffer[count] = '\0';
  }
 
-void testFloatOutput(void){
-    UARTprintf("Testing float output...\r\n");
+void testFloatOutputSmall(void){
+    UARTprintf("Testing float output small...\r\n");
     char fPtr[100];
     char* fptr = fPtr;
-    float f = 0.5;
-    ftoa(f, fptr); 
-    UARTprintf("Float value of f: %s\r\n", fptr);
-    f /= 0.22;
-    f *= 22.3;
-    ftoa(f, fptr); 
-    UARTprintf("Float value of f: %s\r\n", &fPtr);
+    float f = 0.155;
+    while(1){
+        ftoa(f, fptr); 
+        UARTprintf("[small]Float value of f: %s\r\n", fptr);
+        f /= 0.22;
+        ftoa(f, fptr); 
+        UARTprintf("[small]Float value of f: %s\r\n", &fPtr);
+        sleepMS(100);
+        f *= 0.22;
+        ftoa(f, fptr); 
+        UARTprintf("[small]Float value of f: %s\r\n", &fPtr);
+    }
+}
+
+void testFloatOutputBig(void){
+    UARTprintf("Testing float output big...\r\n");
+    char fPtr[100];
+    char* fptr = fPtr;
+    float f = 155.0;
+    while(1){
+        ftoa(f, fptr); 
+        UARTprintf("[big]Float value of f: %s\r\n", fptr);
+        f /= 0.22;
+        ftoa(f, fptr); 
+        sleepMS(100);
+        UARTprintf("[big]Float value of f: %s\r\n", &fPtr);
+        f *= 0.22;
+        ftoa(f, fptr); 
+        UARTprintf("[big]Float value of f: %s\r\n", &fPtr);
+    }
+}
+
+void testFloatMain(void){
+    if (createProcess(512, "testFloatSmall", testFloatOutputSmall, NULL, 20) != 0){
+        UARTprintf("My child did not spawn :(\r\n");
+    }
+    if (createProcess(512, "testFloatBig", testFloatOutputBig, NULL, 20) != 0){
+        UARTprintf("My child did not spawn :(\r\n");
+    }
     while(1){
         sleepS(100);
     }

@@ -8,4 +8,4 @@ int testProcessStructure(void);
 int testGPIO(void);
 int testSVCcall(void);
 int testScheduler(void);
-void testFloatOutput(void);
+void testFloatMain(void);

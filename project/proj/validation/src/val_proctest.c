@@ -13,14 +13,14 @@ extern struct Process* currentProcess;
 void testFunction1(void* param){
     UNUSED(param);
     UARTprintf("testFunction1 says hi!\r\n");
-    nextProcess = processesReady->nextProcess;
+    processesReady = processesReady->nextProcess;
     NVIC_INT_CTRL_R |= (1<<28);
 }
 
 void testFunction2(void* param){
     UNUSED(param);
     UARTprintf("testFunction2 says hi!\r\n");
-    nextProcess = kernel;
+    processesReady = kernel;
     NVIC_INT_CTRL_R |= (1<<28);
     
 }

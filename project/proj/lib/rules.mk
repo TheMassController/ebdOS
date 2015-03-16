@@ -6,5 +6,6 @@ LIBDIRS += $(SYSLIBDIR)/hardfp
 #External libs, these will become obsolete eventually. Maybe
 LIBDIRS += $(ARMGCCGCCLIBSDIR)
 LIBDIRS += $(ARMADITIONALLIBSDIR)
+LIBS += m
 LIBS += c #libc, contains basic I/O, Malloc, etc
 LIBS += gcc #libgcc contains function routines for things like dividing. It contains things which may need many instructions, but cannot be optimized.

@@ -47,6 +47,8 @@ struct NewProcess{
 
 struct DeleteProcess{
     struct Process* processToDelete;
+    struct Process* callee;
+    int retCode;
 };
 
 static struct DeleteProcess deleteProcessPool[DEFKQPOOLSIZE];
@@ -79,6 +81,12 @@ int processNewProcess(struct NewProcess* newProc){
     return __createNewProcess(newProc->mPid, newProc->stacklen, newProc->name, newProc->procFunc, newProc->param, newProc->priority);
 }
 
+int processDeleteProcess(struct DeleteProcess* delProc){
+    (void)delProc;
+    //TODO implement
+    return 0;
+}
+
 void popAndProcessItem(void){
     if (currentProcess->pid != 1){
         return;
@@ -91,6 +99,9 @@ void popAndProcessItem(void){
     switch(item->itemtype){
         case newprocess:
             item->retCode = processNewProcess((struct NewProcess*)item->item);
+            break;
+        case deleteprocess:
+            item->retCode = processDeleteProcess((struct DeleteProcess*) item->item);
             break;
         default:
             break;
@@ -151,12 +162,15 @@ int createAndProcessKernelCall(void* item, enum KQITEMTYPE itemtype){
 }
 
 int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority){
+    //Take the objects needed to touch the new process queue
     takeSemaphore(&newProcessPoolSem, MAXWAITTIME);
     takeMutex(&newProcessPoolMut, MAXWAITTIME);
+    //Find the correct empty spot to write your data to
     struct NewProcess* newProc = NULL;
     for (int i = 0; i < DEFKQPOOLSIZE; ++i){
         if (newProcessPool[i].procFunc == NULL){
             newProc = &newProcessPool[i];
+            break;
         }
     }
 #ifdef DEBUG 
@@ -182,6 +196,39 @@ int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* 
     int retCode = createAndProcessKernelCall(newProc, newprocess);
     releaseSemaphore(&newProcessPoolSem, MAXWAITTIME);
     return retCode;
+}
+
+void exitProcess(int exitCode){
+    takeSemaphore(&deleteProcessPoolSem, MAXWAITTIME);
+    takeMutex(&deleteProcessPoolMut, MAXWAITTIME);
+    struct DeleteProcess* delProc = NULL;
+    for (int i = 0; i < DEFKQPOOLSIZE; ++i){
+        if (deleteProcessPool[i].processToDelete == NULL){
+            delProc = &deleteProcessPool[i];
+            break; 
+        }
+    }
+#ifdef DEBUG 
+    if (delProc == NULL) UARTprintf("WARNING: semaphore of deleteProcessPool is out of sync\r\n");
+#endif
+    if (delProc == NULL) {
+        //TODO kernelpanic or something: the process cannot run anymore and the KQ is broken.
+        //This might be inrecovereble
+        //Well maybe just segfault
+        return;
+    }
+    delProc->processToDelete = currentProcess;
+    delProc->callee = currentProcess;
+    releaseMutex(&deleteProcessPoolMut);
+    delProc->retCode = exitCode;
+    createAndProcessKernelCall(delProc, deleteprocess);
+#ifdef DEBUG
+   UARTprintf("We are at a point in exitProcess where we do not want to be\r\n"); 
+#endif //DEBUG
+}
+
+void processReturn(void){
+    exitProcess(0);
 }
 
 //void deleteCurrentProcess(){

@@ -3,6 +3,8 @@
 #include "sleep.h"
 #include <stdlib.h>
 #include "sysCalls.h"
+#include <limits.h>
+#include <math.h>
 
 void itoa(int n, char s[])
 {
@@ -193,14 +195,42 @@ void testFloatOutputBig(void){
     }
 }
 
-void testFloatMain(void){
-    if (createProcess(512, "testFloatSmall", testFloatOutputSmall, NULL, 20) != 0){
-        UARTprintf("My child did not spawn :(\r\n");
+#define UNUSED(x) (void)(x)
+
+void findPrimeNumbers(void* amount){
+    const unsigned maxCount = (unsigned) amount;
+    if (maxCount != 0){
+        unsigned curCount = 1; 
+        UARTprintf("2");
+        for (unsigned i = 3; i < UINT_MAX; i += 2){
+            float sqrtIf = sqrtf(i);
+            unsigned sqrtIu = (unsigned)sqrtIf;
+            int isPrime = 1;
+            for (unsigned j = 3; j < sqrtIu; ++j){
+              float out = (float)i / j;
+              unsigned output = i / j;
+              if (out - output < 0.0001) isPrime = 0;
+            }
+            if (isPrime){
+                curCount++;
+                UARTprintf(", %u", i);
+            }
+            if (curCount == maxCount) break;
+        }
+
+        UARTprintf(".\r\nDone!\r\n");
     }
-    if (createProcess(512, "testFloatBig", testFloatOutputBig, NULL, 20) != 0){
+    while(1) sleepS(1000);
+}
+
+void testFloatMain(void){
+    //if (createProcess(512, "testFloatSmall", testFloatOutputSmall, NULL, 20) != 0){
+    //    UARTprintf("My child did not spawn :(\r\n");
+    //}
+    if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)203280221, 1) != 0){
         UARTprintf("My child did not spawn :(\r\n");
     }
     while(1){
-        sleepS(100);
+        sleepS(10);
     }
 }

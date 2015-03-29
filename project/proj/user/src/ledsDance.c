@@ -64,6 +64,7 @@ void printProcessInfo(void){
 void ledsFlicker(void){
     printProcessInfo();
     while(1){
+        UARTprintf("Hoi\r\n");
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);
         decreaseSemaphoreBlocking(&sem);
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_2);

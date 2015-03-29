@@ -87,6 +87,7 @@ void initializeProcesses(void){
     processPool[0].stack = NULL;
     processPool[0].stackPointer = NULL;
     processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
+    processPool[0].hwFlags = 16; //Disable the FP on first run (not strictly necessary, because initially this process will be switched out. Just for clarity's sake)
     
     //set some params 
     processesReady = &processPool[0];

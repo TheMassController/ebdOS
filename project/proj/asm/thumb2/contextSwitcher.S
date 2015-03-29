@@ -37,27 +37,23 @@ pendSVHandler:
 
     @Actual context switch
     mrs r0, psp                 @Move the PSP to R0
-    and lr, lr, #0x10           @Test if the 5th bit is 0
+    ands lr, lr, #0x10          @Test if the 5th bit is 0. UPDATES THE CONDITION FLAGS FOR THE FP INSTRUCTION LATER
     ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
     str lr, [r1, #12]           @write the data about the fp flag
 	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
-    cmp lr, #0x0                @test if we need to save the fp regs
-    bne .L6                     @Skip fp saving
-    vstmdb.f32 r12!, {s16-s31}  @Move FP regs to mem. Decrement before
-.L6:
+    it eq                       @start conditional block for eq.
+    vstmdbeq.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. CONDITIONAL EXECUTION only when zero flag was set (is equal)
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     ldr lr, [r3, #12]           @Load the "use FP" flag
     cmp lr, #0x0                @test if we need to load the fp regs
-    bne .L7                     @if not, skip
-    vldmia.f32 r0!, {s16-s31}   @Load the fp regs
-.L7:
+    it eq                       @start conditional block for eq
+    vldmiaeq.f32 r0!, {s16-s31} @Load the fp regs. Increment after. CONDITIONAL EXECUTION only when zero flag was set (is equal)
     ldr r12, [r3]               @Load the sp of the new process
     ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     msr psp, r12                @push r12 to psp
     str r0, [r3, #8]            @Store the moved savedRegsPointer
-
     @Update pointers
 	str	r3, [r2]                @currentProcess = top of processesReady
     

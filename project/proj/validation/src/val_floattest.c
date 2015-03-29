@@ -206,15 +206,19 @@ void findPrimeNumbers(void* amount){
             float sqrtIf = sqrtf(i);
             unsigned sqrtIu = (unsigned)sqrtIf;
             int isPrime = 1;
-            for (unsigned j = 3; j < sqrtIu; ++j){
-              float out = (float)i / j;
-              unsigned output = i / j;
-              if (out - output < 0.0001) isPrime = 0;
+            for (unsigned j = 3; j <= sqrtIu; ++j){
+                float out = (float)i / j;
+                unsigned output = i / j;
+                //get the diff
+                if (out - output < 0.000244140625){
+                    isPrime = 0;
+                    break;
+                }
             }
             if (isPrime){
                 curCount++;
                 UARTprintf(", %u", i);
-            }
+            }  
             if (curCount == maxCount) break;
         }
 
@@ -227,7 +231,8 @@ void testFloatMain(void){
     //if (createProcess(512, "testFloatSmall", testFloatOutputSmall, NULL, 20) != 0){
     //    UARTprintf("My child did not spawn :(\r\n");
     //}
-    if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)203280221, 1) != 0){
+    //if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)203280221, 1) != 0){
+    if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)5000, 1) != 0){
         UARTprintf("My child did not spawn :(\r\n");
     }
     while(1){

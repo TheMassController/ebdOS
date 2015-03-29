@@ -32,8 +32,8 @@ pendSVHandler:
     beq .L3                     @Do not switch context, but return
     
     @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
-    @This function adds the other registers to the stack and then changes the stack.
-    @Then it does the inverse for the function that is being switched to.
+    @This function pushes the other regs to the process control block.
+    @Then it loads the other regs from the process control block of the next process.
 
     @Actual context switch
     mrs r0, psp                 @Move the PSP to R0
@@ -54,32 +54,21 @@ pendSVHandler:
     ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     msr psp, r12                @push r12 to psp
     str r0, [r3, #8]            @Store the moved savedRegsPointer
+
     @Update pointers
 	str	r3, [r2]                @currentProcess = top of processesReady
     
     @Decide the returnvar and return
-	ldr	r1, [r3, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
-	cmp	r1, #1                  @Test if that var is 1
-	beq	.L2                     @Branch if it is not 1
-    cmp lr, #0x0                @Test if we need FP after context switch
-    beq .L8
-	mvn	lr, #2                  @lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
-    b .L3
-.L8:
-    mvn lr, #0x12               @lr = 0xFFFFFFED (Continue from PSP, enable hw FP)
-    b .L3
-.L2:
-    cmp lr, #0x0                @Test if we need FP after context switch
-    beq .L9
-	mvn	lr, #6                  @lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
-    b .L3
-.L9:
     mvn lr, #0x16               @lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
+    it ne                       @The last CMP was to check wether the process uses FP, recycle this information for the retval
+    orrne lr, lr, #0x10         @if nextProc does not use fp: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+	ldr	r1, [r3, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
+	cmp	r1, #1                  @Test if that var is 1. If it is: use MSP. Else: use PSP.
+    it ne                       @Test for not equal
+    orrne lr, lr, #0x4          @If not equal, lr = 0xFFFFFFED (Continue from PSP, enable hw FP) or lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
 .L3:
     cpsie i                     @Reenable all interrupts
     bx lr                       @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
-.L5:
-	.align	2
 .L4:
 	.word	currentProcess
 	.word	processesReady

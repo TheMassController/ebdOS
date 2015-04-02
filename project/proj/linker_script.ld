@@ -17,7 +17,7 @@ SECTIONS
         _etext = .;
     } > FLASH
 
-    .data : /*AT(ADDR(.text) + SIZEOF(.text))*/
+    .data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/
     {
         _data = .;
         *(vtable)
@@ -25,7 +25,7 @@ SECTIONS
         _edata = .;
     } > SRAM AT > FLASH
 
-    .bss : AT (ADDR(.data) + SIZEOF(.data))
+    .bss : AT (ADDR(.data) + SIZEOF(.data)) /*contains unitialized data (should be set to all zero's)*/
     {
         _bss = .;
         *(.bss*)

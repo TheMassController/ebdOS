@@ -193,6 +193,7 @@ struct Process* popFromLockQueue(struct Process* listHead){
         //Fully ignore the fact that the process might also be sleeping.
         //This would indicate a block and wait and we only want this process to stop sleeping (waiting) when it has the mutex
         //So the process itself will check wether or not it is still "sleeping"
+        //Sleeping is an extension module to blocking
         struct Process* item = listHead;
         item->state |= STATE_WAIT;
         item->state ^= STATE_WAIT;
@@ -203,6 +204,7 @@ struct Process* popFromLockQueue(struct Process* listHead){
     return listHead;
 }
 
+//Used to signal increase/decrease
 void lockObjectModified(const char increase){
     struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
@@ -214,6 +216,7 @@ void lockObjectModified(const char increase){
 }
 
 void lockObjectBlock(const char increase){
+    //TODO prevent starvation
     struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
         if (lockObject->lock != 0) return;
@@ -232,7 +235,8 @@ void lockObjectBlockAndSleep(const char increase){
 }
 
 void setKernelPrioMax(void){
-   kernel->priority = 255; 
+    //TODO update for new scheduling algorithm
+    kernel->priority = 255; 
 }
 
 void wakeupCurrentProcess(void){

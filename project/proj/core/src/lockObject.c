@@ -25,6 +25,9 @@ void __cleanupLockObject(struct LockObject* object){
     }
 }
 
+/**
+    Used to mantain integrety when a interrupt signals the sem (for inc or dec)
+**/
 void intrModifyCall(void* oldBlockAddr, const char increase){
     if (increase){
         CALLSUPERVISOR(SVC_multiObjectIncrease);

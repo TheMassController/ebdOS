@@ -16,6 +16,8 @@ extern struct Process* currentProcess;
 
 #define DEFKQPOOLSIZE 5
 
+//TODO this part is fundamentally broken. The syscall layer should be redesigned and re-implemented
+
 enum KQITEMTYPE
 {
     newprocess,

@@ -5,3 +5,4 @@ CFLAGS = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-pre
 ASMFLAGS = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -ffunction-sections -fdata-sections
 #ASMFLAGS = -c -mthumb -mcpu=cortex-m4 -mfloat-abi=softfp -ffunction-sections -fdata-sections
 OBJCOPYFLAGS = 
+ARFLAGS = rcs

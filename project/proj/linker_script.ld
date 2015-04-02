@@ -8,6 +8,31 @@ MEMORY
 
 SECTIONS
 {
+    .kernel.text :
+    {
+        _kernel_text = .;
+        KEEP(kernel.a(.isr_vector))
+        kernel.a(.text*)
+        kernel.a(.rodata*)
+        _kernel_etext = .;
+    } > FLASH
+
+    .kernel.data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/
+    {
+        _kernel_data = .;
+        kernel.a(vtable)
+        kernel.a(.data*)
+        _kernel_edata = .;
+    } > SRAM AT > FLASH
+
+    .kernel.bss : AT (ADDR(.kernel.data) + SIZEOF(.kernel.data)) /*contains unitialized data (should be set to all zero's)*/
+    {
+        _kernel_bss = .;
+        kernel.a(.bss*)
+        kernel.a(COMMON)
+        _kernel_ebss = .;
+    } > SRAM
+
     .text :
     {
         _text = .;

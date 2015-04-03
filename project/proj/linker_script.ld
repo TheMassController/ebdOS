@@ -12,6 +12,7 @@ SECTIONS
     {
         _kernel_text = .;
         KEEP(kernel.a(.isr_vector))
+        KEEP(kernel.a(_sbrk))
         kernel.a(.text*)
         kernel.a(.rodata*)
         _kernel_etext = .;
@@ -33,6 +34,30 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
 
+    .core.text : AT (ADDR(.kernel.text) + SIZEOF(.kernel.text) + SIZEOF(.kernel.data))
+    {
+        _core_text = .;
+        core.a(.text*)
+        core.a(.rodata*)
+        _core_etext = .;
+    } > FLASH
+
+    .core.data :
+    {
+        _core_data = .;
+        core.a(vtable)
+        core.a(.data*)
+        _core_edata = .;
+    } >SRAM AT > FLASH
+
+    .core.bss :
+    {
+        _core_bss = .;
+        core.a(.bss*)
+        core.a(COMMON)
+        _core_ebss = .;
+    } > SRAM
+
     .text :
     {
         _text = .;
@@ -42,7 +67,7 @@ SECTIONS
         _etext = .;
     } > FLASH
 
-    .data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/
+    .data : 
     {
         _data = .;
         *(vtable)

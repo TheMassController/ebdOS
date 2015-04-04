@@ -2,6 +2,8 @@
 
 source arm-gcc-locations
 
+DEFAULT="flash"
+
 MAKEFLAGS="-j10"
 MAKE=$(which make)
 FLASH=$(which lm4flash)
@@ -53,13 +55,12 @@ function launchGDB {
     
 }
 
-function printUsageAndExit {
+function printUsage {
     echo "Usage: <script> params"
     echo "params:"
-    echo "all, clean, distclean, debug, flash, debugflash, echo, launchGDB, screen" 
+    echo "help, all, clean, distclean, debug, flash, debugflash, echo, launchGDB, screen" 
     echo "debugflash implies debug and launchGDB"
     echo "flash implies all"
-    exit
 }
 
 function launchScreen {
@@ -83,22 +84,26 @@ function commandDistribution {
         screen)
             launchScreen
             ;;
+        help)
+            printUsage
+            ;;
         *)
             echo "Unknown command $1"   
             ;;
     esac
 }
 
-if [ $# -eq 0 ]; then
-    printUsageAndExit
-fi
-
 PATH=$PATH:$ARMGCCBIN
 export PATH
 export ARMGCCEXLIB
 export ARMGCCLIB
 
-PARAMS=$(($#))
+#default: all
+if [ $# -eq 0 ]; then
+    commandDistribution $DEFAULT
+    exit 0
+fi
+
 for var in $@; do
     commandDistribution $var;
 done

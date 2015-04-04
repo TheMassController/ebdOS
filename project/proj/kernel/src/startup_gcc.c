@@ -25,6 +25,7 @@
 #include "hw_nvic.h"
 #include "hw_types.h"
 #include "uartstdio.h"
+#include "asmUtils.h"
 
 //*****************************************************************************
 //
@@ -241,6 +242,19 @@ void (* const g_pfnVectors[])(void) =
 // for the "data" segment resides immediately following the "text" segment.
 //
 //*****************************************************************************
+
+extern unsigned long _kernel_etext;
+extern unsigned long _kernel_data;
+extern unsigned long _kernel_edata;
+extern unsigned long _kernel_bss;
+extern unsigned long _kernel_ebss;
+
+extern unsigned long _core_etext;
+extern unsigned long _core_data;
+extern unsigned long _core_edata;
+extern unsigned long _core_bss;
+extern unsigned long _core_ebss;
+
 extern unsigned long _etext;
 extern unsigned long _data;
 extern unsigned long _edata;
@@ -257,55 +271,46 @@ extern unsigned long _ebss;
 // application.
 //
 //*****************************************************************************
-void
-ResetISR(void)
+void ResetISR(void)
 {
-    unsigned long *pulSrc, *pulDest;
+    volatile unsigned long *pulSrc, *pulDest;
 
-    //
     // Copy the data segment initializers from flash to SRAM.
-    //
+    pulSrc = &_kernel_etext;
+    for(pulDest = &_kernel_data; pulDest < &_kernel_edata; )
+    {
+        *pulDest++ = *pulSrc++;
+    }
+
+    pulSrc = &_core_etext;
+    for(pulDest = &_core_data; pulDest < &_core_edata; )
+    {
+        *pulDest++ = *pulSrc++;
+    }
+
     pulSrc = &_etext;
     for(pulDest = &_data; pulDest < &_edata; )
     {
         *pulDest++ = *pulSrc++;
     }
 
-    //
-    // Zero fill the bss segment.
-    //
-    __asm("    ldr     r0, =_bss\n"
-          "    ldr     r1, =_ebss\n"
-          "    mov     r2, #0\n"
-          "    .thumb_func\n"
-          "zero_loop:\n"
-          "        cmp     r0, r1\n"
-          "        it      lt\n"
-          "        strlt   r2, [r0], #4\n"
-          "        blt     zero_loop");
+    // Zero fill the bss segments.
+    zeroFillSection(&_kernel_bss, &_kernel_ebss);
+    zeroFillSection(&_core_bss, &_core_ebss);
+    zeroFillSection(&_bss, &_ebss);
+    //__asm("    ldr     r0, =_bss\n"
+    //      "    ldr     r1, =_ebss\n"
+    //      "    mov     r2, #0\n"
+    //      "    .thumb_func\n"
+    //      "zero_loop:\n"
+    //      "        cmp     r0, r1\n"
+    //      "        it      lt\n"
+    //      "        strlt   r2, [r0], #4\n"
+    //      "        blt     zero_loop");
 
-    //
-    // Enable the floating-point unit.  This must be done here to handle the
-    // case where main() uses floating-point and the function prologue saves
-    // floating-point registers (which will fault if floating-point is not
-    // enabled).  Any configuration of the floating-point unit using DriverLib
-    // APIs must be done here prior to the floating-point unit being enabled.
-    //
-    // Note that this does not use DriverLib since it might not be included in
-    // this project.
-    //
-
-	//DISABLED FOR SIMPLICITY
-
-//    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
-//                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
-//                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
-//
 	//Call the hardware init
 	setupHardware();
-    //
-    // Call the application's entry point.
-    //
+    //Call the application's entry point.
     main();
     //Kick off the scheduler etc
     finishBoot();

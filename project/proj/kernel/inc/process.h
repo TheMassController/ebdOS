@@ -3,11 +3,12 @@
 
 #include "sysSleep.h" 
 
-//States are handled as different bit flags:
-//pos 0 = sleep
-//pos 1,2 = wait
-//if state = 0, then it is ready
-//This way, a process can both be sleeping and waiting for a mutex.
+/* States are handled as different bit flags:
+ * pos 0 = sleep
+ * pos 1,2 = wait
+ * if state = 0, then it is ready
+ * This way, a process can both be sleeping and waiting for a mutex.
+ */ 
 
 #define STATE_READY 0x0
 #define STATE_SLEEP 0x1

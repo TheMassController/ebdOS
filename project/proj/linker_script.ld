@@ -26,7 +26,7 @@ SECTIONS
         _kernel_edata = .;
     } > SRAM AT > FLASH
 
-    .kernel.bss : AT (ADDR(.kernel.data) + SIZEOF(.kernel.data)) /*contains unitialized data (should be set to all zero's)*/
+    .kernel.bss : 
     {
         _kernel_bss = .;
         kernel.a(.bss*)
@@ -62,7 +62,7 @@ SECTIONS
 
     /*TODO allign to be a bit nicer to the MPU */
 
-    .text :
+    .text : AT (ADDR(.core.text) + SIZEOF(.core.text) + SIZEOF(.core.data))
     {
         _text = .;
         KEEP(*(.isr_vector))

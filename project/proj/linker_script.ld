@@ -33,6 +33,8 @@ SECTIONS
         kernel.a(COMMON)
         _kernel_ebss = .;
     } > SRAM
+    
+    /*TODO allign to be a bit nicer to the MPU */
 
     .core.text : AT (ADDR(.kernel.text) + SIZEOF(.kernel.text) + SIZEOF(.kernel.data))
     {
@@ -57,6 +59,8 @@ SECTIONS
         core.a(COMMON)
         _core_ebss = .;
     } > SRAM
+
+    /*TODO allign to be a bit nicer to the MPU */
 
     .text :
     {

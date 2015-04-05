@@ -58,7 +58,7 @@ zeroFillSection:                @params: first address, last address. First addr
                                 @There is no guarantee about any alignment, so it happens in three parts. First: write bytes until aligned, then write words for as long as possible and then write bytes until finished.
     MOV r12, #0                 @load r12 with zero
     MOV r2, r0                  @Set r2 to r0
-    ORN r0, r0, #0x3            @Allign r0 to 0xXXX100
+    BIC r0, r0, #0x3            @Allign r0 to 0xXXX100
     CMP r2, r0                  @Compare r2 to r0 to see if the last two bits were already zero
     IT NE                       @If not... (r2 != r0)
     ADDNE r0, r0, 4             @Add 4 (100 bin) to r0 to let r0 > r2
@@ -69,7 +69,7 @@ zeroFillSection:                @params: first address, last address. First addr
     BHS L3                      @And branch to L3
                                 @If we get here, then we also need to cut off the lowest bytes from r1
     MOV r3, r1                  @Set r3 = r1
-    ORN r1, r1, #0x3            @Cut off the last two bits from the end address (aligning that too)
+    BIC r1, r1, #0x3            @Cut off the last two bits from the end address (aligning that too)
 L3:                             @First part: write bytes                             
     CMP r2, r0                  @Compare r2 and r0
     IT LO                       @If r2 < r0

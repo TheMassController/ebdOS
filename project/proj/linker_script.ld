@@ -36,7 +36,7 @@ SECTIONS
     
     /*TODO allign to be a bit nicer to the MPU */
 
-    .core.text : AT (ADDR(.kernel.text) + SIZEOF(.kernel.text) + SIZEOF(.kernel.data))
+    .core.text : /*AT (ADDR(.kernel.text) + SIZEOF(.kernel.text) + SIZEOF(.kernel.data))*/
     {
         _core_text = .;
         core.a(.text*)
@@ -60,12 +60,10 @@ SECTIONS
         _core_ebss = .;
     } > SRAM
 
-    /*TODO allign to be a bit nicer to the MPU */
 
-    .text : AT (ADDR(.core.text) + SIZEOF(.core.text) + SIZEOF(.core.data))
+    .text : /*AT (ADDR(.core.text) + SIZEOF(.core.text) + SIZEOF(.core.data))*/
     {
         _text = .;
-        KEEP(*(.isr_vector))
         *(.text*)
         *(.rodata*)
         _etext = .;

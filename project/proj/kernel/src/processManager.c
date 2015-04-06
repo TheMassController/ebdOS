@@ -132,8 +132,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     //Create the stack.
     void* stack = malloc(stacklen);
     if (stack == NULL){
-        free(newProc->name);
-        free(newProc);
+        //TODO release the taken mempool object
         return 2;
     }
     newProc->stack = stack;

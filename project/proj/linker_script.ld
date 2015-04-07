@@ -35,7 +35,7 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
     
-    .core.text : ALIGN(0x1000) 
+    .core.text : ALIGN(0x1000)  /*Aligned on 4096 */
     {
         _core_text = .;
         core.a(.text*)
@@ -44,7 +44,7 @@ SECTIONS
         _core_flash_data = ALIGN(0x4);
     } > FLASH
 
-    .core.data : ALIGN(0x800) 
+    .core.data : 
     {
         _core_data = .;
         core.a(vtable)
@@ -52,7 +52,7 @@ SECTIONS
         _core_edata = .;
     } >SRAM AT > FLASH
 
-    .core.bss :
+    .core.bss : /*ALIGN(0x800) /* Aligned on 2048*/
     {
         _core_bss = .;
         core.a(.bss*)
@@ -60,7 +60,8 @@ SECTIONS
         _core_ebss = .;
     } > SRAM
 
-    .text : /*AT (ADDR(.core.text) + SIZEOF(.core.text) + SIZEOF(.core.data))*/
+
+    .text : ALIGN(0x1000) /*Aligned on 1024 */
     {
         _text = .;
         *(.text*)
@@ -69,21 +70,21 @@ SECTIONS
         _flash_data = ALIGN(0x4);
     } > FLASH
 
-    .data : 
+    .data : /*ALIGN(0x400) */
     {
         _data = .;
         *(vtable)
         *(.data*)
         _edata = .;
+        _start_heap = .;
     } > SRAM AT > FLASH
 
-    .bss : AT (ADDR(.data) + SIZEOF(.data)) /*contains unitialized data (should be set to all zero's)*/
+    .bss :
     {
         _bss = .;
         *(.bss*)
         *(COMMON)
         _ebss = .;
-        _start_heap = .;
     } > SRAM
 
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/

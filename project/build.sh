@@ -2,7 +2,7 @@
 
 source arm-gcc-locations
 
-DEFAULT="flash"
+DEFAULT="all"
 
 MAKEFLAGS="-j10"
 MAKE=$(which make)

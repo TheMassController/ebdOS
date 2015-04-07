@@ -36,15 +36,14 @@ TOP :=./
 DIRS := $(shell ls -d */)
 DIRS := $(DIRS:=rules.mk)
 
-
-.PHONY: echo all debug
+.PHONY: echo all debug clean distclean
 
 #all: echo
 all: CFLAGS += -Os
 all: pre-build
 all: $(RELEASETARGETBIN)
 
-debug: CFLAGS += -DDEBUG -g -Os
+debug: CFLAGS += -DDEBUG -g
 debug: LDFLAGS += -g
 debug: ASMFLAGS += -g
 debug: pre-build 
@@ -96,7 +95,7 @@ pre-build:
 	@mkdir -p $(OBJECTDIRS)
 
 clean: 
-	@rm -f $(OFILES) $(DOFILES) $(RELEASETARGET) $(RELEASETARGETBIN) $(DEBUGTARGET) $(DEBUGTARGETBIN)
+	@rm -f $(COREROFILES) $(COREDOFILES) $(KERNELROFILES) $(KERNELDOFILES) $(OFILES) $(DOFILES) $(COREARDEBUG) $(COREARRELEASE) $(KERNELARDEBUG) $(KERNELARRELEASE) $(RELEASETARGET) $(RELEASETARGETBIN) $(DEBUGTARGET) $(DEBUGTARGETBIN)
 
 distclean: 
 	@rm -rf $(OBJECTDIRS)

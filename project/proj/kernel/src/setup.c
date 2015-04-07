@@ -23,8 +23,6 @@
 #include "reentrantMutex.h" //Everything related to mutexes
 #include "malloc.h"
 
-#define SAVETEMPSTACKLEN 35 //8 regs, 32 bit (=4 byte) => 32 byte for reg + 3 byte for possible allignment.
-#define MINSTACKLEN 100 //16 regs, 32 bit (=4 byte) => 64 byte for reg + 3 byte for possible allignment. The other bytes are so that I do not have to write the hibernate and sleep funcs in assemblye (the compiler will push more regs to stack)
 #define BAUDRATE 115200 //Default baudrate, fastest possible
 
 extern struct Process* currentProcess;
@@ -64,9 +62,11 @@ void setupHardware(void){
     NVIC_SYS_HND_CTRL_R |= 0x1<<16;
 
     //Enable the floating point unit
+    //datasheet pp 190
     NVIC_CPAC_R |= 0x3 << 20; //Enable full access to coprocessor 10
     NVIC_CPAC_R |= 0x3 << 22; //Enable full access to coprocessor 11
     //Enable lazy stacking
+    //Datasheet pp 191
     NVIC_FPCC_R |= 0x3 << 30; //Enables the ASPEN (automatic state preservation) bit and the LSPEN (Lazy stacking state preservation)
 
     //Setup the Debug UART out
@@ -84,27 +84,29 @@ void setupHardware(void){
     NVIC_ST_RELOAD_R = 3999; //Fire every 4000 clocks (datasheet pp 135)
     NVIC_ST_CURRENT_R = 0; //Clear the register by writing to it with any value (datasheet pp 118, 136)
     
-    //Hibernate setup
-    //If the program finishes, we want to hibernate
-    //This register setsup all the variables necessary to do that.
-    while (!(HIB_CTL_R & 1<<31)); //Wait until the write bit is clear
-    HIB_CTL_R = 320;    //Dont check battery when hibernating, Keep pinouts,
-                        //dont check battery before hibernation, enable hib_clk, dont listen to pin, 
-                        //dont listen to rtc, no hibernation request, no hibernation RTC module  
-                        //Datasheet pp 470                        
+    ////Hibernate setup
+    ////If the program finishes, we want to hibernate
+    ////This register setsup all the variables necessary to do that.
+    //while (!(HIB_CTL_R & 1<<31)); //Wait until the write bit is clear
+    //HIB_CTL_R = 320;    //Dont check battery when hibernating, Keep pinouts,
+    //                    //dont check battery before hibernation, enable hib_clk, dont listen to pin, 
+    //                    //dont listen to rtc, no hibernation request, no hibernation RTC module  
+    //                    //Datasheet pp 470                        
     
     //Setup the interrupt priorities
     //System interrupt levels: debug, SVC, systick, pendSV
+    //The priorities typed here go before the exception number: if I give a software interrupt prio 0 and a svc interrupt prio 1, then the software interrupt will be handled before the svc interrupt.
+    //IRQ is the second qualifier: PRI1 contains the extra faults and its IRQ is -10 to -12. SVC is -5. If all of them are set to zero then, since the hardware ignores negative numbers and compares absolute, the faults will go before the SVC.
     //Reset both registers to all 0's
-    NVIC_SYS_PRI2_R &= 0;
-    NVIC_SYS_PRI3_R &= 0;     //Debug level is now 0.
-    NVIC_SYS_PRI2_R |= 0<<29; //SVC gets 0 (lower is higher, 7 is lowest). Datasheet pp 166
-    NVIC_SYS_PRI3_R |= 0<<29; //Systick gets 7. Datasheet pp 167
-    NVIC_SYS_PRI3_R |= 7<<21; //pendSV gets 7. Datasheet pp 167.
-    //The pendSV has this low priority so that context switches can be called from an interrupt (stack is in a wrong state when inside an interrupt)
-    //Systick has a high priority because else the state of the processesReady list can not be guaranteed not to change during the run. If it gets changed during the run all sorts of nasty things can happen
-    //So when you call the context switcher from an interrupt, the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled
-    //During the actual context switch all interupts are disabled
+    NVIC_SYS_PRI1_R = 0;        //All faults get the highest priority: 0
+    NVIC_SYS_PRI2_R = 0;        //Implies that the SVC interrupt is now level 0. 
+    NVIC_SYS_PRI3_R = 0;        //All level 3 interrupt (= debug, pendsv, systick) are now zero. Debug and systick stay 0, pendsv becomes 7.
+    NVIC_SYS_PRI3_R |= 7<<21;   //pendSV gets 7. Datasheet pp 167.
+    //The pendSV has this low priority so that context switches can be called from an interrupt (regset is in a wrong state when inside an interrupt)
+    //The standard here is that all other interrupts get a prio higher then 7. Per default every single interrupt is zero, so that works out.
+    //So when you call the context switcher from an interrupt, the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled.
+    //This has two advantages: first you actually can context switch (all stacks and the regset being in the right state and all), second: the context switch can be called multiple times but will only run once per interrupt session
+    //During the actual context switch all interupts are disabled (cpsi instruction)
 
     //Enable all non-special interrupts
     //With this thing disabled, the SVC, PendSV, Systick etc "faults" also wont run. Except Hard Fault and NMI, because they are badass like that. 
@@ -138,7 +140,9 @@ void setupHardware(void){
 
     //Initialize malloc mutex
     initReentrantMutex(&(mallocMutex));
+    //Process initialization (after this function we are suddenly the kernel)
     initializeProcesses();
+    //Setup the syscall layer
     initKernelQueue();
 
     //Create the kernelQueue
@@ -153,5 +157,5 @@ void setupHardware(void){
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
 void finishBoot(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
-    NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
+    //NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
 }

@@ -243,23 +243,24 @@ void (* const g_pfnVectors[])(void) =
 //
 //*****************************************************************************
 
-extern unsigned long _kernel_etext;
 extern unsigned long _kernel_data;
 extern unsigned long _kernel_edata;
 extern unsigned long _kernel_bss;
 extern unsigned long _kernel_ebss;
 
-extern unsigned long _core_etext;
 extern unsigned long _core_data;
 extern unsigned long _core_edata;
 extern unsigned long _core_bss;
 extern unsigned long _core_ebss;
 
-extern unsigned long _etext;
 extern unsigned long _data;
 extern unsigned long _edata;
 extern unsigned long _bss;
 extern unsigned long _ebss;
+
+extern unsigned long _kernel_flash_data;
+extern unsigned long _core_flash_data;
+extern unsigned long _flash_data;
 
 //*****************************************************************************
 //
@@ -276,19 +277,19 @@ void ResetISR(void)
     volatile unsigned long *pulSrc, *pulDest;
 
     // Copy the data segment initializers from flash to SRAM.
-    pulSrc = &_kernel_etext;
+    pulSrc = &_kernel_flash_data;
     for(pulDest = &_kernel_data; pulDest < &_kernel_edata; )
     {
         *pulDest++ = *pulSrc++;
     }
 
-    pulSrc = &_core_etext;
+    pulSrc = &_core_flash_data;
     for(pulDest = &_core_data; pulDest < &_core_edata; )
     {
         *pulDest++ = *pulSrc++;
     }
 
-    pulSrc = &_etext;
+    pulSrc = &_flash_data;
     for(pulDest = &_data; pulDest < &_edata; )
     {
         *pulDest++ = *pulSrc++;

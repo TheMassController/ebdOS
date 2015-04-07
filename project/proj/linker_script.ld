@@ -16,6 +16,7 @@ SECTIONS
         kernel.a(.text*)
         kernel.a(.rodata*)
         _kernel_etext = .;
+        _kernel_flash_data = ALIGN(0x4);
     } > FLASH
 
     .kernel.data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/
@@ -34,17 +35,16 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
     
-    /*TODO allign to be a bit nicer to the MPU */
-
-    .core.text : /*AT (ADDR(.kernel.text) + SIZEOF(.kernel.text) + SIZEOF(.kernel.data))*/
+    .core.text : ALIGN(0x1000) 
     {
         _core_text = .;
         core.a(.text*)
         core.a(.rodata*)
         _core_etext = .;
+        _core_flash_data = ALIGN(0x4);
     } > FLASH
 
-    .core.data :
+    .core.data : ALIGN(0x800) 
     {
         _core_data = .;
         core.a(vtable)
@@ -60,13 +60,13 @@ SECTIONS
         _core_ebss = .;
     } > SRAM
 
-
     .text : /*AT (ADDR(.core.text) + SIZEOF(.core.text) + SIZEOF(.core.data))*/
     {
         _text = .;
         *(.text*)
         *(.rodata*)
         _etext = .;
+        _flash_data = ALIGN(0x4);
     } > FLASH
 
     .data : 

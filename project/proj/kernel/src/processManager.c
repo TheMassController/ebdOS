@@ -1,3 +1,4 @@
+//Responsible for creating and managing processes
 #include "defenitions.h"
 #include "process.h"
 #include "string.h"
@@ -10,32 +11,21 @@
 #include "semaphore.h"
 
 #ifdef DEBUG
-#include "malloc.h"
 #include "uartstdio.h"
 #endif //DEBUG
 #include "getSetRegisters.h"
 
-//Responsible for creating and managing processes
 
-//Stack save reg size: the total amount of bytes that needs to be written from regs to stack.
-#define STACKSAVEREGSIZE 64
 //And the other defines
 #define DEFAULT_KERNEL_PROCESSES 2
-#define KERNELSTACKLEN 67
 #define IDLEFUNCSTACKLEN 128
 
 struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
 
 struct Process* processesReady = NULL;
-struct Process* kernel = &processPool[0];
+struct Process* kernel = NULL;
 extern struct Process* currentProcess;
-//Usefull for selecting the pids
-
 struct Process* newProcess = NULL;
-
-
-
-//char kernelPSPStack[KERNELSTACKLEN];
 
 void __sleepProcessFunc(void){
     while(1){
@@ -52,9 +42,14 @@ void __processReturn(void){
     }
 }
 
+void releaseFromMemPool(struct Process* process){
+    process->containsProcess = 0;
+}
+
+//This function is not threadsafe: only the kernel can run it!
 struct Process* getProcessFromPool(void){
     //Starts at one because process zero is always the kernel. If that process does not exist then something real is going on.
-    for (int i = 1; i < MAXTOTALPROCESSES + 2; ++i){
+    for (int i = 1; i < MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES; ++i){
         if (!processPool[i].containsProcess){
             return &processPool[i];
         }
@@ -81,8 +76,7 @@ void initializeProcesses(void){
     processPool[0].blockAddress = NULL;
     processPool[0].sleepObj.process = &processPool[0];
     strcpy(processPool[0].name, "Kernel");
-    //processPool[0].stack = kernelPSPStack;
-    //processPool[0].stackPointer = (void*)((long)(&kernelPSPStack[KERNELSTACKLEN - 1]) & (long)0xFFFFFFFC);
+    //Because the kernel works from the MSP, there is no kernel stack and the kernelstackpointer is set on first context switch
     processPool[0].stack = NULL;
     processPool[0].stackPointer = NULL;
     processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
@@ -131,12 +125,15 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     //Create the stack.
     void* stack = malloc(stacklen);
     if (stack == NULL){
-        //TODO release the taken mempool object
+        releaseFromMemPool(newProc);
         return 2;
     }
+    //This pointer is kept for the freeing, later
     newProc->stack = stack;
-    //Because a stack moves up (from high to low) move the pointer to the last address and then move it back up to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
-    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - 4) & (long)0xFFFFFFFC ); //TODO is the -4 necessary?
+    //Because a stack moves down (from high to low) move the pointer to the last address and then move it down to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
+    //This new address is always lower then or equal to the highest address that is assigned this process. 
+    //stacklen -sizeof(void*) is because ptr + stacklen is one too much, the pointer itself is also assigned to the process
+    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - sizeof(void*)) & ~((long)(0x3))); 
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
@@ -161,11 +158,13 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
     //FP: S16, S17, S18, S19, S20, S21, S22, S23, S24, s25, S26, S27, S28, S29, S30, S31
+    //Normal regs first
     unsigned it = 0;
     for ( int u = 16; u <= 31; u++){
         newProc->savedRegSpace[it] = u;
         ++it;
     }
+    //Then the FP regs
     for ( int u = 4; u <= 11; u++ ){
         newProc->savedRegSpace[it] = u;
         ++it;

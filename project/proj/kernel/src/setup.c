@@ -22,6 +22,7 @@
 #include "mutex.h" //Everything related to mutexes
 #include "reentrantMutex.h" //Everything related to mutexes
 #include "malloc.h"
+#include "mpucontrol.h"
 
 #define BAUDRATE 115200 //Default baudrate, fastest possible
 
@@ -137,6 +138,9 @@ void setupHardware(void){
     ROM_IntPrioritySet(INT_WTIMER0B, 200);
     //NVIC_PRI27_R |= 7<<5;
     //UARTprintf("%d\r\n",NVIC_PRI27_R);
+    
+    //Initialize the MPU
+    initializeMPU();
 
     //Initialize malloc mutex
     initReentrantMutex(&(mallocMutex));

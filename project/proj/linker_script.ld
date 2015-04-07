@@ -88,4 +88,6 @@ SECTIONS
     } > SRAM
 
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/
+    _flash_start = ORIGIN(FLASH);
+    _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 }

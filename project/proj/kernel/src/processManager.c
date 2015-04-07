@@ -9,8 +9,6 @@
 #include "lm4f120h5qr.h" //Hardware regs
 #include "semaphore.h"
 
-#define UNUSED(x) (void)(x) //To suppress compiler warning
-
 #ifdef DEBUG
 #include "malloc.h"
 #include "uartstdio.h"
@@ -21,20 +19,21 @@
 
 //Stack save reg size: the total amount of bytes that needs to be written from regs to stack.
 #define STACKSAVEREGSIZE 64
+//And the other defines
+#define DEFAULT_KERNEL_PROCESSES 2
+#define KERNELSTACKLEN 67
+#define IDLEFUNCSTACKLEN 128
+
+struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
 
 struct Process* processesReady = NULL;
-struct Process* kernel = NULL;
+struct Process* kernel = &processPool[0];
 extern struct Process* currentProcess;
 //Usefull for selecting the pids
 
 struct Process* newProcess = NULL;
 
-#define DEFAULT_KERNEL_PROCESSES 2
 
-struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
-
-#define KERNELSTACKLEN 67
-#define IDLEFUNCSTACKLEN 128
 
 //char kernelPSPStack[KERNELSTACKLEN];
 

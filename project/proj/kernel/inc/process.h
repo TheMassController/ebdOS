@@ -24,6 +24,13 @@
 //The next var is only about user processes, the kernel-based processes (kernel itself and idle) are counted seperately
 #define MAXTOTALPROCESSES 10
 
+//The HWFlags
+//1st bit: Privileged process
+//5th bit: Process uses FP.
+#define PROCESS_DEFAULT 0x0
+#define PROCESS_IS_PRIVILEGED 0x1
+#define PROCESS_ENABLE_FP 0x2
+
 //The order of the first three is vital to make the assembly work correctly
 struct Process {
     void* stackPointer;                                             //The actual stackpointer

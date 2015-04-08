@@ -80,7 +80,7 @@ void initializeProcesses(void){
     processPool[0].stack = NULL;
     processPool[0].stackPointer = NULL;
     processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
-    processPool[0].hwFlags = 16; //Disable the FP on first run (not strictly necessary, because initially this process will be switched out. Just for clarity's sake)
+    processPool[0].hwFlags = PROCESS_IS_PRIVILEGED; 
     
     //set some params 
     processesReady = &processPool[0];
@@ -112,7 +112,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->nextProcess = NULL;
     newProc->priority = priority;
     newProc->state = STATE_READY;
-    newProc->hwFlags = 16; //Disable FPU context switching on process creation, it will be enabled when the process calls a FP instruction
+    newProc->hwFlags = PROCESS_DEFAULT;
     newProc->blockAddress = NULL;
     newProc->sleepObj.process = newProc;
     if (strlen(name) > 20){

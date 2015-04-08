@@ -35,28 +35,36 @@ pendSVHandler:
     @This function pushes the other regs to the process control block.
     @Then it loads the other regs from the process control block of the next process.
 
+    @Update pointers
+	str	r3, [r2]                @currentProcess = top of processesReady
+
     @Actual context switch
-    mrs r0, psp                 @Move the PSP to R0
+    ldr r2, [r1, #12]           @Load the flags
     ands lr, lr, #0x10          @Test if the 5th bit is 0. UPDATES THE CONDITION FLAGS FOR THE FP INSTRUCTION LATER
+    itt eq                      @Start an eq block
+    orreq r2, r2, #0x2          @Set the FP flag if the last outcome was equal. (there was a zero at the end of the ALU)
+    streq r2, [r1, #12]         @write the data about the fp flag to currentProcess
     ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
-    str lr, [r1, #12]           @write the data about the fp flag
-	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
     it eq                       @start conditional block for eq.
     vstmdbeq.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. CONDITIONAL EXECUTION only when zero flag was set (is equal)
-	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
-    ldr lr, [r3, #12]           @Load the "use FP" flag
-    cmp lr, #0x0                @test if we need to load the fp regs
-    it eq                       @start conditional block for eq
-    vldmiaeq.f32 r0!, {s16-s31} @Load the fp regs. Increment after. CONDITIONAL EXECUTION only when zero flag was set (is equal)
-    ldr r12, [r3]               @Load the sp of the new process
-    ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
-    msr psp, r12                @push r12 to psp
-    str r0, [r3, #8]            @Store the moved savedRegsPointer
+    mrs r0, psp                 @Move the PSP to R0
+	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
-    @Update pointers
-	str	r3, [r2]                @currentProcess = top of processesReady
+    ldr lr, [r3, #12]           @Load the "use FP" flag
+    ands r12, lr, #0x2          @Test the FP flag UPDATES THE CONDITION FLAGS
+	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
+    it ne                       @start conditional block for eq
+    vldmiane.f32 r0!, {s16-s31} @Load the fp regs. Increment after. CONDITIONAL EXECUTION only when zero flag was set (is equal)
+    ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
+    str r0, [r3, #8]            @Store the moved savedRegsPointer
+    ldr r2, [r3]                @Load the sp of the new process
+    msr psp, r2                 @push r2 (= new stackpointer) to psp
+    rbit lr, lr                 @reverse the LR bits. If the exection mode is privileged then we want r12 to become 0x0, so we need this lsb to become zero and it was one. And vice versa
+    and r12, lr, #0x1           @Set the privilege flag in r12
+    msr CONTROL, r12            @Write the privilege flag to control
+
     
     @Decide the returnvar and return
     mvn lr, #0x16               @lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)

@@ -6,6 +6,11 @@
 #include "uartstdio.h"
 #include "lm4f120h5qr.h"
 #include "asmUtils.h"
+#include "process.h"
+#endif //DEBUG
+
+#ifdef DEBUG
+extern struct Process* currentProcess;
 #endif //DEBUG
 
 void faultISRHandler(void){
@@ -32,6 +37,14 @@ void usageFaultHandler(void){
 void mpuFaultHandler(void){
 #ifdef DEBUG
     UARTprintf("MPU fault occured\r\n");
+    UARTprintf("\tMemory Management Fault Address Register Valid: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MMARV) ? 1 : 0);
+    UARTprintf("\tMemory Management Fault on Floating-Point Lazy State Preservation: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MLSPERR) ? 1 : 0);
+    UARTprintf("\tStack Access Violation: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MSTKE) ? 1 : 0);
+    UARTprintf("\tUnstack Access Violation: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MUSTKE) ? 1 : 0);
+    UARTprintf("\tData Access Violation: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_DERR) ? 1 : 0);
+    UARTprintf("\tInstruction Access Violation: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_IERR) ? 1 : 0);
+    UARTprintf("\r\n\tMMADDR value: 0x%X\r\n", NVIC_MM_ADDR_R);
+    UARTprintf("\tCurrent process name: %s\r\n", currentProcess->name);
 #endif //DEBUG
     while(1) waitForInterrupt();
 }

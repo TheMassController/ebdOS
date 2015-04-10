@@ -47,5 +47,20 @@ void initializeMPU(void){
             (unsigned long)&_kernel_text,
             regLen |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
             );
+    ROM_MPURegionSet(
+            2,
+            (unsigned long)0x20000000,
+            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            );
+    ROM_MPURegionSet(
+            7,
+            (unsigned long)0x10000000,
+            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            );
+    ROM_MPURegionSet(
+            6,
+            (unsigned long)0x40000000,
+            MPU_RGN_SIZE_4G |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            );
     //HWREG(0x100) = 0x12345678;
 }

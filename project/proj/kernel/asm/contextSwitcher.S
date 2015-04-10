@@ -40,30 +40,35 @@ pendSVHandler:
 
     @Actual context switch
     ldr r2, [r1, #12]           @Load the flags
-    ands lr, lr, #0x10          @Test if the 5th bit is 0. UPDATES THE CONDITION FLAGS FOR THE FP INSTRUCTION LATER
-    itt eq                      @Start an eq block
-    orreq r2, r2, #0x2          @Set the FP flag if the last outcome was equal. (there was a zero at the end of the ALU)
-    streq r2, [r1, #12]         @write the data about the fp flag to currentProcess
+    and lr, lr, #0x10           @Test if the 5th bit is 0. 
+    cmp lr, #0x10               @Compares to see if the FPU is currently activated. UPDATES THE CONDITION FLAGS FOR THE FP INSTRUCTION LATER
+    itt ne                      @Start an test block
+    orrne r2, r2, #0x2          @Set the FP flag if the last outcome was not equal. If it was not equal then the FPU is in use 
+    strne r2, [r1, #12]         @write the data about the fp flag to currentProcess
     ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
-    it eq                       @start conditional block for eq.
-    vstmdbeq.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. CONDITIONAL EXECUTION only when zero flag was set (is equal)
+    it ne                       @If the fpu was activated, we need to switch out the fpu regs
+    vstmdbne.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     mrs r0, psp                 @Move the PSP to R0
 	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
-    ldr lr, [r3, #12]           @Load the "use FP" flag
-    ands r12, lr, #0x2          @Test the FP flag UPDATES THE CONDITION FLAGS
+    ldr lr, [r3, #12]           @Load the hw flags
+    and r12, lr, #0x1           @Isolate the first bit, the privileged bit
+    cmp r12, #0x1               @Test if the bit is set
+    ite ne                      @if not..
+    movne r12, #0x1             @Then set r12 to 1
+    moveq r12, #0x0             @else set r12 to 0
+    msr CONTROL, r12            @Write the r12 to CONTROL to set the privilege
+    and r12, lr, #0x2           @Isolate the FPU flag
+    cmp r12, #0x2               @Test if it is set
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
-    it ne                       @start conditional block for eq
-    vldmiane.f32 r0!, {s16-s31} @Load the fp regs. Increment after. CONDITIONAL EXECUTION only when zero flag was set (is equal)
+    it eq                       @start conditional block for eq
+    vldmiaeq.f32 r0!, {s16-s31} @Load the fp regs. Increment after. CONDITIONAL EXECUTION only when zero flag was set (is equal)
     ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     str r0, [r3, #8]            @Store the moved savedRegsPointer
     ldr r2, [r3]                @Load the sp of the new process
     msr psp, r2                 @push r2 (= new stackpointer) to psp
-    rbit lr, lr                 @reverse the LR bits. If the exection mode is privileged then we want r12 to become 0x0, so we need this lsb to become zero and it was one. And vice versa
-    and r12, lr, #0x1           @Set the privilege flag in r12
-    msr CONTROL, r12            @Write the privilege flag to control
 
     
     @Decide the returnvar and return

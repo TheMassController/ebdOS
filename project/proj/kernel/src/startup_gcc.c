@@ -311,8 +311,6 @@ void ResetISR(void)
 
 	//Call the hardware init
 	setupHardware();
-    //Call the application's entry point.
-    main();
     //Kick off the scheduler etc
     finishBoot();
     //Actual kernel process

@@ -24,6 +24,8 @@
 #include "malloc.h"
 #include "mpucontrol.h"
 
+#include "validation.h"
+
 #define BAUDRATE 115200 //Default baudrate, fastest possible
 
 extern struct Process* currentProcess;
@@ -43,6 +45,7 @@ extern int initialized;
 
 void initializeProcesses(void);
 void initKernelQueue(void);
+void main(void);
 
 void setupHardware(void){
     //Setup the PLL
@@ -160,6 +163,10 @@ void setupHardware(void){
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
 void finishBoot(void){
+    //Create the main process
+    //__createNewProcess(currentProcess->pid, 256, "main", main, NULL, 75, 0); 
+    __createNewProcess(currentProcess->pid, 256, "testMPUPriv", testMPUPriv, NULL, 80, 1); 
+    __createNewProcess(currentProcess->pid, 256, "testMPUUPriv", testMPUUpriv, NULL, 75, 0); 
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     //NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
 }

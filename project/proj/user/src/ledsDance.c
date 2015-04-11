@@ -100,11 +100,11 @@ void ledsDance(void){
 void ledsDanceMain(void){
     printProcessInfo();
     prepareHardware();
-    initSemaphore(&sem, 1);
-    if(__createNewProcess(0, 1024, "ledsDance", ledsDance, NULL, 5) == 2){
-        UARTprintf("FAILURE\r\n");
-    } else {
-        UARTprintf("Leds Dance!!\r\n");
-    }
+    //initSemaphore(&sem, 1);
+    //if(createProcess(1024, "ledsDance", ledsDance, NULL, 5) == 2){
+    //    UARTprintf("FAILURE\r\n");
+    //} else {
+    //    UARTprintf("Leds Dance!!\r\n");
+    //}
 
 }

@@ -34,7 +34,7 @@ void initializeMPU(void){
     ROM_MPURegionSet(
             0, 
             (unsigned long)&_flash_start,
-            MPU_RGN_SIZE_256K | MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_256K | MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
             );
     unsigned long regLen = (unsigned long)&_core_text - (unsigned long)&_kernel_text; 
     if (!testRegionSize(regLen)){

@@ -19,7 +19,7 @@ SECTIONS
         _kernel_flash_data = ALIGN(0x4);
     } > FLASH
 
-    .kernel.data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/
+    .kernel.data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/  /*This one is usually empty, which makes the linker misbehave.*/
     {
         _kernel_data = .;
         kernel.a(vtable)
@@ -35,7 +35,7 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
     
-    .core.text : ALIGN(0x1000)  /*Aligned on 4096 */
+    .core.text : /*ALIGN(0x1000)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
     {
         _core_text = .;
         core.a(.text*)
@@ -44,7 +44,7 @@ SECTIONS
         _core_flash_data = ALIGN(0x4);
     } > FLASH
 
-    .core.data : 
+    .core.data : ALIGN(0x800) /*Only if .core.data size is not null this alignment is useful */
     {
         _core_data = .;
         core.a(vtable)
@@ -52,7 +52,7 @@ SECTIONS
         _core_edata = .;
     } >SRAM AT > FLASH
 
-    .core.bss : /*ALIGN(0x800) /* Aligned on 2048*/
+    .core.bss : ALIGN(0x800) /* Aligned on 2048*/
     {
         _core_bss = .;
         core.a(.bss*)
@@ -60,8 +60,7 @@ SECTIONS
         _core_ebss = .;
     } > SRAM
 
-
-    .text : ALIGN(0x1000) /*Aligned on 1024 */
+    .text : /*ALIGN(0x1000) /*Aligned on 1024 */
     {
         _text = .;
         *(.text*)
@@ -77,6 +76,7 @@ SECTIONS
         *(.data*)
         _edata = .;
         _start_heap = .;
+        _flash_text_data_end = _text + SIZEOF(.text) + SIZEOF(.data);
     } > SRAM AT > FLASH
 
     .bss :

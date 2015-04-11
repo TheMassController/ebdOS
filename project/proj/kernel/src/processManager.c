@@ -89,12 +89,12 @@ void initializeProcesses(void){
     kernel = currentProcess;
 
     //Create the sleeper
-    __createNewProcess(1, IDLEFUNCSTACKLEN, "Idle Process", __sleepProcessFunc, NULL, 0);
+    __createNewProcess(1, IDLEFUNCSTACKLEN, "Idle Process", __sleepProcessFunc, NULL, 0, 0);
     kernel->nextProcess->priority = 0; //Set the priority of the sleep process to min.
 }
 
 
-int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority){
+int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged){
     if (priority == 255) priority = 254; //Max 254, 255 is kernel only
     if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
     if (currentProcess->pid != 1) {
@@ -113,6 +113,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     newProc->priority = priority;
     newProc->state = STATE_READY;
     newProc->hwFlags = PROCESS_DEFAULT;
+    if (isPrivileged) newProc->hwFlags |= PROCESS_IS_PRIVILEGED;
     newProc->blockAddress = NULL;
     newProc->sleepObj.process = newProc;
     if (strlen(name) > 20){

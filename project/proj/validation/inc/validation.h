@@ -9,3 +9,6 @@ int testGPIO(void);
 int testSVCcall(void);
 int testScheduler(void);
 void testFloatMain(void);
+
+void testMPUPriv(void);
+void testMPUUpriv(void);

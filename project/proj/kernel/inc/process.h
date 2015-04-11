@@ -25,11 +25,10 @@
 #define MAXTOTALPROCESSES 10
 
 //The HWFlags
-//1st bit: Privileged process
-//5th bit: Process uses FP.
 #define PROCESS_DEFAULT 0x0
 #define PROCESS_IS_PRIVILEGED 0x1
 #define PROCESS_ENABLE_FP 0x2
+#define PROCESS_USES_MSP 0x4
 
 //The order of the first three is vital to make the assembly work correctly
 struct Process {
@@ -59,6 +58,6 @@ struct Process {
         2: Out of mem
         3: Wrong caller pid, only kernel (PID 0) can create processes
 */
-int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority );
+int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
 
 #endif

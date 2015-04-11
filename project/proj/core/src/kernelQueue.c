@@ -80,7 +80,7 @@ void initKernelQueue(void){
 }
 
 int processNewProcess(struct NewProcess* newProc){
-    return __createNewProcess(newProc->mPid, newProc->stacklen, newProc->name, newProc->procFunc, newProc->param, newProc->priority);
+    return __createNewProcess(newProc->mPid, newProc->stacklen, newProc->name, newProc->procFunc, newProc->param, newProc->priority, 0);
 }
 
 int processDeleteProcess(struct DeleteProcess* delProc){

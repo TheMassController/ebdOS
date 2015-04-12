@@ -40,31 +40,28 @@ pendSVHandler:
 
     @Actual context switch
     ldr r2, [r1, #12]           @Load the flags
-    and lr, lr, #0x10           @Test if the 5th bit is 0. 
-    cmp lr, #0x10               @Compares to see if the FPU is currently activated. UPDATES THE CONDITION FLAGS FOR THE FP INSTRUCTION LATER
-    itt ne                      @Start an test block
-    orrne r2, r2, #0x2          @Set the FP flag if the last outcome was not equal. If it was not equal then the FPU is in use 
-    strne r2, [r1, #12]         @write the data about the fp flag to currentProcess
+    ands lr, lr, #0x10          @Test if the 5th bit is 0. If it is, then the FPU was activated
+    itt eq                      @If the fith bit is zero, then the Z HW flag is set 
+    orreq r2, r2, #0x2          @Set the FP flag if the last outcome was not equal. If it was not equal then the FPU is in use 
+    streq r2, [r1, #12]         @write the data about the fp flag to currentProcess
     ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
     stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
-    it ne                       @If the fpu was activated, we need to switch out the fpu regs
-    vstmdbne.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
+    it eq                       @If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
+    vstmdbeq.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
     str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     mrs r0, psp                 @Move the PSP to R0
 	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
-    ldr lr, [r3, #12]           @Load the hw flags
-    and r12, lr, #0x1           @Isolate the first bit, the privileged bit
-    cmp r12, #0x1               @Test if the bit is set
-    ite ne                      @if not..
-    movne r12, #0x1             @Then set r12 to 1
-    moveq r12, #0x0             @else set r12 to 0
+    ldr r12, [r3, #12]          @Load the hw flags
+    ands r0, r12, #0x1          @Isolate the first bit, the privileged bit
+    ite eq                      @If the HW Z bit is not set, then the privileged bit was also not set
+    moveq r12, #0x1             @Then set r12 to 1 (if we write 0x1 to control we set unprivileged)
+    movne r12, #0x0             @else set r12 to 0 (Here we will set privileged if it was not set)
     msr CONTROL, r12            @Write the r12 to CONTROL to set the privilege
-    and r12, lr, #0x2           @Isolate the FPU flag
-    cmp r12, #0x2               @Test if it is set
+    ands r1, r12, #0x2          @Isolate the FPU flag
 	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
-    it eq                       @start conditional block for eq
-    vldmiaeq.f32 r0!, {s16-s31} @Load the fp regs. Increment after. CONDITIONAL EXECUTION only when zero flag was set (is equal)
+    it ne                       @If the FP bit is set, so if the Z hw bit is unset
+    vldmiane.f32 r0!, {s16-s31} @Load the fp regs. Increment after. 
     ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
     str r0, [r3, #8]            @Store the moved savedRegsPointer
     ldr r2, [r3]                @Load the sp of the new process
@@ -73,15 +70,14 @@ pendSVHandler:
     
     @Decide the returnvar and return
     mvn lr, #0x16               @lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
-    it ne                       @The last CMP was to check wether the process uses FP, recycle this information for the retval
-    orrne lr, lr, #0x10         @if nextProc does not use fp: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
-	ldr	r1, [r3, #4]            @Get the second variable of processesReady. This is the pid and 1 for the kernel
-	cmp	r1, #1                  @Test if that var is 1. If it is: use MSP. Else: use PSP.
-    it ne                       @Test for not equal
-    orrne lr, lr, #0x4          @If not equal, lr = 0xFFFFFFED (Continue from PSP, enable hw FP) or lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
+    it eq                       @If the FP bit is not set, so the Z hw bit is set
+    orreq lr, lr, #0x10         @nextProc does not use fp: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+    ands r1, r12, #0x4          @Test the MSP bit
+    it eq                       @If the MSP bit is not set, so the Z HW bit is set
+    orreq lr, lr, #0x4          @If not equal, lr = 0xFFFFFFED (Continue from PSP, enable hw FP) or lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
 .L3:
     cpsie i                     @Reenable all interrupts
-    bx lr                       @Branch to LR-addr (lr->pc) (mov pc, lr leads to hard fault for some reason)
+    bx lr                       @Branch to LR-addr, without linking
 .L4:
 	.word	currentProcess
 	.word	processesReady

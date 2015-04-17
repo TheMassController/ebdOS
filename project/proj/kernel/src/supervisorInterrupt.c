@@ -17,12 +17,13 @@
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
-extern struct Process* sleepProcessList;
 extern struct Process* kernel;
 extern struct Process* newProcess;
 
 static struct SleepingProcessStruct* sleepProcessListHead = NULL;
 static struct SleepingProcessStruct* nextToWakeUp = NULL;
+
+volatile void* intrBlockObject;
 
 void rescheduleImmediately(void){
     if(processesReady != currentProcess) NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending (Datasheet pp 156)
@@ -256,7 +257,7 @@ void sayHi(void){
 #endif //DEBUG
 
 //This function responds to an interrupt that can be generated at any runlevel.
-void svcHandler_main(char reqCode){
+void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
         case 0:
             rescheduleImmediately();
@@ -274,10 +275,10 @@ void svcHandler_main(char reqCode){
             lockObjectBlock(0);
             break;
         case 8:
-            lockObjectBlockAndSleep(1);
+            if (!fromHandlerMode) lockObjectBlockAndSleep(1);
             break;
         case 9:
-            lockObjectBlockAndSleep(0);
+            if (!fromHandlerMode) lockObjectBlockAndSleep(0);
             break;
         case 10:
             setKernelPrioMax();

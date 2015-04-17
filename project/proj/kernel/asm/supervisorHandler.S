@@ -10,12 +10,15 @@
 svcHandler:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
-    TST lr, #4
-    IT eq
-    MRSEQ r0, MSP
+    TST lr, #4          @Test which stack pointer was in use
+    ITE eq              @If bit 4 is high
+    MRSEQ r0, MSP       @MSP was in use
+    MRSNE r0, PSP       @Else PSP
+    AND r1, lr, #0xF    @Get the last halfbyte from the LR (test for handler mode coming up)
+    cmp r1, #0x1        @test if it is equal to 1
     it ne
-    MRSNE r0, PSP
-    ldr r0, [r0, #24]
+    movne r1, #0x0      
+    ldr r0, [r0, #24]   
     ldrb r0, [r0, #-2]
     nop
 	b svcHandler_main	

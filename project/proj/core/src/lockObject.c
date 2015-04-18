@@ -6,7 +6,7 @@
 #include "asmUtils.h"
 
 extern struct Process* currentProcess;
-extern volatile void* intrBlockObject;
+extern void* volatile intrBlockObject;
 
 //Returns new value of multilockobject, or -1 in case of failure
 int __increaseLockObject(struct LockObject* addr);
@@ -42,7 +42,7 @@ int modifyLockObject(struct LockObject* object, const char increase){
                 CALLSUPERVISOR(SVC_multiObjectDecrease);
             }
         } else {
-            volatile void* storeAddr = intrBlockObject;
+            void * volatile storeAddr = intrBlockObject;
             intrBlockObject = object;
             if (increase){
                 CALLSUPERVISOR(SVC_multiObjectIncrease);

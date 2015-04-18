@@ -89,7 +89,7 @@ void initializeProcesses(void){
     kernel = currentProcess;
 
     //Create the sleeper
-    __createNewProcess(1, IDLEFUNCSTACKLEN, "Idle Process", __sleepProcessFunc, NULL, 0, 1);
+    __createNewProcess(1, IDLEFUNCSTACKLEN, "Idle Process", __sleepProcessFunc, NULL, 0, 0);
     kernel->nextProcess->priority = 0; //Set the priority of the sleep process to min.
 }
 

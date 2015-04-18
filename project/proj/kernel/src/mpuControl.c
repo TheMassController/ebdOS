@@ -34,12 +34,12 @@ void initializeMPU(void){
     ROM_MPURegionSet(
             0,
             (unsigned long)&_flash_start,
-            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RO | MPU_RGN_ENABLE
             );
     ROM_MPURegionSet(
             1,
             (unsigned long)0x20000000,
-            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
     ROM_MPURegionSet(
             2,
@@ -49,6 +49,6 @@ void initializeMPU(void){
     ROM_MPURegionSet(
             3,
             (unsigned long)0x40000000,
-            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
 }

@@ -12,3 +12,6 @@ void testFloatMain(void);
 
 void testMPUPriv(void);
 void testMPUUpriv(void);
+
+void mainProcessLocker(void);
+void mutPasser(void);

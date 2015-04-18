@@ -23,7 +23,7 @@ extern struct Process* newProcess;
 static struct SleepingProcessStruct* sleepProcessListHead = NULL;
 static struct SleepingProcessStruct* nextToWakeUp = NULL;
 
-volatile void* intrBlockObject;
+void* volatile intrBlockObject;
 
 void rescheduleImmediately(void){
     if(processesReady != currentProcess) NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending (Datasheet pp 156)
@@ -217,7 +217,7 @@ void lockObjectModified(const char increase){
 }
 
 void lockObjectModifiedIntr(const char increase){
-    volatile struct LockObject* lockObject = intrBlockObject;
+    struct LockObject* volatile lockObject = intrBlockObject;
     if (increase){
         lockObject->processWaitingQueueIncrease = popFromLockQueue(lockObject->processWaitingQueueIncrease);
     } else {

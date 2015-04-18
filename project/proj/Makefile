@@ -39,7 +39,7 @@ DIRS := $(DIRS:=rules.mk)
 .PHONY: echo all debug clean distclean
 
 #all: echo
-all: CFLAGS += -Os
+all: CFLAGS += -O3
 all: pre-build
 all: $(RELEASETARGETBIN)
 

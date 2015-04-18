@@ -216,6 +216,15 @@ void lockObjectModified(const char increase){
     currentProcess->blockAddress = NULL;
 }
 
+void lockObjectModifiedIntr(const char increase){
+    volatile struct LockObject* lockObject = intrBlockObject;
+    if (increase){
+        lockObject->processWaitingQueueIncrease = popFromLockQueue(lockObject->processWaitingQueueIncrease);
+    } else {
+        lockObject->processWaitingQueueDecrease = popFromLockQueue(lockObject->processWaitingQueueDecrease);
+    }
+}
+
 void lockObjectBlock(const char increase){
     //TODO prevent starvation
     struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
@@ -263,10 +272,12 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
             rescheduleImmediately();
             break;
         case 4:
-            lockObjectModified(1);
+            if (fromHandlerMode) lockObjectModifiedIntr(1);
+            else lockObjectModified(1);
             break;
         case 5:
-            lockObjectModified(0);
+            if (fromHandlerMode) lockObjectModifiedIntr(0);
+            else lockObjectModified(0);
             break;
         case 6:
             if (!fromHandlerMode) lockObjectBlock(1);

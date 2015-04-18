@@ -6,6 +6,7 @@
 #include "asmUtils.h"
 
 extern struct Process* currentProcess;
+extern volatile void* intrBlockObject;
 
 //Returns new value of multilockobject, or -1 in case of failure
 int __increaseLockObject(struct LockObject* addr);
@@ -25,18 +26,6 @@ void __cleanupLockObject(struct LockObject* object){
     }
 }
 
-/**
-    Used to mantain integrety when a interrupt signals the sem (for inc or dec)
-**/
-void intrModifyCall(void* oldBlockAddr, const char increase){
-    if (increase){
-        CALLSUPERVISOR(SVC_multiObjectIncrease);
-    } else {
-        CALLSUPERVISOR(SVC_multiObjectDecrease);
-    }
-    currentProcess->blockAddress = oldBlockAddr;
-}
-
 int modifyLockObject(struct LockObject* object, const char increase){
     int retCode;
     if (increase){
@@ -45,9 +34,23 @@ int modifyLockObject(struct LockObject* object, const char increase){
         retCode = __decreaseLockObject(object);
     }
     if (retCode != -1){
-        void* oldBlockAddress = currentProcess->blockAddress;
-        currentProcess->blockAddress = object;
-        intrModifyCall(oldBlockAddress, increase);
+        if (!isInInterrupt()){
+            currentProcess->blockAddress = object;
+            if (increase){
+                CALLSUPERVISOR(SVC_multiObjectIncrease);
+            } else {
+                CALLSUPERVISOR(SVC_multiObjectDecrease);
+            }
+        } else {
+            volatile void* storeAddr = intrBlockObject;
+            intrBlockObject = object;
+            if (increase){
+                CALLSUPERVISOR(SVC_multiObjectIncrease);
+            } else {
+                CALLSUPERVISOR(SVC_multiObjectDecrease);
+            }
+            intrBlockObject = storeAddr;
+        }
     }
     return retCode;
 }

@@ -35,7 +35,7 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
     
-    .core.text : /*ALIGN(0x1000)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
+    .core.text : ALIGN(0x1000)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
     {
         _core_text = .;
         core.a(.text*)

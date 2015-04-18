@@ -26,21 +26,9 @@ struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
 extern struct Process* currentProcess;
 struct Process* newProcess = NULL;
-
-void __sleepProcessFunc(void){
-    while(1){
-        waitForInterrupt();
-    }
-}
-
-void __processReturn(void){
-    UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
-    //TODO tell kernel about this stuff and let it cleanup the mess
-    currentProcess->state = STATE_WAIT;
-    while(1){
-        CALLSUPERVISOR(SVC_reschedule);
-    }
-}
+// Declarations of core helper functions
+void __sleepProcessFunc(void);
+void __processReturn(void);
 
 void releaseFromMemPool(struct Process* process){
     process->containsProcess = 0;

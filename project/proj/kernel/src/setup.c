@@ -151,14 +151,6 @@ void setupHardware(void){
     initializeProcesses();
     //Setup the syscall layer
     initKernelQueue();
-
-    //Create the kernelQueue
-    //kernelQueue = malloc(sizeof(struct KernelQueue));
-    //kernelQueue->existingItems = createSemaphore(255);
-    //kernelQueue->readyItems = createSemaphore(255);
-    //kernelQueue->listProtectionMutex = createMutex();
-    //kernelQueue->firstItem = NULL;
-
 }
 
 //This is the last function to run before the scheduler starts. At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes

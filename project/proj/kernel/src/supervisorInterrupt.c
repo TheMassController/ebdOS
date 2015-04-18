@@ -269,10 +269,10 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
             lockObjectModified(0);
             break;
         case 6:
-            lockObjectBlock(1);
+            if (!fromHandlerMode) lockObjectBlock(1);
             break;
         case 7:
-            lockObjectBlock(0);
+            if (!fromHandlerMode) lockObjectBlock(0);
             break;
         case 8:
             if (!fromHandlerMode) lockObjectBlockAndSleep(1);

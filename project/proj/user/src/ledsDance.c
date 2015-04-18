@@ -52,10 +52,10 @@ void gpioBInterrup(void){
     increaseSemaphoreNonBlocking(&sem); 
 }
 
-void button2Interrupt(void){
-    ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
-    increaseSemaphoreNonBlocking(&sem); 
-}
+//void button2Interrupt(void){
+//    ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
+//    increaseSemaphoreNonBlocking(&sem); 
+//}
 
 void printProcessInfo(void){
     UARTprintf("My name is: %s, my PID is %u, my mPid is: %u\r\n", currentProcess->name, currentProcess->pid, currentProcess->mPid);

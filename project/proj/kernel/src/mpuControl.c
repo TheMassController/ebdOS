@@ -19,6 +19,8 @@ extern unsigned long _flash_end;
 extern unsigned long _kernel_text;
 //Core code start
 extern unsigned long _core_text;
+//Flash end
+extern unsigned long _flash_text_data_end;
 
 unsigned long testRegionSize(unsigned long regionLen){
     if ((regionLen & (regionLen - 1)) == 0) {
@@ -29,12 +31,15 @@ unsigned long testRegionSize(unsigned long regionLen){
 }
 
 void initializeMPU(void){
-    //Region 0 protects the entire SRAM, making it RO, RO
     ROM_MPUEnable(MPU_CONFIG_PRIV_DEFAULT);
+    //Lets start with FLASH. 3 regions:
+    //1. Kernel code and data (only privileged read)
+    //2. Other code and data (everyone read)
+    //3. Unused FLASH (only privileged r/w)
     ROM_MPURegionSet(
             0,
             (unsigned long)&_flash_start,
-            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RO | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE
             );
     ROM_MPURegionSet(
             1,

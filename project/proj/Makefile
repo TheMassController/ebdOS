@@ -43,7 +43,7 @@ all: CFLAGS += -Os
 all: pre-build
 all: $(RELEASETARGETBIN)
 
-debug: CFLAGS += -DDEBUG -g
+debug: CFLAGS += -DDEBUG -g -Os
 debug: LDFLAGS += -g
 debug: ASMFLAGS += -g
 debug: pre-build 

@@ -35,7 +35,7 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
     
-    .core.text : ALIGN(0x1000)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
+    .core.text : ALIGN(4096)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
     {
         _core_text = .;
         core.a(.text*)
@@ -44,7 +44,7 @@ SECTIONS
         _core_flash_data = ALIGN(0x4);
     } > FLASH
 
-    .core.bss : ALIGN(0x800) /* Aligned on 2048*/
+    .core.bss : ALIGN(2048) /* Aligned on 2048*/
     {
         _core_bss = .;
         core.a(.bss*)
@@ -77,7 +77,6 @@ SECTIONS
         *(.data*)
         _edata = .;
         _start_heap = .;
-        _flash_text_data_end = _text + SIZEOF(.text) + SIZEOF(.data);
     } > SRAM AT > FLASH
 
     .bss :
@@ -88,6 +87,9 @@ SECTIONS
         _ebss = .;
     } > SRAM
 
+    _flash_text_data_end = _etext +  SIZEOF(.data);
+    _flash_text_data_end_algined = (2 << LOG2CEIL( _etext +  SIZEOF(.data)));
+    _data_size = SIZEOF(.data);
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/
     _flash_start = ORIGIN(FLASH);
     _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);

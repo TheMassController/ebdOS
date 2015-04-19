@@ -10,6 +10,7 @@
 #include "rom.h" //Declare ROM addresses for rom funcs
 
 //Used for unrecoverable errors
-void generateNMI(void){
-     NVIC_INT_CTRL_R |= (1<<31);
+void generateCrash(void){
+    //Sets the NMI to pending
+    NVIC_INT_CTRL_R |= (1<<31);
 }

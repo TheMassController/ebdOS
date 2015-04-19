@@ -7,9 +7,8 @@
 #include <hw_nvic.h>
 #include <hw_ints.h>
 
-#ifdef DEBUG
-    #include "uartstdio.h"
-#endif //DEBUG
+#include "uartstdio.h"
+#include "utilFuncs.h"
 
 //Flash addresses
 extern unsigned long _flash_start;
@@ -20,7 +19,7 @@ extern unsigned long _kernel_text;
 //Core code start
 extern unsigned long _core_text;
 //Flash end
-extern unsigned long _flash_text_data_end;
+extern unsigned long _flash_text_data_end_aligned;
 
 unsigned long testRegionSize(unsigned long regionLen){
     if ((regionLen & (regionLen - 1)) == 0) {
@@ -36,11 +35,22 @@ void initializeMPU(void){
     //1. Kernel code and data (only privileged read)
     //2. Other code and data (everyone read)
     //3. Unused FLASH (only privileged r/w)
+    //Kernel code and data runs until _core_text
+    //Because all three sizes need to be power of two's, we are going to exploit the overlapping mechanism of the MPU
+    //
+    //Start with some tests. If the linker made mistakes, these cannot be compensated for here. So the kernel will crash.
+    if (! testRegionSize(&_core_text - &_kernel_text)){
+        UARTprintf("The region size of kernel_text and kernel_data is not a power of two. Region size is: 0x%x\n", (unsigned long)(&_core_text - &_kernel_text));
+        generateCrash();
+    }
+    if (
+    //Region 3, for the unused flash
     ROM_MPURegionSet(
             0,
             (unsigned long)&_flash_start,
-            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
             );
+    //Core and text run until flash_text_data_end
     ROM_MPURegionSet(
             1,
             (unsigned long)0x20000000,

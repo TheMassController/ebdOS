@@ -39,11 +39,16 @@ void initializeMPU(void){
     //Because all three sizes need to be power of two's, we are going to exploit the overlapping mechanism of the MPU
     //
     //Start with some tests. If the linker made mistakes, these cannot be compensated for here. So the kernel will crash.
+    //First test: the kernel .text and .data section + padding should be a nice log 2
     if (! testRegionSize(&_core_text - &_kernel_text)){
         UARTprintf("The region size of kernel_text and kernel_data is not a power of two. Region size is: 0x%x\n", (unsigned long)(&_core_text - &_kernel_text));
         generateCrash();
     }
-    if (
+    //All other stuff is core and user. this is one big section
+    if (! testRegionSize(&_flash_text_data_end_aligned - &_core_text)){
+        UARTprintf("The region size of core text, core data, user text and user data is not a power of two. Region size is: 0x%x\n", (unsigned long)(&_flash_text_data_end_aligned - &_core_text));
+        generateCrash();
+    }
     //Region 3, for the unused flash
     ROM_MPURegionSet(
             0,
@@ -53,8 +58,8 @@ void initializeMPU(void){
     //Core and text run until flash_text_data_end
     ROM_MPURegionSet(
             1,
-            (unsigned long)0x20000000,
-            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            (unsigned long)&_kernel_text,
+            (unsigned long)(&_core_text - &_kernel_text) |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
     ROM_MPURegionSet(
             2,

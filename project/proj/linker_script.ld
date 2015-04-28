@@ -88,7 +88,7 @@ SECTIONS
     } > SRAM
 
     _flash_text_data_end = _etext +  SIZEOF(.data);
-    _flash_text_data_end_algined = (2 << LOG2CEIL( _etext +  SIZEOF(.data)));
+    _flash_text_data_end_aligned = (2 << LOG2CEIL( _etext +  SIZEOF(.data)));
     _data_size = SIZEOF(.data);
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/
     _flash_start = ORIGIN(FLASH);

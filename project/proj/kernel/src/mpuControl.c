@@ -14,6 +14,10 @@
 extern unsigned long _flash_start;
 extern unsigned long _flash_end;
 
+//SRAM addresses
+extern unsigned long _sram_start;
+extern unsigned long _sram_end;
+
 //kernel code start
 extern unsigned long _kernel_text;
 //Core code start
@@ -34,40 +38,70 @@ void initializeMPU(void){
     //Lets start with FLASH. 3 regions:
     //1. Kernel code and data (only privileged read)
     //2. Other code and data (everyone read)
-    //3. Unused FLASH (only privileged r/w)
+    //3. Unused FLASH (only privileged r/w, unprivileged no)
     //Kernel code and data runs until _core_text
-    //Because all three sizes need to be power of two's, we are going to exploit the overlapping mechanism of the MPU
-    //
+    const unsigned long FLASHSIZE = &_flash_end - &_flash_start;
+    const unsigned long SRAMSIZE = &_sram_end - &_sram_start;
+    const unsigned long KERNELFLASHSIZE = &_core_text - &_kernel_text;
+    const unsigned long PUBLICFLASHSIZE = &_flash_text_data_end_aligned - &_core_text;
+
+    const unsigned long FLASHSTART = (unsigned long)&_flash_start;
+    const unsigned long KERNELFLASHSTART = (unsigned long)&_kernel_text;
+    const unsigned long PUBLICFLASHSTART = (unsigned long)&_core_text;
+    const unsigned long SRAMSTART = (unsigned long)&_sram_start;
+
     //Start with some tests. If the linker made mistakes, these cannot be compensated for here. So the kernel will crash.
-    //First test: the kernel .text and .data section + padding should be a nice log 2
-    if (! testRegionSize(&_core_text - &_kernel_text)){
+    if (! testRegionSize(FLASHSIZE)){
+        UARTprintf("The size of the region that is the flash itself is not a power of two. Region size is: 0x%x\n", FLASHSIZE);
+        generateCrash();
+    }
+    if (! testRegionSize(KERNELFLASHSIZE)){
         UARTprintf("The region size of kernel_text and kernel_data is not a power of two. Region size is: 0x%x\n", (unsigned long)(&_core_text - &_kernel_text));
         generateCrash();
     }
-    //All other stuff is core and user. this is one big section
-    if (! testRegionSize(&_flash_text_data_end_aligned - &_core_text)){
+    if (! testRegionSize(PUBLICFLASHSIZE)){
         UARTprintf("The region size of core text, core data, user text and user data is not a power of two. Region size is: 0x%x\n", (unsigned long)(&_flash_text_data_end_aligned - &_core_text));
         generateCrash();
     }
-    //Region 3, for the unused flash
+    //Tests have passed, setup the first three MPU regions: the flash regions
+    //TODO the data sections, how do we want to handle those?
+
+    //Global flash region, provides a set of base permissions for the flash
     ROM_MPURegionSet(
             0,
-            (unsigned long)&_flash_start,
-            MPU_RGN_SIZE_256K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
+            FLASHSTART,
+            FLASHSIZE |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_NO | MPU_RGN_ENABLE
             );
-    //Core and text run until flash_text_data_end
+    //Talkes purely about the kernel .text and .data sections
     ROM_MPURegionSet(
             1,
-            (unsigned long)&_kernel_text,
-            (unsigned long)(&_core_text - &_kernel_text) |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            KERNELFLASHSTART,
+            KERNELFLASHSIZE |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
             );
-    ROM_MPURegionSet(
+    //Talks about al other .text and .data sections
+    ROM_MPURegionSet (
             2,
+            PUBLICFLASHSTART,
+            PUBLICFLASHSIZE | MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE
+            );
+    
+    //End of flash, start of SRAM
+    //Global SRAM region, provides a set of default permissions for the SRAM
+    ROM_MPURegionSet (
+            3,
+            SRAMSTART,
+            SRAMSIZE | MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            );
+    
+    //EEPROM and regs
+    //TODO make them a bit more pretty
+    ROM_MPURegionSet(
+            4,
             (unsigned long)0x10000000,
             MPU_RGN_SIZE_32K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
     ROM_MPURegionSet(
-            3,
+            5,
             (unsigned long)0x40000000,
             MPU_RGN_SIZE_32K |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );

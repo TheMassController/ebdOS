@@ -27,14 +27,14 @@ SECTIONS
         _kernel_edata = .;
     } > SRAM AT > FLASH
 
-    .kernel.bss : 
+    .kernel.bss :
     {
         _kernel_bss = .;
         kernel.a(.bss*)
         kernel.a(COMMON)
         _kernel_ebss = .;
     } > SRAM
-    
+
     .core.text : ALIGN(4096)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
     {
         _core_text = .;
@@ -93,4 +93,6 @@ SECTIONS
 	_stack_top = ORIGIN(SRAM) + LENGTH(SRAM) - 1; /*The starting point of the stack, at the very bottom of the RAM*/
     _flash_start = ORIGIN(FLASH);
     _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
+    _sram_start = ORIGIN(SRAM);
+    _sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 }

@@ -35,15 +35,20 @@ unsigned long testRegionSize(unsigned long regionLen){
 
 void initializeMPU(void){
     ROM_MPUEnable(MPU_CONFIG_PRIV_DEFAULT);
+    unsigned long pulAddr, pulFlags;
+    for (int i = 0; i < 8; ++i){
+        ROM_MPURegionGet(i, &pulAddr, &pulFlags);
+        UARTprintf("Region: %i\n\tpulAddr: 0x%x\n\tpulFlags:0x%x\n", i, pulAddr, pulFlags);
+    }
     //Lets start with FLASH. 3 regions:
     //1. Kernel code and data (only privileged read)
     //2. Other code and data (everyone read)
     //3. Unused FLASH (only privileged r/w, unprivileged no)
     //Kernel code and data runs until _core_text
     const unsigned long FLASHSIZE = &_flash_end - &_flash_start;
-    const unsigned long SRAMSIZE = &_sram_end - &_sram_start;
     const unsigned long KERNELFLASHSIZE = &_core_text - &_kernel_text;
     const unsigned long PUBLICFLASHSIZE = &_flash_text_data_end_aligned - &_core_text;
+    const unsigned long SRAMSIZE = &_sram_end - &_sram_start;
 
     const unsigned long FLASHSTART = (unsigned long)&_flash_start;
     const unsigned long KERNELFLASHSTART = (unsigned long)&_kernel_text;
@@ -63,6 +68,22 @@ void initializeMPU(void){
         UARTprintf("The region size of core text, core data, user text and user data is not a power of two. Region size is: 0x%x\n", (unsigned long)(&_flash_text_data_end_aligned - &_core_text));
         generateCrash();
     }
+    if ((FLASHSTART % FLASHSIZE)){
+        UARTprintf("The baseadress of the flash has to be aligned to 0x%x\n", FLASHSIZE);
+        generateCrash();
+    }
+    if ((KERNELFLASHSTART % KERNELFLASHSIZE)) {
+        UARTprintf("The baseadress of the kernel text has to be aligned to 0x%x\n", KERNELFLASHSIZE);
+        generateCrash();
+    } 
+    if ((PUBLICFLASHSTART % PUBLICFLASHSIZE)) {
+        UARTprintf("The baseaddress of the public .text has to be aligned to 0x%x\n", PUBLICFLASHSIZE);
+        generateCrash();
+    }
+    if ((SRAMSTART % SRAMSIZE)) {
+        UARTprintf("The baseaddress of the SRAM has to be algined to 0x%x\n", SRAMSIZE);
+        generateCrash();
+    }
     //Tests have passed, setup the first three MPU regions: the flash regions
     //TODO the data sections, how do we want to handle those?
 
@@ -70,19 +91,19 @@ void initializeMPU(void){
     ROM_MPURegionSet(
             0,
             FLASHSTART,
-            FLASHSIZE |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_NO | MPU_RGN_ENABLE
+            FLASHSIZE |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
-    //Talkes purely about the kernel .text and .data sections
+    //Talks purely about the kernel .text and .data sections
     ROM_MPURegionSet(
             1,
             KERNELFLASHSTART,
-            KERNELFLASHSIZE |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE
+            KERNELFLASHSIZE |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
     //Talks about al other .text and .data sections
     ROM_MPURegionSet (
             2,
             PUBLICFLASHSTART,
-            PUBLICFLASHSIZE | MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE
+            PUBLICFLASHSIZE | MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
     
     //End of flash, start of SRAM
@@ -90,7 +111,7 @@ void initializeMPU(void){
     ROM_MPURegionSet (
             3,
             SRAMSTART,
-            SRAMSIZE | MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            SRAMSIZE | MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
     
     //EEPROM and regs
@@ -103,6 +124,15 @@ void initializeMPU(void){
     ROM_MPURegionSet(
             5,
             (unsigned long)0x40000000,
-            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
+            MPU_RGN_SIZE_32K |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE
             );
+    ROM_MPURegionDisable(6);
+    ROM_MPURegionDisable(7);
+    for (int i = 0; i < 8; ++i){
+        ROM_MPURegionGet(i, &pulAddr, &pulFlags);
+        UARTprintf("Region: %i\n\tpulAddr: 0x%x\n\tpulFlags:0x%x\n", i, pulAddr, pulFlags);
+    }
+    UARTprintf("%x\n", KERNELFLASHSTART);
+    UARTprintf("0x%x\n", FLASHSIZE |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE);
+    UARTprintf("0x%x\n", KERNELFLASHSIZE |  MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE);
 }

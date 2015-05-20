@@ -159,9 +159,10 @@ void finishBoot(void){
     //__createNewProcess(currentProcess->pid, 256, "main", main, NULL, 75, 0); 
     //__createNewProcess(currentProcess->pid, 256, "testMPUPriv", testMPUPriv, NULL, 80, 1); 
     //__createNewProcess(currentProcess->pid, 256, "testMPUUPriv", testMPUUpriv, NULL, 75, 0); 
-    __createNewProcess(currentProcess->pid, 256, "locktestmain", mainProcessLocker, NULL, 80, 1);
-    __createNewProcess(currentProcess->pid, 256, "mutPasser1", mutPasser, NULL, 75, 1);
-    __createNewProcess(currentProcess->pid, 256, "mutPasser2", mutPasser, NULL, 75, 1);
+    //
+    //__createNewProcess(currentProcess->pid, 256, "locktestmain", mainProcessLocker, NULL, 80, 1);
+    //__createNewProcess(currentProcess->pid, 256, "mutPasser1", mutPasser, NULL, 75, 1);
+    //__createNewProcess(currentProcess->pid, 256, "mutPasser2", mutPasser, NULL, 75, 1);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); //Start the sleep timer     
     //NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
 }

@@ -29,19 +29,18 @@ unsigned isPowerOfTwo(unsigned size){
     }
 }
 
-//Returns 1 if everything went ok
-unsigned setMPURegion(unsigned char regionNumber, unsigned baseAddr, unsigned size, unsigned settings){
+//Returns 0 if everything went ok
+static unsigned setMPURegion(unsigned char regionNumber, unsigned baseAddr, unsigned size, unsigned settings){
     //Test the params for sanity. The ROM function does not return, so we have to catch errors here.
     if (!isPowerOfTwo(size) || (unsigned)baseAddr % size || size == 0 || size < 32 || regionNumber > 7 ){
-        return 0;
+        return 1;
     }
     //Find the position of the two.
+    //Size calculation: log2(size) - 1 (see proj/lib/inc/mpu.h)
+    //log2Size is four because we need to find log2(size)-1. Size cannot be below 32, so the first five pos are already shifted out. Then apply the -1 trick here to set log2Size to log2(size)-1
     size >>= 5;
     unsigned log2Size;
-    //Size calculation: log2(size) - 1 (see proj/lib/inc/mpu.h)
-    //The sizeCopy & 1 is to test if the correct pos has been found
-    //log2Size is four because we need to find log2(size)-1. Size cannot be below 32, so the first five pos are already shifted out. Then apply the -1 trick here to set log2Size to log2(size)-1
-    for (log2Size = 4; log2Size < 32 && !(size & 1); ++log2Size){
+    for (log2Size = 4; !(size & 1); ++log2Size){
         size >>= 1;
     }
     log2Size <<= 1; //Again, see proj/lib/inc/mpu.h
@@ -50,7 +49,7 @@ unsigned setMPURegion(unsigned char regionNumber, unsigned baseAddr, unsigned si
             (unsigned)baseAddr,
             log2Size | settings
             );
-    return 1;
+    return 0;
 }
 
 void initializeMPU(void){
@@ -65,22 +64,22 @@ void initializeMPU(void){
     const unsigned PUBLICFLASHSTART = (unsigned long)&_core_text;
     const unsigned SRAMSTART = (unsigned long)&_sram_start;
     //Global flash region: the fallback region
-    if (!setMPURegion(0, FLASHSTART, FLASHSIZE, MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_NO | MPU_RGN_ENABLE)){
+    if (setMPURegion(0, FLASHSTART, FLASHSIZE, MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_NO | MPU_RGN_ENABLE)){
         UARTprintf("Setting up the default flash region failed\n");
         generateCrash();
     }
     //The kernelflash region: only readable for privilege
-    if (!setMPURegion(1, KERNELFLASHSTART, KERNELFLASHSIZE, MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE)){
+    if (setMPURegion(1, KERNELFLASHSTART, KERNELFLASHSIZE, MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_NO | MPU_RGN_ENABLE)){
         UARTprintf("Setting up the kernel flash region failed\n");
         generateCrash();
     }
     //The public region, readable for everyone
-    if (!setMPURegion(2, PUBLICFLASHSTART, PUBLICFLASHSIZE, MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE)){
+    if (setMPURegion(2, PUBLICFLASHSTART, PUBLICFLASHSIZE, MPU_RGN_PERM_EXEC | MPU_RGN_PERM_PRV_RO_USR_RO | MPU_RGN_ENABLE)){
         UARTprintf("Setting up the public flash region failed\n");
         generateCrash();
     }
     //The global SRAM region: the fallback region
-    if (!setMPURegion(3, SRAMSTART, SRAMSIZE,  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE)){
+    if (setMPURegion(3, SRAMSTART, SRAMSIZE,  MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RW | MPU_RGN_ENABLE)){
         UARTprintf("Setting up the global SRAM region failed\n");
         generateCrash();
     }

@@ -25,7 +25,7 @@
 #include "hw_nvic.h"
 #include "hw_types.h"
 #include "uartstdio.h"
-#include "asmUtils.h"
+#include "coreUtils.h"
 
 //*****************************************************************************
 //

@@ -3,7 +3,7 @@
 #include "supervisorCall.h"
 #include "sysSleep.h"
 #include "stdlib.h"
-#include "asmUtils.h"
+#include "coreUtils.h"
 
 extern struct Process* currentProcess;
 extern void* volatile intrBlockObject;

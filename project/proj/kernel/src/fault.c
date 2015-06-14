@@ -3,8 +3,9 @@
     #define DEBUG //For now
 #endif //DEBUG
 #ifdef DEBUG
-#include "uartstdio.h"
-#include "lm4f120h5qr.h"
+#include <uartstdio.h>
+#include <lm4f120h5qr.h>
+
 #include "coreUtils.h"
 #include "process.h"
 #endif //DEBUG

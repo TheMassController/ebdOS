@@ -30,6 +30,7 @@ unsigned isPowerOfTwo(unsigned size){
 }
 
 //Returns 0 if everything went ok
+//See proj/lib/inc/mpu.h for implementation of macro's and constraints
 static unsigned setMPURegion(unsigned char regionNumber, unsigned baseAddr, unsigned size, unsigned settings){
     //Test the params for sanity. The ROM function does not return, so we have to catch errors here.
     if (!isPowerOfTwo(size) || (unsigned)baseAddr % size || size == 0 || size < 32 || regionNumber > 7 ){
@@ -64,7 +65,7 @@ void initializeMPU(void){
     const unsigned PUBLICFLASHSTART = (unsigned long)&_core_text;
     const unsigned SRAMSTART = (unsigned long)&_sram_start;
     //Global flash region: the fallback region
-    if (setMPURegion(0, FLASHSTART, FLASHSIZE, MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_NO | MPU_RGN_ENABLE)){
+    if (setMPURegion(0, FLASHSTART, FLASHSIZE, MPU_RGN_PERM_NOEXEC | MPU_RGN_PERM_PRV_RW_USR_RO | MPU_RGN_ENABLE)){
         UARTprintf("Setting up the default flash region failed\n");
         generateCrash();
     }
@@ -84,6 +85,7 @@ void initializeMPU(void){
         generateCrash();
     }
     //ROM region (datasheet pp 87)
+    //TODO magic numbers
     ROM_MPURegionSet(
             7,
             (unsigned long)0x01000000,

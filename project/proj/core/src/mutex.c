@@ -3,7 +3,7 @@
 #include "stdlib.h"
 #include "process.h"
 #include "lockObject.h" 
-#include "asmUtils.h"
+#include "coreUtils.h"
 
 extern struct Process* currentProcess;
 

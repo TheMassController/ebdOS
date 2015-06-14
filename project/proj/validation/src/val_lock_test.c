@@ -12,7 +12,7 @@
 #include "binarySemaphore.h"
 #include "mutex.h"
 #include "sleep.h"
-#include "asmUtils.h"
+#include "coreUtils.h"
 
 struct BinarySemaphore bSem;
 struct Mutex mut;

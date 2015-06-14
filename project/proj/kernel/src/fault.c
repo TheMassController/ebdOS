@@ -5,7 +5,7 @@
 #ifdef DEBUG
 #include "uartstdio.h"
 #include "lm4f120h5qr.h"
-#include "asmUtils.h"
+#include "coreUtils.h"
 #include "process.h"
 #endif //DEBUG
 

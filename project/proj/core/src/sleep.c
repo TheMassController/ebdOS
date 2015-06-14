@@ -13,7 +13,7 @@
 #include "sleep.h"
 #include "sysSleep.h"
 #include "stdlib.h"
-#include "asmUtils.h"
+#include "coreUtils.h"
 #include "stdint.h"
 
 #define MAXSLEEPTIMER 4294967295

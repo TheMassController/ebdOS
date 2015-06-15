@@ -2,7 +2,7 @@
 #include "mutex.h"
 #include "stdlib.h"
 #include "process.h"
-#include "lockObject.h" 
+#include "lockObject.h"
 #include "coreUtils.h"
 
 extern struct Process* currentProcess;

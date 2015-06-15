@@ -26,7 +26,7 @@ extern struct Process* currentProcess;
 void sleepTimerWAInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
     UARTprintf("Apparently, almost 40 days have passed");
-    
+
 }
 
 void sleepTimerWBInterrupt(void){
@@ -80,5 +80,5 @@ void sleepS(unsigned seconds){
 
 //------- Sleep functions as used by the mutex functions
 void __sleepMSDelayBlock(unsigned ms){
-    sleepHalfMSDelayBlock(ms*sleepClocksPerMS);    
+    sleepHalfMSDelayBlock(ms*sleepClocksPerMS);
 }

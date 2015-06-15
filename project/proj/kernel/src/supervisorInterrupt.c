@@ -9,9 +9,9 @@
 #include "hw_types.h" //Contains the special types
 #include "rom_map.h" //Call functions directly from the ROM if available
 #include "rom.h" //Declare ROM addresses for rom funcs
-#include "process.h" 
-#include "lockObject.h" 
-#include "stdlib.h" 
+#include "process.h"
+#include "lockObject.h"
+#include "stdlib.h"
 #include "sysSleep.h"
 #include "sleep.h"
 
@@ -99,7 +99,7 @@ void addNewProcess(void){
     if (newProcess != NULL){
         addProcessToReady(newProcess);
         newProcess = NULL;
-    }    
+    }
 }
 
 //Sleep related
@@ -116,7 +116,7 @@ void wakeupProcess(struct SleepingProcessStruct* ptr){
     }
     ptr->process->state = STATE_READY;
     addProcessToReady(ptr->process);
-}   
+}
 
 void setSleepTimerWB(void){
     while (sleepProcessListHead != nextToWakeUp){
@@ -127,7 +127,7 @@ void setSleepTimerWB(void){
             if (nextToWakeUp != NULL){
                 ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
                 nextToWakeUp = NULL;
-            }       
+            }
             break;
         } else {
             unsigned curValWTA = getCurrentSleepTimerValue();
@@ -138,10 +138,10 @@ void setSleepTimerWB(void){
                 nextToWakeUp = sleepProcessListHead;
                 ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
                 ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepProcessListHead->sleepUntil);
-                ROM_TimerEnable(WTIMER0_BASE, TIMER_B); 
+                ROM_TimerEnable(WTIMER0_BASE, TIMER_B);
             }
         }
-    }    
+    }
 }
 
 void wakeupFromWBInterrupt(void){
@@ -240,17 +240,17 @@ void lockObjectBlock(const char increase){
 }
 
 void lockObjectBlockAndSleep(const char increase){
-    lockObjectBlock(increase); 
+    lockObjectBlock(increase);
     addSleeperToList(&(currentProcess->sleepObj));
 }
 
 void setKernelPrioMax(void){
     //TODO update for new scheduling algorithm
-    kernel->priority = 255; 
+    kernel->priority = 255;
 }
 
 void wakeupCurrentProcess(void){
-   removeSleeperFromList(currentProcess); 
+   removeSleeperFromList(currentProcess);
 }
 
 void fallAsleep(void){

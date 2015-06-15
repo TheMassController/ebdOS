@@ -33,7 +33,7 @@ int decreaseSemaphoreNonBlocking(struct Semaphore* semaphore){
     if (__decreaseLockObjectNoBlock(&(semaphore->lockObject)) == -1){
         return 0;
     }
-    return 1; 
+    return 1;
 }
 
 int decreaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout){

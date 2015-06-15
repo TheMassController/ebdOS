@@ -175,7 +175,7 @@ int createProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* 
             break;
         }
     }
-#ifdef DEBUG 
+#ifdef DEBUG
     if (newProc == NULL) UARTprintf("WARNING: semaphore of newProcessPool is out of sync\r\n");
 #endif
     if (newProc == NULL){
@@ -207,10 +207,10 @@ void exitProcess(int exitCode){
     for (int i = 0; i < DEFKQPOOLSIZE; ++i){
         if (deleteProcessPool[i].processToDelete == NULL){
             delProc = &deleteProcessPool[i];
-            break; 
+            break;
         }
     }
-#ifdef DEBUG 
+#ifdef DEBUG
     if (delProc == NULL) UARTprintf("WARNING: semaphore of deleteProcessPool is out of sync\r\n");
 #endif
     if (delProc == NULL) {
@@ -225,7 +225,7 @@ void exitProcess(int exitCode){
     delProc->retCode = exitCode;
     createAndProcessKernelCall(delProc, deleteprocess);
 #ifdef DEBUG
-   UARTprintf("We are at a point in exitProcess where we do not want to be\r\n"); 
+   UARTprintf("We are at a point in exitProcess where we do not want to be\r\n");
 #endif //DEBUG
 }
 

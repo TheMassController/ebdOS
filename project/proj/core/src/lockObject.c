@@ -105,7 +105,7 @@ int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, 
     }
     if (retCode == -1){
         __sleepMSDelayBlock(msTimeout);
-        while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){ 
+        while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){
             if (increase){
                 currentProcess->state |= STATE_DEC_WAIT;
                 //You want to increase, so you wait for a decrease
@@ -137,7 +137,7 @@ int __getLockVal(struct LockObject* object){
 }
 
 int __getLockMaxVal(struct LockObject* object){
-   return object->maxLockVal; 
+   return object->maxLockVal;
 }
 
 int __LockIsMaxVal(struct LockObject* object){

@@ -25,7 +25,7 @@ void itoa(int n, char s[])
         char temp = s[i];
         s[i] = s[len - 1 - i];
         s[len - 1 - i] = temp;
-    } 
+    }
 }
 
 void ftoa(float Value, char* Buffer)
@@ -33,22 +33,22 @@ void ftoa(float Value, char* Buffer)
      union
      {
          float f;
-     
+
          struct
          {
              unsigned int    mantissa_lo : 16;
-             unsigned int    mantissa_hi : 7;    
+             unsigned int    mantissa_hi : 7;
              unsigned int     exponent : 8;
              unsigned int     sign : 1;
          };
      } helper;
-     
+
      unsigned long mantissa;
      signed char exponent;
      unsigned int int_part;
      char frac_part[3];
      int i, count = 0;
-     
+
      helper.f = Value;
      //mantissa is LS 23 bits
      mantissa = helper.mantissa_lo;
@@ -57,7 +57,7 @@ void ftoa(float Value, char* Buffer)
      mantissa += 0x00800000;
      //exponent is biased by 127
      exponent = (signed char) helper.exponent - 127;
-     
+
      //too big to shove into 8 chars
      if (exponent > 18)
      {
@@ -67,7 +67,7 @@ void ftoa(float Value, char* Buffer)
          Buffer[3] = '\0';
          return;
      }
-     
+
      //too small to resolve (resolution of 1/8)
      if (exponent < -3)
      {
@@ -75,36 +75,36 @@ void ftoa(float Value, char* Buffer)
          Buffer[1] = '\0';
          return;
      }
-     
+
      count = 0;
-     
+
      //add negative sign (if applicable)
      if (helper.sign)
      {
          Buffer[0] = '-';
          count++;
      }
-     
+
      //get the integer part
-     int_part = mantissa >> (23 - exponent);    
+     int_part = mantissa >> (23 - exponent);
      //convert to string
      itoa(int_part, &Buffer[count]);
-     
+
      //find the end of the integer
      for (i = 0; i < 8; i++)
          if (Buffer[i] == '\0')
          {
              count = i;
              break;
-         }        
- 
-     //not enough room in the buffer for the frac part    
+         }
+
+     //not enough room in the buffer for the frac part
      if (count > 5)
          return;
-     
-     //add the decimal point    
+
+     //add the decimal point
      Buffer[count++] = '.';
-     
+
      //use switch to resolve the fractional part
      switch (0x7 & (mantissa  >> (20 - exponent)))
      {
@@ -116,45 +116,45 @@ void ftoa(float Value, char* Buffer)
          case 1:
              frac_part[0] = '1';
              frac_part[1] = '2';
-             frac_part[2] = '5';            
+             frac_part[2] = '5';
              break;
          case 2:
              frac_part[0] = '2';
              frac_part[1] = '5';
-             frac_part[2] = '0';            
+             frac_part[2] = '0';
              break;
          case 3:
              frac_part[0] = '3';
              frac_part[1] = '7';
-             frac_part[2] = '5';            
+             frac_part[2] = '5';
              break;
          case 4:
              frac_part[0] = '5';
              frac_part[1] = '0';
-             frac_part[2] = '0';            
+             frac_part[2] = '0';
              break;
          case 5:
              frac_part[0] = '6';
              frac_part[1] = '2';
-             frac_part[2] = '5';            
+             frac_part[2] = '5';
              break;
          case 6:
              frac_part[0] = '7';
              frac_part[1] = '5';
-             frac_part[2] = '0';            
+             frac_part[2] = '0';
              break;
          case 7:
              frac_part[0] = '8';
              frac_part[1] = '7';
-             frac_part[2] = '5';                    
+             frac_part[2] = '5';
              break;
      }
-     
+
      //add the fractional part to the output string
      for (i = 0; i < 3; i++)
          if (count < 7)
              Buffer[count++] = frac_part[i];
-     
+
      //make sure the output is terminated
      Buffer[count] = '\0';
  }
@@ -165,14 +165,14 @@ void testFloatOutputSmall(void){
     char* fptr = fPtr;
     float f = 0.155;
     while(1){
-        ftoa(f, fptr); 
+        ftoa(f, fptr);
         UARTprintf("[small]Float value of f: %s\r\n", fptr);
         f /= 0.22;
-        ftoa(f, fptr); 
+        ftoa(f, fptr);
         UARTprintf("[small]Float value of f: %s\r\n", &fPtr);
         sleepMS(100);
         f *= 0.22;
-        ftoa(f, fptr); 
+        ftoa(f, fptr);
         UARTprintf("[small]Float value of f: %s\r\n", &fPtr);
     }
 }
@@ -183,14 +183,14 @@ void testFloatOutputBig(void){
     char* fptr = fPtr;
     float f = 155.0;
     while(1){
-        ftoa(f, fptr); 
+        ftoa(f, fptr);
         UARTprintf("[big]Float value of f: %s\r\n", fptr);
         f /= 0.22;
-        ftoa(f, fptr); 
+        ftoa(f, fptr);
         sleepMS(100);
         UARTprintf("[big]Float value of f: %s\r\n", &fPtr);
         f *= 0.22;
-        ftoa(f, fptr); 
+        ftoa(f, fptr);
         UARTprintf("[big]Float value of f: %s\r\n", &fPtr);
     }
 }
@@ -200,7 +200,7 @@ void testFloatOutputBig(void){
 void findPrimeNumbers(void* amount){
     const unsigned maxCount = (unsigned) amount;
     if (maxCount != 0){
-        unsigned curCount = 1; 
+        unsigned curCount = 1;
         UARTprintf("2");
         for (unsigned i = 3; i < UINT_MAX; i += 2){
             float sqrtIf = sqrtf(i);
@@ -218,7 +218,7 @@ void findPrimeNumbers(void* amount){
             if (isPrime){
                 curCount++;
                 UARTprintf(", %u", i);
-            }  
+            }
             if (curCount == maxCount) break;
         }
 

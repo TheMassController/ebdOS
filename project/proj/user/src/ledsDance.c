@@ -31,7 +31,7 @@ void prepareHardware(void){
     ROM_GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_4);
     ROM_IntPrioritySet(INT_GPIOF, 200);
     ROM_IntEnable(INT_GPIOF);
-    
+
     //B gate: 4 io's
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
     ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
@@ -49,12 +49,12 @@ void prepareHardware(void){
 
 void gpioBInterrup(void){
     ROM_GPIOPinIntClear(GPIO_PORTB_BASE, GPIO_PIN_3);
-    increaseSemaphoreNonBlocking(&sem); 
+    increaseSemaphoreNonBlocking(&sem);
 }
 
 //void button2Interrupt(void){
 //    ROM_GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_4);
-//    increaseSemaphoreNonBlocking(&sem); 
+//    increaseSemaphoreNonBlocking(&sem);
 //}
 
 void printProcessInfo(void){
@@ -73,7 +73,7 @@ void ledsFlicker(void){
         decreaseSemaphoreBlocking(&sem);
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1);
         decreaseSemaphoreBlocking(&sem);
-    } 
+    }
 }
 
 void ledsDance(void){

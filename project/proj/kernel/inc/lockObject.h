@@ -2,12 +2,12 @@
 #ifndef LOCKOBJECT_H
 #define LOCKOBJECT_H
 
-#include "process.h" 
+#include "process.h"
 #define MAXWAITTIME 0xFFFFFFFF
 
 /**
-    There is a quite fundamental difference between the lockobject and the semaphore from theoretical information schience. 
-    The obvious difference is that the lockobject can not be increased indefinitely. 
+    There is a quite fundamental difference between the lockobject and the semaphore from theoretical information schience.
+    The obvious difference is that the lockobject can not be increased indefinitely.
     The less obvious differences are that the lockobject can also block on maxval to increase performance or readability in some consumer-producer problems.
     Dijkstra's semaphore only blocks on wait() (=try decrease). POSIX's sem_t will return an error when trying to increase beyond its bounds.
     This implementation can return an errorcode (-1) when increase or decrease is impossible (lock == maxval || lock == 0) and it can block when inc- or decrease is impossible.

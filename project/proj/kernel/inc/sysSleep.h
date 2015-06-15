@@ -1,7 +1,7 @@
 #ifndef SYSSLEEP_H
 #define SYSSLEEP_H
 
-#include "process.h" 
+#include "process.h"
 
 struct SleepingProcessStruct{
     struct Process* process;

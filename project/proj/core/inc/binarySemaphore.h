@@ -15,7 +15,7 @@ You cannot grab it twice: if you try to grab it a second time, you will need to 
 
 
 struct BinarySemaphore{
-   struct LockObject lockObject; 
+   struct LockObject lockObject;
 };
 
 /**

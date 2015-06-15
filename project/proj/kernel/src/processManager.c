@@ -6,7 +6,7 @@
 #include "coreUtils.h"
 #include "uartstdio.h"
 #include "process.h"
-#include "supervisorCall.h" 
+#include "supervisorCall.h"
 #include "lm4f120h5qr.h" //Hardware regs
 #include "semaphore.h"
 
@@ -68,11 +68,11 @@ void initializeProcesses(void){
     processPool[0].stack = NULL;
     processPool[0].stackPointer = NULL;
     processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
-    processPool[0].hwFlags = PROCESS_IS_PRIVILEGED; 
-    
-    //set some params 
+    processPool[0].hwFlags = PROCESS_IS_PRIVILEGED;
+
+    //set some params
     processesReady = &processPool[0];
-    currentProcess = &processPool[0]; 
+    currentProcess = &processPool[0];
     setPSP(currentProcess->stackPointer); //For safety, do set the PSP to zero when the kernel runs. This way, when an error is made a segfault happens and not random memory overwrite
     kernel = currentProcess;
 
@@ -87,10 +87,10 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
     if (currentProcess->pid != 1) {
         return 3;
-    } 
+    }
     struct Process* newProc = getProcessFromPool();
     if ( newProc == NULL) { //Insufficient mem
-       return 1; 
+       return 1;
     }
     if (stacklen < 67){
         return 4;
@@ -120,13 +120,13 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     //This pointer is kept for the freeing, later
     newProc->stack = stack;
     //Because a stack moves down (from high to low) move the pointer to the last address and then move it down to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
-    //This new address is always lower then or equal to the highest address that is assigned this process. 
+    //This new address is always lower then or equal to the highest address that is assigned this process.
     //stacklen -sizeof(void*) is because ptr + stacklen is one too much, the pointer itself is also assigned to the process
-    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - sizeof(void*)) & ~((long)(0x3))); 
+    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - sizeof(void*)) & ~((long)(0x3)));
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
-    *stackPointer-- = 0x01000000; //XPSR, standard stuff 
+    *stackPointer-- = 0x01000000; //XPSR, standard stuff
     *stackPointer-- = (int)procFunc; //PC, initally points to start of function
     *stackPointer-- = (int)&__processReturn; //LR, return func
 #ifdef DEBUG
@@ -135,7 +135,7 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     *stackPointer-- = 2; // reg2, 2 for debug
     *stackPointer-- = 1; // reg1, 1 for debug
 #else
-    stackPointer -= 4;      //If not debugging, just decrease the stackptr    
+    stackPointer -= 4;      //If not debugging, just decrease the stackptr
 #endif //DEBUG
     *stackPointer = (int)param; // reg 0, first param
     //Save the stackpointer to the struct
@@ -157,12 +157,12 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     for ( int u = 4; u <= 11; u++ ){
         newProc->savedRegSpace[it] = u;
         ++it;
-    }  
+    }
 #endif //DEBUG
     newProc->containsProcess = 1;
 
     //Add the new process to the list of processes
     newProcess = newProc;
     CALLSUPERVISOR(SVC_processAdd);
-    return 0; 
+    return 0;
 }

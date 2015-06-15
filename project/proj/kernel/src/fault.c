@@ -61,7 +61,7 @@ void busFaultHandler(void){
     UARTprintf("\tImprecise Data Bus Error: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_IMPRE) ? 1 : 0);
     UARTprintf("\tPrecise Data Bus Error: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_PRECISE) ? 1 : 0);
     UARTprintf("\tInstruction Bus Error: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_IBUS) ? 1 : 0);
-    
+
     UARTprintf("\r\nBus Fault Address value: 0x%x\r\n", NVIC_FAULT_ADDR_R);
 #endif //DEBUG
     while(1) waitForInterrupt();

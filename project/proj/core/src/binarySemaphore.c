@@ -2,7 +2,7 @@
 #include "binarySemaphore.h"
 #include "stdlib.h"
 #include "process.h"
-#include "lockObject.h" 
+#include "lockObject.h"
 #include "coreUtils.h"
 
 extern struct Process* currentProcess;
@@ -29,7 +29,7 @@ int lockBinarySemaphoreBlockWait(struct BinarySemaphore* mutex, unsigned msWaitT
 }
 
 void releaseBinarySemaphore(struct BinarySemaphore* mutex){
-    __decreaseLockObjectNoBlock(&(mutex->lockObject)); 
+    __decreaseLockObjectNoBlock(&(mutex->lockObject));
 }
 
 int takeBinarySemaphore(struct BinarySemaphore* sem, unsigned waitTime){

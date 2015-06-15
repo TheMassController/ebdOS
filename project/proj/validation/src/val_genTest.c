@@ -9,4 +9,4 @@ int heapTest(){
     char* testCharPtr2 = malloc(5);
     UARTprintf("%d\n",testCharPtr2 - testCharPtr);
     return 0;
-}    
+}

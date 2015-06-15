@@ -1,14 +1,14 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "sysSleep.h" 
+#include "sysSleep.h"
 
 /* States are handled as different bit flags:
  * pos 0 = sleep
  * pos 1,2 = wait
  * if state = 0, then it is ready
  * This way, a process can both be sleeping and waiting for a mutex.
- */ 
+ */
 
 #define STATE_READY 0x0
 #define STATE_SLEEP 0x1
@@ -42,7 +42,7 @@ struct Process {
     void* stack;                                                    //refers to the address returned by Malloc
     char name[21];                                                  //The name can be 20 chars max, the last char is a /0
     char state;                                                     //Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
-    char priority;                                                  //Higher is higher: 255 is highest  
+    char priority;                                                  //Higher is higher: 255 is highest
     char containsProcess;                                           //Flag used for mempooling
 
     void* blockAddress;                                             //The multilockobject this process is waiting for

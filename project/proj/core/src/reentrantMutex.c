@@ -7,7 +7,7 @@ void initReentrantMutex(struct ReentrantMutex* mutex){
 }
 
 void cleanupReentrantMutex(struct ReentrantMutex* mutex){
-    cleanupMutex(&(mutex->mutex)); 
+    cleanupMutex(&(mutex->mutex));
 }
 
 void lockReentrantMutexBlocking(struct ReentrantMutex* mutex){

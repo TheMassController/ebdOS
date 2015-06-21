@@ -5,3 +5,4 @@ LIB :=
 LIBDIR :=
 OFILES :=
 DOFILES :=
+ALLOFILES :=

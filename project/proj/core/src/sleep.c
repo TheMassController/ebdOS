@@ -1,20 +1,20 @@
 //Contains all sleep related code
+#include <hw_nvic.h>        // Macros for NVIC
+#include <hw_types.h>       // Defines for TI libs
+#include <uartstdio.h>      // Specific STDIO
+#include <timer.h>          // Function prototypes for timer hw interaction
+#include <lm4f120h5qr.h>    // Hardware regs
+#include <hw_memmap.h>      // address of GPIO etc
+#include <rom_map.h>        // Call functions directly from the ROM if available
+#include <rom.h>            // Declare ROM addresses for rom funcs
+#include <stdlib.h>         // C defaults like NULL
+#include <stdint.h>         // All ints existing for this platform
 
-#include "hw_nvic.h"
-#include "hw_types.h"
-#include "uartstdio.h"
-#include "timer.h"
-#include "lm4f120h5qr.h" //Hardware regs
-#include "hw_memmap.h" //address of GPIO etc
-#include "rom_map.h" //Call functions directly from the ROM if available
-#include "rom.h" //Declare ROM addresses for rom funcs
-#include "supervisorCall.h"
-#include "process.h"
-#include "sleep.h"
-#include "sysSleep.h"
-#include "stdlib.h"
-#include "coreUtils.h"
-#include "stdint.h"
+#include "supervisorCall.h" // Defs for supervisor interrupt params
+#include "process.h"        // Defs for the process
+#include "sleep.h"          // Header of the same name
+#include "sysSleep.h"       // Kernel facing sleep funcs
+#include "coreUtils.h"      // Additional utils
 
 #define MAXSLEEPTIMER 4294967295
 
@@ -25,6 +25,7 @@ extern struct Process* currentProcess;
 
 void sleepTimerWAInterrupt(void){
     ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
+    //TODO
     UARTprintf("Apparently, almost 40 days have passed");
 
 }

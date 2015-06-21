@@ -13,7 +13,6 @@
 #define SVC_multiObjectWaitForDecrease 7
 #define SVC_multiObjectWaitForIncreaseAndSleep 8
 #define SVC_multiObjectWaitForDecreaseAndSleep 9
-#define SVC_setKernelPrioMax 10
 #define SVC_sleep 11
 #define SVC_wakeup 12
 #define SVC_wakeupCurrent 13

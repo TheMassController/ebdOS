@@ -255,11 +255,6 @@ void lockObjectBlockAndSleep(const char increase){
     addSleeperToList(&(currentProcess->sleepObj));
 }
 
-void setKernelPrioMax(void){
-    //TODO update for new scheduling algorithm
-    kernel->priority = 255;
-}
-
 void wakeupCurrentProcess(void){
    removeSleeperFromList(currentProcess);
 }
@@ -269,14 +264,14 @@ void fallAsleep(void){
     addSleeperToList(&(currentProcess->sleepObj));
 }
 
-
 #ifdef DEBUG
 void sayHi(void){
     UARTprintf("Hi from your favorite supervisor!\r\n");
 }
 #endif //DEBUG
 
-//This function responds to an interrupt that can be generated at any runlevel.
+// This function responds to an interrupt that can be generated at any runlevel.
+// Handlermode is somewhere near equal to being in an interrupt. 
 void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
         case SVC_reschedule:
@@ -301,9 +296,6 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
             break;
         case SVC_multiObjectWaitForDecreaseAndSleep:
             if (!fromHandlerMode) lockObjectBlockAndSleep(0);
-            break;
-        case SVC_setKernelPrioMax:
-            setKernelPrioMax();
             break;
         case SVC_sleep:
             fallAsleep();

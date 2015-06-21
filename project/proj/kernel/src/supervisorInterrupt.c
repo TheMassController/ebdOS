@@ -14,6 +14,7 @@
 #include "lockObject.h"     // Declarations for the lockobjects
 #include "sysSleep.h"       // Kernel facing sleep functions
 #include "sleep.h"          // User facing sleep functions
+#include "supervisorCall.h" // Supplies the SVC commands
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
@@ -278,46 +279,46 @@ void sayHi(void){
 //This function responds to an interrupt that can be generated at any runlevel.
 void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
-        case 0:
+        case SVC_reschedule:
             rescheduleImmediately();
             break;
-        case 4:
+        case SVC_multiObjectIncrease:
             if (fromHandlerMode) lockObjectModifiedIntr(1);
             else lockObjectModified(1);
             break;
-        case 5:
+        case SVC_multiObjectDecrease:
             if (fromHandlerMode) lockObjectModifiedIntr(0);
             else lockObjectModified(0);
             break;
-        case 6:
+        case SVC_multiObjectWaitForIncrease:
             if (!fromHandlerMode) lockObjectBlock(1);
             break;
-        case 7:
+        case SVC_multiObjectWaitForDecrease:
             if (!fromHandlerMode) lockObjectBlock(0);
             break;
-        case 8:
+        case SVC_multiObjectWaitForIncreaseAndSleep:
             if (!fromHandlerMode) lockObjectBlockAndSleep(1);
             break;
-        case 9:
+        case SVC_multiObjectWaitForDecreaseAndSleep:
             if (!fromHandlerMode) lockObjectBlockAndSleep(0);
             break;
-        case 10:
+        case SVC_setKernelPrioMax:
             setKernelPrioMax();
             break;
-        case 11:
+        case SVC_sleep:
             fallAsleep();
             break;
-        case 12:
+        case SVC_wakeup:
             wakeupFromWBInterrupt();
             break;
-        case 13:
+        case SVC_wakeupCurrent:
             wakeupCurrentProcess();
             break;
-        case 14:
+        case SVC_processAdd:
             addNewProcess();
             break;
 #ifdef DEBUG
-        case 255:
+        case SVC_test:
             sayHi();
             break;
 #endif //DEBUG

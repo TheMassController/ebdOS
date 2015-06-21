@@ -57,10 +57,21 @@ function launchGDB {
 
 function printUsage {
     echo "Usage: <script> params"
+    echo "Example: buid.sh clean all debug"
     echo "params:"
-    echo "help, all, clean, distclean, debug, flash, debugflash, echo, launchGDB, screen" 
-    echo "debugflash implies debug and launchGDB"
-    echo "flash implies all"
+    echo "help          Print this message"
+    echo "all           Release build"
+    echo "debug         Debug build"
+    echo "flash         Compile and flash. Implies all"
+    echo "debugFlash    Compile and flash. Implies debug"
+    echo "launchGDB     Connects the GDB debugger the the board and loads the debug symbols"
+    echo "debugRun      Same as debug debugflash launchGDB"
+    echo "clean         Remove all .o files"
+    echo "distclean     Remove all files that are not created by the user"
+    echo "screen        Connect to the stellaris using GNU screen"
+    echo "echo          Prints some parameters about the current build envirnment"
+    echo ""
+    echo "'all' is implied when no commands are given"
 }
 
 function launchScreen {

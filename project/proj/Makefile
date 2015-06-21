@@ -43,9 +43,9 @@ all: CFLAGS += -Os
 all: pre-build
 all: $(RELEASETARGETBIN)
 
-debug: CFLAGS += -DDEBUG -g -O0
-debug: LDFLAGS += -g
-debug: ASMFLAGS += -g
+debug: CFLAGS += -DDEBUG -g3 -Og
+debug: LDFLAGS +=
+debug: ASMFLAGS +=
 debug: pre-build
 debug: $(DEBUGTARGET)
 

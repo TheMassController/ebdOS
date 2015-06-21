@@ -1,19 +1,19 @@
 //Handles the supervisor interrupt call
-#include "hw_nvic.h"
-#include "hw_types.h"
-#include "uartstdio.h"
-#include "timer.h"
-#include "hw_memmap.h" //address of GPIO etc
-#include "uartstdio.h"
-#include "lm4f120h5qr.h" //Hardware regs
-#include "hw_types.h" //Contains the special types
-#include "rom_map.h" //Call functions directly from the ROM if available
-#include "rom.h" //Declare ROM addresses for rom funcs
-#include "process.h"
-#include "lockObject.h"
-#include "stdlib.h"
-#include "sysSleep.h"
-#include "sleep.h"
+#include <hw_nvic.h>        // Macros related to the NVIC hardware
+#include <hw_types.h>       // Common types and macros for the TI libs
+#include <uartstdio.h>      // UART stdio declarations
+#include <timer.h>          // Function prototypes for the timer module
+#include <hw_memmap.h>      // Address of GPIO etc
+#include <lm4f120h5qr.h>    // Hardware regs
+#include <hw_types.h>       // Contains the special types
+#include <rom_map.h>        // Call functions directly from the ROM if available
+#include <rom.h>            // Declare ROM addresses for rom funcs
+#include <stdlib.h>         // Contains C defs like NULL
+
+#include "process.h"        // Declares the OS's process structs and funcs
+#include "lockObject.h"     // Declarations for the lockobjects
+#include "sysSleep.h"       // Kernel facing sleep functions
+#include "sleep.h"          // User facing sleep functions
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
@@ -55,6 +55,17 @@ struct Process* sortProcessIntoList(struct Process* listHead, struct Process* it
         previous->nextProcess = item;
         item->nextProcess = current;
     }
+    return listHead;
+}
+
+struct Process* appendProcessToList(struct Process* listHead, struct Process* item){
+    if (listHead == NULL){
+        item->nextProcess = NULL;
+        return item;
+    }
+    struct Process* current = listHead;
+    for (; current->nextProcess != NULL; current = current->nextProcess);
+    current->nextProcess = item;
     return listHead;
 }
 
@@ -226,16 +237,15 @@ void lockObjectModifiedIntr(const char increase){
 }
 
 void lockObjectBlock(const char increase){
-    //TODO prevent starvation
     struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
         if (lockObject->lock != 0) return;
         removeProcessFromReady(currentProcess);
-        lockObject->processWaitingQueueIncrease = sortProcessIntoList(lockObject->processWaitingQueueIncrease, currentProcess);
+        lockObject->processWaitingQueueIncrease = appendProcessToList(lockObject->processWaitingQueueIncrease, currentProcess);
     } else {
         if (lockObject->lock < lockObject->maxLockVal) return;
         removeProcessFromReady(currentProcess);
-        lockObject->processWaitingQueueDecrease = sortProcessIntoList(lockObject->processWaitingQueueDecrease, currentProcess);
+        lockObject->processWaitingQueueDecrease = appendProcessToList(lockObject->processWaitingQueueDecrease, currentProcess);
     }
 }
 

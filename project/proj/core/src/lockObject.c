@@ -69,7 +69,6 @@ int modifyLockObjectBlock(struct LockObject* object, const char increase){
     if (increase){
         retCode = modifyLockObject(object, 1);
         while (retCode == -1){
-            currentProcess->state |= STATE_DEC_WAIT;
             //You want to increase, so you wait for a decrease
             currentProcess->blockAddress = object;
             CALLSUPERVISOR(SVC_multiObjectWaitForDecrease);
@@ -78,7 +77,6 @@ int modifyLockObjectBlock(struct LockObject* object, const char increase){
     } else {
         retCode = modifyLockObject(object, 0);
         while (retCode == -1){
-            currentProcess->state |= STATE_INC_WAIT;
             currentProcess->blockAddress = object;
             CALLSUPERVISOR(SVC_multiObjectWaitForIncrease);
             retCode = modifyLockObject(object, 0);
@@ -107,13 +105,11 @@ int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, 
         __sleepMSDelayBlock(msTimeout);
         while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){
             if (increase){
-                currentProcess->state |= STATE_DEC_WAIT;
                 //You want to increase, so you wait for a decrease
                 currentProcess->blockAddress = object;
                 CALLSUPERVISOR(SVC_multiObjectWaitForDecreaseAndSleep);
                 retCode = modifyLockObjectBlock(object, 1);
             } else {
-                currentProcess->state |= STATE_INC_WAIT;
                 currentProcess->blockAddress = object;
                 CALLSUPERVISOR(SVC_multiObjectWaitForIncreaseAndSleep);
                 retCode = modifyLockObjectBlock(object, 0);

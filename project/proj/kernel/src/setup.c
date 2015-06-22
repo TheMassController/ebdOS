@@ -28,14 +28,6 @@
 #define BAUDRATE 115200
 
 extern struct Process* currentProcess;
-extern struct Process* sleepProcess;
-extern struct Process* hibernateProcess;
-extern struct Process* processesReady;
-extern struct Process* kernel;
-extern struct KernelQueue* kernelQueue;
-
-extern void __sleepProcessFunc(void* param);
-extern void __hibernateProcessFunc(void* param);
 
 extern unsigned sleepClocksPerMS;
 
@@ -140,6 +132,10 @@ void setupHardware(void){
     ROM_IntPrioritySet(INT_WTIMER0B, 200);
     // NVIC_PRI27_R |= 7<<5;
     // UARTprintf("%d\r\n",NVIC_PRI27_R);
+#ifdef DEBUG
+    // The following setting stalls both the sleep timers when the CPU is stopped for debugging.
+    ROM_TimerControlStall(WTIMER0_BASE, TIMER_BOTH, 1);
+#endif //DEBUG
 
     // Initialize the MPU
     initializeMPU();

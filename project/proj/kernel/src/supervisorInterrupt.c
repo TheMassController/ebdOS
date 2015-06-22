@@ -67,6 +67,7 @@ struct Process* appendProcessToList(struct Process* listHead, struct Process* it
     struct Process* current = listHead;
     for (; current->nextProcess != NULL; current = current->nextProcess);
     current->nextProcess = item;
+    item->nextProcess = NULL;
     return listHead;
 }
 
@@ -237,22 +238,37 @@ void lockObjectModifiedIntr(const char increase){
     }
 }
 
-void lockObjectBlock(const char increase){
+/*
+ * Returns 1 if successful
+ */
+int tryAddLockQueue(const char increase){
     struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
-        if (lockObject->lock != 0) return;
+        if (lockObject->lock != 0) return 0;
         removeProcessFromReady(currentProcess);
         lockObject->processWaitingQueueIncrease = appendProcessToList(lockObject->processWaitingQueueIncrease, currentProcess);
     } else {
-        if (lockObject->lock < lockObject->maxLockVal) return;
+        if (lockObject->lock < lockObject->maxLockVal) return 0;
         removeProcessFromReady(currentProcess);
         lockObject->processWaitingQueueDecrease = appendProcessToList(lockObject->processWaitingQueueDecrease, currentProcess);
+    }
+    return 1;
+}
+
+void lockObjectBlock(const char increase) {
+    if (tryAddLockQueue(increase)){
+        if (increase) {
+            currentProcess->state |= STATE_INC_WAIT;
+        } else {
+            currentProcess->state |= STATE_DEC_WAIT;
+        }
     }
 }
 
 void lockObjectBlockAndSleep(const char increase){
     lockObjectBlock(increase);
     addSleeperToList(&(currentProcess->sleepObj));
+    currentProcess->state |= STATE_SLEEP;
 }
 
 void wakeupCurrentProcess(void){
@@ -271,7 +287,7 @@ void sayHi(void){
 #endif //DEBUG
 
 // This function responds to an interrupt that can be generated at any runlevel.
-// Handlermode is somewhere near equal to being in an interrupt. 
+// Handlermode is somewhere near equal to being in an interrupt.
 void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
         case SVC_reschedule:

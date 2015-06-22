@@ -35,10 +35,11 @@ void sleepTimerWBInterrupt(void){
     CALLSUPERVISOR(SVC_wakeup);
 }
 
-//----------- Sys functions (internals)
+//----------- Sys functions (internals) (Used by core)
 
 
 void prepareSleep(int64_t sleepTicks){
+    if (isInInterrupt()) return; // Silently fail
     unsigned overflows = 0;
     int64_t curval = (int64_t)getCurrentSleepTimerValue();
     sleepTicks = curval - sleepTicks;
@@ -50,11 +51,14 @@ void prepareSleep(int64_t sleepTicks){
     currentProcess->sleepObj.sleepUntil = sleepTicks;
 }
 
-void sleepHalfMS(long sleepTicks){
+void prepareSleepMS(unsigned ms){
+    prepareSleep(ms * sleepClocksPerMS);
+}
+
+void sleepTickCount(long sleepTicks){
     //Because a half ms is exactly 1 tick
     if (isInInterrupt()) return; //cannot sleep from an interrupt
     prepareSleep(sleepTicks);
-    currentProcess->state |= STATE_SLEEP;
     CALLSUPERVISOR(SVC_sleep);
 }
 
@@ -62,8 +66,7 @@ unsigned getCurrentSleepTimerValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }
 
-void sleepHalfMSDelayBlock(long sleepticks){
-    currentProcess->state |= STATE_SLEEP;
+void sleepTickCountDelayBlock(long sleepticks){
     prepareSleep(sleepticks);
 }
 
@@ -71,15 +74,15 @@ void sleepHalfMSDelayBlock(long sleepticks){
 
 void sleepMS(unsigned ms){
     //The millisecond sleeper
-    sleepHalfMS(ms*sleepClocksPerMS);
+    sleepTickCount(ms*sleepClocksPerMS);
 }
 
 void sleepS(unsigned seconds){
     //The second sleeper
-    sleepHalfMS(seconds*1000*sleepClocksPerMS);
+    sleepTickCount(seconds*1000*sleepClocksPerMS);
 }
 
 //------- Sleep functions as used by the mutex functions
 void __sleepMSDelayBlock(unsigned ms){
-    sleepHalfMSDelayBlock(ms*sleepClocksPerMS);
+    sleepTickCountDelayBlock(ms*sleepClocksPerMS);
 }

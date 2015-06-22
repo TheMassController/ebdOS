@@ -16,7 +16,7 @@
 #define STATE_WAIT 0x6 //A flag to surround them all
 #define STATE_INC_WAIT 0x2
 #define STATE_DEC_WAIT 0x4
-
+//CS means context switcher
 #define CS_SAVEDREGSPACE 8
 #define CS_FPSAVEDREGSPACE 16
 #define CS_USING_FP 0x4
@@ -32,23 +32,23 @@
 
 //The order of the first three is vital to make the assembly work correctly
 struct Process {
-    void* stackPointer;                                             //The actual stackpointer
-    unsigned pid;                                                   //Pid of the process
-    void* savedRegsPointer;                                         //Points towards the point were the saved data needs to be retrieved from or stored to
-    unsigned hwFlags;                                               //HWflags used for context switching
+    void* stackPointer;                                             // The actual stackpointer
+    unsigned pid;                                                   // Pid of the process
+    void* savedRegsPointer;                                         // Points towards the point were the saved data needs to be retrieved from or stored to
+    unsigned hwFlags;                                               // HWflags used for context switching
 
-    unsigned savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  //Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
-    unsigned mPid;                                                  //Mother pid
-    void* stack;                                                    //refers to the address returned by Malloc
-    char name[21];                                                  //The name can be 20 chars max, the last char is a /0
-    char state;                                                     //Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
-    char priority;                                                  //Higher is higher: 255 is highest
-    char containsProcess;                                           //Flag used for mempooling
+    unsigned savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  // Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
+    unsigned mPid;                                                  // Mother pid
+    void* stack;                                                    // refers to the address returned by Malloc
+    char name[21];                                                  // The name can be 20 chars max, the last char is a /0
+    char state;                                                     // Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
+    char priority;                                                  // Higher is higher: 255 is highest
+    char containsProcess;                                           // Flag used for mempooling
 
-    void* blockAddress;                                             //The multilockobject this process is waiting for
-    struct SleepingProcessStruct sleepObj;                          //The sleepobject, contains all data necessary for sleeping
+    void* blockAddress;                                             // The multilockobject this process is waiting for
+    struct SleepingProcessStruct sleepObj;                          // The sleepobject, contains all data necessary for sleeping
 
-    struct Process* nextProcess;                                    //Makes the thing a linkedlist
+    struct Process* nextProcess;                                    // Makes the thing a linkedlist
 };
 
 /*
@@ -59,5 +59,4 @@ struct Process {
         3: Wrong caller pid, only kernel (PID 0) can create processes
 */
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
-
 #endif

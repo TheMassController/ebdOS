@@ -4,7 +4,7 @@ source arm-gcc-locations
 
 DEFAULT="all"
 
-MAKEFLAGS="-j10"
+MAKEFLAGS="-j15"
 MAKE=$(which make)
 FLASH=$(which lm4flash)
 OPENOCD=$(which openocd)

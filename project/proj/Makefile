@@ -3,13 +3,13 @@ include mk/compilers.mk
 include mk/emptyvars.mk
 include mk/predefined.mk
 include mk/flags.mk
+include mk/receipes.mk
 
 TARGET := jackoOS
 TARGETBIN := jackoOS_stripped
 
 KERNELAR := kernel.a
 COREAR := core.a
-USERAR := user.a
 
 DEBUG_OBJECTS_DIR := $(OBJ_DIR)$(DEBUG_DIR)
 RELEASE_OBJECTS_DIR := $(OBJ_DIR)$(RELEASE_DIR)
@@ -22,12 +22,6 @@ KERNELARDEBUG := $(DEBUG_DIR)$(KERNELAR)
 KERNELARRELEASE := $(RELEASE_DIR)$(KERNELAR)
 COREARDEBUG := $(DEBUG_DIR)$(COREAR)
 COREARRELEASE := $(RELEASE_DIR)$(COREAR)
-
-LINKRECEIPE = $(LD) $(LDFLAGS) -o $@ $^ $(LIB)
-OBJCOPYRECEIPE = $(OBJCOPY) $(OBJCPYFLAGS) -O binary $< $@
-CCRECEIPE = $(CC) $(CFLAGS) -c $< -o $@
-ASMRECEIPE = $(CC) $(ASMFLAGS) -c $< -o $@
-ARRECEIPE = $(AR) $(ARFLAGS) $@ $^
 
 OBJECTDIRS += $(RELEASE_DIR) $(DEBUG_DIR)
 
@@ -95,7 +89,7 @@ pre-build:
 	@mkdir -p $(OBJECTDIRS)
 
 clean:
-	@rm -f $(COREROFILES) $(COREDOFILES) $(KERNELROFILES) $(KERNELDOFILES) $(OFILES) $(DOFILES) $(COREARDEBUG) $(COREARRELEASE) $(KERNELARDEBUG) $(KERNELARRELEASE) $(RELEASETARGET) $(RELEASETARGETBIN) $(DEBUGTARGET) $(DEBUGTARGETBIN)
+	@rm -f $(ALLOFILES)
 
 distclean:
 	@rm -rf $(OBJECTDIRS)

@@ -11,6 +11,8 @@
  * Privileged processes can call some and some will silently fail.
  * Interrupts can call all, but this might result in undefined behaviour. Only the SVC interrupt can call all functions safely.
  *
+ * The idea is that a process generates an SVC interrupt if it wants to interact with the scheduler, for example because it wants to fall asleep or it wants to yield.
+ *
  * The size of the timeslice needs to be written to the systick timer. The systick timer can only contain 24 bit, and thus this is the maxlength of the timeslice.
  * The slice is get and set in MS. The maxlength depends on the clock source.
  * @see setup.c to find out which clock source is used by the systick timer.
@@ -58,4 +60,10 @@ int removeProcessFromScheduler(struct Process* proc);
  * @warning This function will cause a segfault if called from unprivileged mode.
  */
 int processInScheduler(struct Process* proc);
+
+/* @brief Forces a reschedule without waiting for the systick.
+ * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
+ */
+void premptCurrentProcess(void);
+
 #endif // SCHEDULER_H

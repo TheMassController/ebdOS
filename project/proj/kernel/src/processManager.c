@@ -22,9 +22,9 @@
 
 struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
 
-struct Process* processesReady = NULL;
 struct Process* kernel = NULL;
 extern struct Process* currentProcess;
+extern struct Process* processesReady;
 struct Process* newProcess = NULL;
 // Declarations of core helper functions
 void __sleepProcessFunc(void);
@@ -47,7 +47,7 @@ struct Process* getProcessFromPool(void){
 
 void initializeProcesses(void){
 #ifdef DEBUG
-    if (processesReady != NULL){
+    if (kernel != NULL){
         UARTprintf("PANIC: second run of initilializeProcesses\r\n");
     }
 #endif

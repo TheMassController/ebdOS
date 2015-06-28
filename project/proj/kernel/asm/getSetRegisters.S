@@ -6,11 +6,11 @@
 
 	.global getMSP
     .global setPSP
-	
+
 getMSP:
-	MRS 	R0 , msp 	@Move the stack pointer to the return register, R0
-	MOV 	pc , lr		@Return by moving the link register to the program counter
+	MRS R0, msp 	@Move the stack pointer to the return register, R0
+	MOV pc, lr		@Return by moving the link register to the program counter
 
 setPSP:
-    MSR psp, R0 @Move R0 to the PSP
-    MOV pc, lr @return
+    MSR psp, R0     @Move R0 to the PSP
+    MOV pc, lr      @return

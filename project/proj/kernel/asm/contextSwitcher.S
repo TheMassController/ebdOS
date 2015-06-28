@@ -24,60 +24,62 @@ pendSVHandler:
     cpsid i         @Disables all interrupts
 
     @First: the check if we even need to context switch
-	ldr	r2, .L4                 @Load L4+0, which is currentprocess (r2 = &currentProcess)
-	ldr	r3, .L4+4               @Load l4+4, which is processesReady (r3 = &processesReady)
-	ldr	r1, [r2]                @Deref (r1 = currentProcess)
-	ldr	r3, [r3]                @Deref r3 (r3 = processesReady)
-    cmp r1, r3                  @If the next process is equal to the current one
-    beq .L3                     @Do not switch context, but return
+	ldr	r2, .L4                 @ Load L4+0, which is currentprocess (r2 = &currentProcess)
+	ldr	r3, .L4+4               @ Load l4+4, which is processesReady (r3 = &processesReady)
+	ldr	r1, [r2]                @ Deref (r1 = currentProcess)
+	ldr	r3, [r3]                @ Deref r3 (r3 = processesReady)
+    cmp r1, r3                  @ If the next process is equal to the current one
+    beq .L3                     @ Do not switch context, but return
 
-    @The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
-    @This function pushes the other regs to the process control block.
-    @Then it loads the other regs from the process control block of the next process.
+    @ The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
+    @ The first half of the FP regs (s0-s15) get pushed by lazy stacking: when the FP regs are used they are switched out automatically. See setup.c for more details
+    @ This function pushes the other regs to the process control block.
+    @ During the switch, if the FP regs have been used by this process they are also written to the main memory.
+    @ Then it loads the other regs from the process control block of the next process.
 
-    @Update pointers
-	str	r3, [r2]                @currentProcess = top of processesReady
+    @ Update pointers
+	str	r3, [r2]                @ currentProcess = top of processesReady
 
-    @Actual context switch
-    ldr r2, [r1, #12]           @Load the flags
-    ands lr, lr, #0x10          @Test if the 5th bit is 0. If it is, then the FPU was activated
-    itt eq                      @If the fith bit is zero, then the Z HW flag is set
-    orreq r2, r2, #0x2          @Set the FP flag if the last outcome was not equal. If it was not equal then the FPU is in use
-    streq r2, [r1, #12]         @write the data about the fp flag to currentProcess
-    ldr r12, [r1, #8]           @r12 = savedRegsPointer of currentProcess
-    stmdb r12!, {r4-r11}        @Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
-    it eq                       @If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
-    vstmdbeq.f32 r12!, {s16-s31}@Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
-    str r12, [r1, #8]           @Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
-    mrs r0, psp                 @Move the PSP to R0
-	str	r0, [r1]                @Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
+    @ Actual context switch
+    ldr r2, [r1, #12]           @ Load the flags
+    ands lr, lr, #0x10          @ Test if the 5th bit is 0. If it is, then the FPU was activated
+    itt eq                      @ If the fith bit is zero, then the Z HW flag is set
+    orreq r2, r2, #0x2          @ Set the FP flag if the last outcome was not equal. If it was not equal then the FPU is in use
+    streq r2, [r1, #12]         @ write the data about the fp flag to currentProcess
+    ldr r12, [r1, #8]           @ r12 = savedRegsPointer of currentProcess
+    stmdb r12!, {r4-r11}        @ Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
+    it eq                       @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
+    vstmdbeq.f32 r12!, {s16-s31}@ Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
+    str r12, [r1, #8]           @ Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
+    mrs r0, psp                 @ Move the PSP to R0
+	str	r0, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
-    ldr r12, [r3, #12]          @Load the hw flags
-    ands r0, r12, #0x1          @Isolate the first bit, the privileged bit
-    ite eq                      @If the HW Z bit is not set, then the privileged bit was also not set
-    moveq r12, #0x1             @Then set r12 to 1 (if we write 0x1 to control we set unprivileged)
-    movne r12, #0x0             @else set r12 to 0 (Here we will set privileged if it was not set)
-    msr CONTROL, r12            @Write the r12 to CONTROL to set the privilege
-    ands r1, r12, #0x2          @Isolate the FPU flag
-	ldr	r0, [r3, #8]            @Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
-    it ne                       @If the FP bit is set, so if the Z hw bit is unset
-    vldmiane.f32 r0!, {s16-s31} @Load the fp regs. Increment after.
-    ldmia   r0! , {r4-r11}      @Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
-    str r0, [r3, #8]            @Store the moved savedRegsPointer
-    ldr r2, [r3]                @Load the sp of the new process
-    msr psp, r2                 @push r2 (= new stackpointer) to psp
+    ldr r12, [r3, #12]          @ Load the hw flags
+    ands r0, r12, #0x1          @ Isolate the first bit, the privileged bit
+    ite eq                      @ If the HW Z bit is not set, then the privileged bit was also not set
+    moveq r12, #0x1             @ Then set r12 to 1 (if we write 0x1 to control we set unprivileged)
+    movne r12, #0x0             @ else set r12 to 0 (Here we will set privileged if it was not set)
+    msr CONTROL, r12            @ Write the r12 to CONTROL to set the privilege
+    ands r1, r12, #0x2          @ Isolate the FPU flag
+	ldr	r0, [r3, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
+    it ne                       @ If the FP bit is set, so if the Z hw bit is unset
+    vldmiane.f32 r0!, {s16-s31} @ Load the fp regs. Increment after.
+    ldmia   r0! , {r4-r11}      @ Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
+    str r0, [r3, #8]            @ Store the moved savedRegsPointer
+    ldr r2, [r3]                @ Load the sp of the new process
+    msr psp, r2                 @ push r2 (= new stackpointer) to psp
 
 
-    @Decide the returnvar and return
-    mvn lr, #0x16               @lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
-    it eq                       @If the FP bit is not set, so the Z hw bit is set
-    orreq lr, lr, #0x10         @nextProc does not use fp: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
-    ands r1, r12, #0x4          @Test the MSP bit
-    it eq                       @If the MSP bit is not set, so the Z HW bit is set
-    orreq lr, lr, #0x4          @If not equal, lr = 0xFFFFFFED (Continue from PSP, enable hw FP) or lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
+    @ Decide the returnvar and return
+    mvn lr, #0x16               @ lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
+    it eq                       @ If the FP bit is not set, so the Z hw bit is set
+    orreq lr, lr, #0x10         @ nextProc does not use fp: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+    ands r1, r12, #0x4          @ Test the MSP bit
+    it eq                       @ If the MSP bit is not set, so the Z HW bit is set
+    orreq lr, lr, #0x4          @ If not equal, lr = 0xFFFFFFED (Continue from PSP, enable hw FP) or lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
 .L3:
-    cpsie i                     @Reenable all interrupts
-    bx lr                       @Branch to LR-addr, without linking
+    cpsie i                     @ Reenable all interrupts
+    bx lr                       @ Branch to LR-addr, without linking
 .L4:
 	.word	currentProcess
 	.word	processesReady

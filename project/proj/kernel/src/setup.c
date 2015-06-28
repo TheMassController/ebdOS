@@ -72,7 +72,8 @@ void setupHardware(void){
     ROM_GPIOPinTypeUART(GPIO_PORTA_BASE,GPIO_PIN_0|GPIO_PIN_1);
     // Start the UART0 with baud BAUD
     UARTStdioInitExpClk(0,BAUDRATE);
-
+    
+    // TODO fix
     // For scheduling: systick
     // It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock
     // Initially configured as 1 tick per ms. This is equal to 4000 ticks on the 4 Mhz clock.

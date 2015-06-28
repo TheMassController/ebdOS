@@ -34,37 +34,29 @@
 //*****************************************************************************
 void ResetISR(void);
 static void NmiSR(void);
-extern void faultISRHandler(void);
 static void IntDefaultHandler(void);
-
-//*****************************************************************************
-//
-// The entry point for the application.
-//
-//*****************************************************************************
-extern int main(void);
 
 //System stack start, defined in linker script
 extern char _stack_top;
 
-//Hardware setup
-void setupHardware(void);
-//Kicking off the scheduler etc
-void finishBoot(void);
-//Actual kernel process
-void kernelMain(void);
-//Pendsv interrupt handler
-void pendSVHandler(void);
-//SVCcall handler
-void svcHandler(void);
-//Sleep timer interrupt
-void sleepTimerWAInterrupt(void);
-void sleepTimerWBInterrupt(void);
-//misc fault handling
-void usageFaultHandler(void);
-void mpuFaultHandler(void);
-void busFaultHandler(void);
-//TEMP
+/* All sorts of declarations that we want to use here, but nowhere else.
+ * So these functions are not declared in headers but here.
+ */
+void setupHardware(void);           // Declared in setup.c
+void finishBoot(void);              // Declared in setup.c
+void kernelMain(void);              // Declared in kernelProcess.c
+void pendSVHandler(void);           // Declared in contextSwitcher.S
+void svcHandler(void);              // Declared in supervisorHandler.S
+void sysTickHandler(void);          // Declared in scheduler.c
+void sleepTimerWAInterrupt(void);   // Declared in sleep.c
+void sleepTimerWBInterrupt(void);   // Declared in sleep.c
+void usageFaultHandler(void);       // Declared in fault.c
+void mpuFaultHandler(void);         // Declared in fault.c
+void busFaultHandler(void);         // Declared in fault.c
+void faultISRHandler(void);         // Declared in fault.c
+int main(void);                     // Declared in main.c
+
+/* Temporary handlers, not here to stay */
 void button2Interrupt(void);
 void gpioBInterrup(void);
 
@@ -81,21 +73,21 @@ void (* const g_pfnVectors[])(void) =
                                             // The initial stack pointer
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler
-    faultISRHandler,                               // The hard fault handler
-    mpuFaultHandler,                      // The MPU fault handler
-    busFaultHandler,                      // The bus fault handler
+    faultISRHandler,                        // The hard fault handler
+    mpuFaultHandler,                        // The MPU fault handler
+    busFaultHandler,                        // The bus fault handler
     usageFaultHandler,                      // The usage fault handler
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved
-    svcHandler,                      // SVCall handler
+    svcHandler,                             // SVCall handler
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
-    pendSVHandler,                      // The PendSV handler
-    IntDefaultHandler,                      // The SysTick handler
+    pendSVHandler,                          // The PendSV handler
+    sysTickHandler,                         // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
-    gpioBInterrup,                      // GPIO Port B
+    gpioBInterrup,                          // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
@@ -124,7 +116,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Analog Comparator 2
     IntDefaultHandler,                      // System Control (PLL, OSC, BO)
     IntDefaultHandler,                      // FLASH Control
-    button2Interrupt,                      // GPIO Port F
+    button2Interrupt,                       // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
     IntDefaultHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
@@ -188,8 +180,8 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     IntDefaultHandler,                      // Timer 5 subtimer A
     IntDefaultHandler,                      // Timer 5 subtimer B
-    sleepTimerWAInterrupt,                      // Wide Timer 0 subtimer A
-    sleepTimerWBInterrupt,                      // Wide Timer 0 subtimer B
+    sleepTimerWAInterrupt,                  // Wide Timer 0 subtimer A
+    sleepTimerWBInterrupt,                  // Wide Timer 0 subtimer B
     IntDefaultHandler,                      // Wide Timer 1 subtimer A
     IntDefaultHandler,                      // Wide Timer 1 subtimer B
     IntDefaultHandler,                      // Wide Timer 2 subtimer A
@@ -299,15 +291,6 @@ void ResetISR(void)
     zeroFillSection(&_kernel_bss, &_kernel_ebss);
     zeroFillSection(&_core_bss, &_core_ebss);
     zeroFillSection(&_bss, &_ebss);
-    //__asm("    ldr     r0, =_bss\n"
-    //      "    ldr     r1, =_ebss\n"
-    //      "    mov     r2, #0\n"
-    //      "    .thumb_func\n"
-    //      "zero_loop:\n"
-    //      "        cmp     r0, r1\n"
-    //      "        it      lt\n"
-    //      "        strlt   r2, [r0], #4\n"
-    //      "        blt     zero_loop");
 
 	//Call the hardware init
 	setupHardware();

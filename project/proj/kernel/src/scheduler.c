@@ -6,4 +6,6 @@
 //TODO make processesReady static.
 struct Process* processesReady = NULL;
 
+void sysTickHandler(void){
 
+}

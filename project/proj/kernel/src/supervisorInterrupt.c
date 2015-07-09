@@ -1,4 +1,4 @@
-//Handles the supervisor interrupt call
+// Handles the supervisor interrupt call
 #include <hw_nvic.h>        // Macros related to the NVIC hardware
 #include <hw_types.h>       // Common types and macros for the TI libs
 #include <uartstdio.h>      // UART stdio declarations
@@ -15,6 +15,7 @@
 #include "sysSleep.h"       // Kernel facing sleep functions
 #include "sleep.h"          // User facing sleep functions
 #include "supervisorCall.h" // Supplies the SVC commands
+#include "scheduler.h"      // All functions related to the scheduler
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
@@ -25,10 +26,6 @@ static struct SleepingProcessStruct* sleepProcessListHead = NULL;
 static struct SleepingProcessStruct* nextToWakeUp = NULL;
 
 void* volatile intrBlockObject;
-
-void rescheduleImmediately(void){
-    if(processesReady != currentProcess) NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending (Datasheet pp 156)
-}
 
 //----- Functions related to the moving of functions from one queue to another
 
@@ -91,30 +88,12 @@ struct Process* removeProcessFromList(struct Process* listHead, struct Process* 
     return listHead;
 }
 
-//Readylist related
-int processInReadyList(struct Process* process){
-    return processInList(processesReady, process);
-}
-
-void addProcessToReady(struct Process* process){
-    if (!processInList(processesReady, process)){
-        processesReady = sortProcessIntoList(processesReady, process);
-        rescheduleImmediately();
-    }
-}
-
-void removeProcessFromReady(struct Process* process){
-    processesReady = removeProcessFromList(processesReady, process);
-    rescheduleImmediately();
-}
-
 void addNewProcess(void){
     if (newProcess != NULL){
-        addProcessToReady(newProcess);
+        addProcessToScheduler(newProcess);
         newProcess = NULL;
     }
 }
-
 //Sleep related
 void wakeupProcess(struct SleepingProcessStruct* ptr){
     if (ptr->process->state & STATE_WAIT){
@@ -128,7 +107,7 @@ void wakeupProcess(struct SleepingProcessStruct* ptr){
         ptr->process->blockAddress = NULL;
     }
     ptr->process->state = STATE_READY;
-    addProcessToReady(ptr->process);
+    addProcessToScheduler(ptr->process);
 }
 
 void setSleepTimerWB(void){
@@ -213,7 +192,7 @@ struct Process* popFromLockQueue(struct Process* listHead){
         item->state ^= STATE_WAIT;
         item->blockAddress = NULL;
         listHead = listHead->nextProcess;
-        addProcessToReady(item);
+        addProcessToScheduler(item);
     }
     return listHead;
 }
@@ -245,11 +224,11 @@ int tryAddLockQueue(const char increase){
     struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
     if (increase){
         if (lockObject->lock != 0) return 0;
-        removeProcessFromReady(currentProcess);
+        removeProcessFromScheduler(currentProcess);
         lockObject->processWaitingQueueIncrease = appendProcessToList(lockObject->processWaitingQueueIncrease, currentProcess);
     } else {
         if (lockObject->lock < lockObject->maxLockVal) return 0;
-        removeProcessFromReady(currentProcess);
+        removeProcessFromScheduler(currentProcess);
         lockObject->processWaitingQueueDecrease = appendProcessToList(lockObject->processWaitingQueueDecrease, currentProcess);
     }
     return 1;
@@ -276,7 +255,7 @@ void wakeupCurrentProcess(void){
 }
 
 void fallAsleep(void){
-    removeProcessFromReady(currentProcess);
+    removeProcessFromScheduler(currentProcess);
     addSleeperToList(&(currentProcess->sleepObj));
 }
 
@@ -291,7 +270,7 @@ void sayHi(void){
 void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
         case SVC_reschedule:
-            rescheduleImmediately();
+            preemptCurrentProcess();
             break;
         case SVC_multiObjectIncrease:
             if (fromHandlerMode) lockObjectModifiedIntr(1);

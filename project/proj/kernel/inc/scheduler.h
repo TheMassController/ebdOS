@@ -48,10 +48,9 @@ void addProcessToScheduler(struct Process* proc);
  *
  * If this is the current active process then this function will trigger a context switch.
  * @param proc A pointer to the process you want to remove.
- * @return 0 if the process was not on the scheduler, nonzero else.
  * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
  */
-int removeProcessFromScheduler(struct Process* proc);
+void removeProcessFromScheduler(struct Process* proc);
 
 /* @brief Tests if given process is currently in the scheduler.
  * @param proc A pointer to the process this request is about.
@@ -64,6 +63,5 @@ int processInScheduler(struct Process* proc);
 /* @brief Forces a reschedule without waiting for the systick.
  * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
  */
-void premptCurrentProcess(void);
-
+void preemptCurrentProcess(void);
 #endif // SCHEDULER_H

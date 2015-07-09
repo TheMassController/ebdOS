@@ -11,24 +11,21 @@
 #include "kernUtils.h"      // Kernel's util funcs. Used for generateCrash
 #endif //DEBUG
 
-// TODO make processesReady static.
-struct Process* processesReady  = NULL;
-struct Process* nextProcess     = NULL;
-struct Process* currentProcess  = NULL;
-struct Process* idleProcess     = NULL;
+static struct Process* processesReady   = NULL;
+struct Process* nextProcess             = NULL;
+struct Process* currentProcess          = NULL;
+struct Process* idleProcess             = NULL;
 
 // Interrupt hanler
 void sysTickHandler(void){
-    (void)processesReady;
 }
 
 static void rescheduleImmediately(void){
     if (currentProcess != processesReady){
-        if (processesReady == NULL){
+        if (processesReady == NULL)
             nextProcess = idleProcess;
-        } else if (processesReady != currentProcess){
+        else
             nextProcess = processesReady;
-        }
 #ifdef DEBUG
         if (nextProcess == NULL){
             UARTprintf("The context switcher is trying to switch to NULL. Cannot continue");
@@ -37,10 +34,10 @@ static void rescheduleImmediately(void){
 #endif //DEBUG
         NVIC_INT_CTRL_R |= (1<<28); // Set the pendSV to pending (Datasheet pp 156)
     }
-
 }
 
 static struct Process* appendProcessToList(struct Process* listHead, struct Process* item){
+    // Run trough the singly linked list until you find an empty spot
     if (listHead == NULL){
         item->nextProcess = NULL;
         return item;
@@ -96,6 +93,7 @@ int processInScheduler(struct Process* proc){
 }
 
 void preemptCurrentProcess(void){
+    // TODO revise
     if (isInInterrupt() && processesReady != NULL && currentProcess->nextProcess != NULL){
         removeProcessFromScheduler(currentProcess);
         addProcessToScheduler(currentProcess);

@@ -1,19 +1,20 @@
-//Responsible for creating and managing processes
-#include "defenitions.h"
+// Responsible for creating and managing processes
+// External headers
+#include <lm4f120h5qr.h> //Hardware regs
+#include <string.h>
+#include <stdlib.h>
+
 #include "process.h"
-#include "string.h"
-#include "stdlib.h"
 #include "coreUtils.h"
-#include "uartstdio.h"
 #include "process.h"
 #include "supervisorCall.h"
-#include "lm4f120h5qr.h" //Hardware regs
 #include "semaphore.h"
+#include "getSetRegisters.h"
 
 #ifdef DEBUG
-#include "uartstdio.h"
+#include <uartstdio.h>
+#include "kernUtils.h"
 #endif //DEBUG
-#include "getSetRegisters.h"
 
 
 //And the other defines
@@ -24,7 +25,7 @@ struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
 
 struct Process* kernel = NULL;
 extern struct Process* currentProcess;
-extern struct Process* processesReady;
+extern struct Process* idleProcess;
 struct Process* newProcess = NULL;
 // Declarations of core helper functions
 void __sleepProcessFunc(void);
@@ -49,6 +50,7 @@ void initializeProcesses(void){
 #ifdef DEBUG
     if (kernel != NULL){
         UARTprintf("PANIC: second run of initilializeProcesses\r\n");
+        generateCrash();
     }
 #endif
     for (int i = 0; i < MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES; ++i){
@@ -71,14 +73,17 @@ void initializeProcesses(void){
     processPool[0].hwFlags = PROCESS_IS_PRIVILEGED;
 
     //set some params
-    processesReady = &processPool[0];
     currentProcess = &processPool[0];
     setPSP(currentProcess->stackPointer); //For safety, do set the PSP to zero when the kernel runs. This way, when an error is made a segfault happens and not random memory overwrite
     kernel = currentProcess;
 
+    // It is quite vital that this happens right before a return or functioncall, else the set of the global var might be delayed
+    newProcess = kernel;
+    CALLSUPERVISOR(SVC_processAdd);
     //Create the sleeper
     __createNewProcess(1, IDLEFUNCSTACKLEN, "Idle Process", __sleepProcessFunc, NULL, 0, 0);
-    kernel->nextProcess->priority = 0; //Set the priority of the sleep process to min.
+    idleProcess = kernel->nextProcess;
+    kernel->nextProcess = NULL;
 }
 
 

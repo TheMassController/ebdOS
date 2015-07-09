@@ -9,7 +9,7 @@
 #include <hw_ints.h>
 #include <uartstdio.h>
 //User headers
-#include "utilFuncs.h"
+#include "kernUtils.h"
 
 //All of these are determined by the linker, see linker_script.ld
 extern unsigned long _flash_start;

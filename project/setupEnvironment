@@ -45,4 +45,4 @@ Well, after everything above is done the file build.sh can handle everything for
 -connect GDB
 -and some more
 
-just type ./build.sh to see all commands. Make sure the arm-gcc-locations file contains the correct paths though. Unless the toolchain is in your PATH, running make directly from proj will not work.
+just type ./build.sh help to see all commands. Make sure the arm-gcc-locations file contains the correct paths though. Unless the toolchain is in your PATH, running make directly from proj will not work.

@@ -18,6 +18,7 @@ struct Process* idleProcess             = NULL;
 
 // Interrupt hanler
 void sysTickHandler(void){
+    NVIC_INT_CTRL_R |= (1<<28); // Set the pendSV to pending (Datasheet pp 156)
 }
 
 static void rescheduleImmediately(void){

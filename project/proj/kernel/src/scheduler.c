@@ -25,10 +25,7 @@ static unsigned timeSliceMS = 20;
 
 // Interrupt hanler
 void sysTickHandler(void){
-#ifdef DEBUG
-    UARTprintf("Systick FIRE!\n");
-#endif //DEBUG
-    //CALLSUPERVISOR(SVC_reschedule);
+    CALLSUPERVISOR(SVC_reschedule);
 }
 
 static void setSystick(unsigned timeSlices) {
@@ -42,6 +39,7 @@ static void setSystick(unsigned timeSlices) {
             ROM_SysTickPeriodSet(tickCount);
             ROM_SysTickEnable();
         } else {
+            ROM_SysTickPeriodSet(1);
             ROM_SysTickDisable();
         }
     }

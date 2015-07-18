@@ -10,9 +10,13 @@
     .thumb_func
     .type   pendSVHandler, %function
 pendSVHandler:
-	@ args = 0, pretend = 0, frame = 8
-	@ frame_needed = 0, uses_anonymous_args = 0
-    cpsid i         @Disables all interrupts
+    cpsid i                     @Disables all interrupts
+    @ Check if we are inside the pendSV
+    mrs r2, PSR                 @ Load the PSR into r2
+    and r2, r2, #0xE            @ If we are in the pendsv then the last seven bits are equal to 0xe, see datasheet pp 76 - 79. So after this and, we are inside the pendSV if r2 == 0xe
+    cmp r2, #0xe                @ The compare instruction
+    it ne                       @ If not equal..
+    bne .L3                     @ If not equal, jump to L3 (just exit the function
 
     @First: the check if we even need to context switch
 	ldr	r2, .L4                 @ Load L4+0, which is currentprocess (r2 = &currentProcess)
@@ -28,6 +32,8 @@ pendSVHandler:
     @ During the switch, if the FP regs have been used by this process they are also written to the main memory.
     @ Then it loads the other regs from the process control block of the next process.
 
+    @ The LR reg contains the return value and tells a lot about the currently active process, for example wether or not it was using the FPU
+
     @ Update pointers
 	str	r3, [r2]                @ currentProcess = top of processesReady
 
@@ -35,7 +41,7 @@ pendSVHandler:
     ldr r2, [r1, #12]           @ Load the flags
     ands lr, lr, #0x10          @ Test if the 5th bit is 0. If it is, then the FPU was activated
     itt eq                      @ If the fith bit is zero, then the Z HW flag is set
-    orreq r2, r2, #0x2          @ Set the FP flag if the last outcome was not equal. If it was not equal then the FPU is in use
+    orreq r2, r2, #0x2          @ Set the FP flag if the ands operation resulted in lr being zero: the zero flag is now set and this translates to eq
     streq r2, [r1, #12]         @ write the data about the fp flag to currentProcess
     ldr r12, [r1, #8]           @ r12 = savedRegsPointer of currentProcess
     stmdb r12!, {r4-r11}        @ Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc

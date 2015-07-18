@@ -73,23 +73,22 @@ void setupHardware(void){
     // Start the UART0 with baud BAUD
     UARTStdioInitExpClk(0, BAUDRATE);
 
-    // TODO fix
-    // For scheduling: systick
-    // It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock (see datasheet pp 118)
-    // It only gets its interrupt enabled here, the scheduler will manage it further
-    ROM_SysTickIntEnable();
-
-
     // Setup the interrupt priorities
     NVIC_SYS_PRI1_R = 0;        // All faults get the highest priority: 0
     NVIC_SYS_PRI2_R = 0;        // Implies that the SVC interrupt is now level 0.
-    NVIC_SYS_PRI3_R = 0;        // All level 3 interrupt (= debug, pendsv, systick) are now zero. Debug and systick stay 0, pendsv becomes 7.
+    NVIC_SYS_PRI3_R = 0;        // All level 3 interrupt (= debug, pendsv, systick) are now zero.
     NVIC_SYS_PRI3_R |= 7<<21;   // pendSV gets 7. Datasheet pp 167.
+    NVIC_SYS_PRI3_R |= 1<<29;   // Systick gets 1. Datasheet pp 167.
     // The pendSV has this low priority so that context switches can be called from an interrupt (regset is in a wrong state when inside an interrupt)
     // The standard here is that all other interrupts get a prio higher then 7. Per default every single interrupt is zero, so that works out.
     // So when you request a context switcher from an interrupt, the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled.
     // This has two advantages: first you actually can context switch (all stacks and the regset being in the right state and all), second: the context switch can be called multiple times but will only run once per interrupt session
     // During the actual context switch all interupts are disabled (cpsi instruction)
+
+    // For scheduling: systick
+    // It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock (see datasheet pp 118)
+    // It only gets its interrupt enabled here, the scheduler will manage it further
+    ROM_SysTickIntEnable();
 
     // Enable all non-special interrupts
     // With this thing disabled, the SVC, PendSV, Systick, busfault etc "exceptions" also wont run. Except Hard Fault and NMI, because they are badass like that.

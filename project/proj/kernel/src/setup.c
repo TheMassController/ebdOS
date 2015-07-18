@@ -75,10 +75,9 @@ void setupHardware(void){
 
     // TODO fix
     // For scheduling: systick
-    // It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock
-    // Initially configured as 1 tick per ms. This is equal to 4000 ticks on the 4 Mhz clock.
-    NVIC_ST_RELOAD_R = 3999; // Fire every 4000 clocks (datasheet pp 135)
-    NVIC_ST_CURRENT_R = 0; // Clear the register by writing to it with any value (datasheet pp 118, 136)
+    // It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock (see datasheet pp 118)
+    // It only gets its interrupt enabled here, the scheduler will manage it further
+    ROM_SysTickIntEnable();
 
 
     // Setup the interrupt priorities

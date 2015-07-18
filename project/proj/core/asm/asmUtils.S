@@ -7,6 +7,7 @@
     .global zeroFillSection
     .global __increaseLockObject
     .global __decreaseLockObject
+    .global isInSVCInterrupt
 
 waitForInterrupt:
     WFI                         @ Wait for interrupt
@@ -84,3 +85,11 @@ L5:                             @ Third part: write bytes
     STRBLO r12, [r1], #1        @ Write only 1 byte to zero and then increase r1 with 1
     BLO L5                      @ if r1 < r3, branch L5
     BX lr                       @ return
+
+isInSVCInterrupt:
+    mrs r0, PSR                 @ Load the PSR register, this special reg contains the current interrupt code
+    and r0, r0, #0xb            @ Clear all bits exept for 0xb, this set is all 1 if inside SVC
+    cmp r0, #0xb                @ Test if r0 is exactly equal to  0xb
+    it ne
+    movne r0, 0                 @ If r0 != 0xb then r0 = 0
+    bx lr                       @ return

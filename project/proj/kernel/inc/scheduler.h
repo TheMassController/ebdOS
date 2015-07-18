@@ -26,21 +26,21 @@
  */
 unsigned getTimeSlice(void);
 
-/* @brief Get the maximal timeslice length.
- * @return The maximal timeslice length.
+/* @brief Get the maximal timeslice length in ms.
+ * @return The maximal timeslice length in ms.
  * @warning This function will cause a segfault if called from unprivileged mode.
  */
 unsigned getMaxTimeSlice(void);
 
 /* @brief Set the current length of the timeslice in ms.
  * @return The value that is set as the new timeslice.
- * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
+ * @warning If this function is not called from SVC interrupt it silently fails.
  */
 unsigned setTimeSlice(unsigned newSlice);
 
 /* @brief Adds a process to the scheduler, thus allowing it to get timeslices.
  * @param proc A pointer to the process you want to add.
- * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
+ * @warning If this function is not called from SVC interrupt it silently fails.
  */
 void addProcessToScheduler(struct Process* proc);
 
@@ -48,7 +48,7 @@ void addProcessToScheduler(struct Process* proc);
  *
  * If this is the current active process then this function will trigger a context switch.
  * @param proc A pointer to the process you want to remove.
- * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
+ * @warning If this function is not called from SVC interrupt it silently fails.
  */
 void removeProcessFromScheduler(struct Process* proc);
 
@@ -61,7 +61,7 @@ void removeProcessFromScheduler(struct Process* proc);
 int processInScheduler(struct Process* proc);
 
 /* @brief Forces a reschedule without waiting for the systick.
- * @warning If this function is not called from an interrupt it silently fails. If the interrupt is not SVC then undefined behaviour might happen.
+ * @warning If this function is not called from SVC interrupt it silently fails.
  */
 void preemptCurrentProcess(void);
 #endif // SCHEDULER_H

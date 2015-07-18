@@ -22,8 +22,8 @@ pendSVHandler:
 	ldr	r2, .L4                 @ Load L4+0, which is currentprocess (r2 = &currentProcess)
 	ldr	r3, .L4+4               @ Load l4+4, which is processesReady (r3 = &processesReady)
 	ldr	r1, [r2]                @ Deref (r1 = currentProcess)
-	ldr	r3, [r3]                @ Deref r3 (r3 = processesReady)
-    cmp r1, r3                  @ If the next process is equal to the current one
+	ldr	r0, [r3]                @ Deref r3 (r3 = processesReady)
+    cmp r1, r0                  @ If the next process is equal to the current one
     beq .L3                     @ Do not switch context, but return
 
     @ The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
@@ -35,7 +35,7 @@ pendSVHandler:
     @ The LR reg contains the return value and tells a lot about the currently active process, for example wether or not it was using the FPU
 
     @ Update pointers
-	str	r3, [r2]                @ currentProcess = top of processesReady
+	str	r0, [r2]                @ currentProcess = top of processesReady
 
     @ Actual context switch
     ldr r2, [r1, #12]           @ Load the flags
@@ -48,22 +48,22 @@ pendSVHandler:
     it eq                       @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
     vstmdbeq.f32 r12!, {s16-s31}@ Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
     str r12, [r1, #8]           @ Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
-    mrs r0, psp                 @ Move the PSP to R0
-	str	r0, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
+    mrs r3, psp                 @ Move the PSP to R0
+	str	r3, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
-    ldr r12, [r3, #12]          @ Load the hw flags
-    ands r0, r12, #0x1          @ Isolate the first bit, the privileged bit
+    ldr r12, [r0, #12]          @ Load the hw flags
+    ands r3, r12, #0x1          @ Isolate the first bit, the privileged bit
     ite eq                      @ If the HW Z bit is not set, then the privileged bit was also not set
     moveq r12, #0x1             @ Then set r12 to 1 (if we write 0x1 to control we set unprivileged)
     movne r12, #0x0             @ else set r12 to 0 (Here we will set privileged if it was not set)
     msr CONTROL, r12            @ Write the r12 to CONTROL to set the privilege
     ands r1, r12, #0x2          @ Isolate the FPU flag
-	ldr	r0, [r3, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
+	ldr	r3, [r0, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     it ne                       @ If the FP bit is set, so if the Z hw bit is unset
-    vldmiane.f32 r0!, {s16-s31} @ Load the fp regs. Increment after.
-    ldmia   r0! , {r4-r11}      @ Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
-    str r0, [r3, #8]            @ Store the moved savedRegsPointer
-    ldr r2, [r3]                @ Load the sp of the new process
+    vldmiane.f32 r3!, {s16-s31} @ Load the fp regs. Increment after.
+    ldmia   r3! , {r4-r11}      @ Move from ram to regs while increasing R0. Increment after, so load, increment, load, increment etc
+    str r3, [r0, #8]            @ Store the moved savedRegsPointer
+    ldr r2, [r0]                @ Load the sp of the new process
     msr psp, r2                 @ push r2 (= new stackpointer) to psp
 
 

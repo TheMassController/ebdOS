@@ -56,8 +56,8 @@ function launchGDB {
 }
 
 function printUsage {
-    echo "Usage: <script> params"
-    echo "Example: buid.sh clean all debug"
+    echo "Usage: $0 params"
+    echo "Example: $0 clean all debug"
     echo "params:"
     echo "help          Print this message"
     echo "all           Release build"

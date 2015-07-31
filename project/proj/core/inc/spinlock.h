@@ -12,7 +12,7 @@
  */
 
 /**
- * The spinlock struct.
+ * The spinlock struct. Its only possible values are 0 and 1, 1 is locked.
  */
 struct Spinlock {
     unsigned value;
@@ -43,6 +43,16 @@ int destroySpinlock(struct Spinlock* spinlock);
  */
 int lockSpinlock(struct Spinlock* spinlock);
 
+/**
+ * @brief Tries to lock the spinlock, returns immeaditaly
+ * This function tries once and then returns
+ * @return 0 if locked, nonzero if not
+ */
+int tryLockSpinlock(struct Spinlock* spinlock);
 
-
+/**
+ * @brief Releases the spinlock, but only if the requesting process was the owner.
+ * @return 0 if everything was ok, nonzero if not.
+ */
+int unlockSpinlock(struct Spinlock* spinlock);
 #endif //SPINLOCK_H

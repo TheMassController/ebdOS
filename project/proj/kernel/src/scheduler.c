@@ -25,7 +25,7 @@ static unsigned timeSliceMS = 20;
 
 // Interrupt hanler
 void sysTickHandler(void){
-    CALLSUPERVISOR(SVC_reschedule);
+    CALLSUPERVISOR(SVC_yield);
 }
 
 static void setSystick(unsigned timeSlices) {

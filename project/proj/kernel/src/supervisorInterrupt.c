@@ -269,7 +269,7 @@ void sayHi(void){
 // Handlermode is somewhere near equal to being in an interrupt.
 void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
-        case SVC_reschedule:
+        case SVC_yield:
             preemptCurrentProcess();
             break;
         case SVC_multiObjectIncrease:

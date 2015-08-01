@@ -15,7 +15,7 @@
  * The spinlock struct. Its only possible values are 0 and 1, 1 is locked.
  */
 struct Spinlock {
-    unsigned value;
+    int value;
     struct Process* owner;
 };
 
@@ -51,7 +51,8 @@ int lockSpinlock(struct Spinlock* spinlock);
 int tryLockSpinlock(struct Spinlock* spinlock);
 
 /**
- * @brief Releases the spinlock, but only if the requesting process was the owner.
+ * @brief Releases the spinlock.
+ * If the calling process was not the owner, then nothing happens.
  * @return 0 if everything was ok, nonzero if not.
  */
 int unlockSpinlock(struct Spinlock* spinlock);

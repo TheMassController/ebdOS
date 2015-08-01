@@ -6,7 +6,7 @@
 #define STR(x) STR_HELPER(x)
 
 // The codes
-#define SVC_reschedule 0
+#define SVC_yield 0
 #define SVC_multiObjectIncrease 4
 #define SVC_multiObjectDecrease 5
 #define SVC_multiObjectWaitForIncrease 6

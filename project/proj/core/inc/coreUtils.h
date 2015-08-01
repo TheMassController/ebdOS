@@ -33,4 +33,23 @@ int isInSVCInterrupt(void);
  */
 void zeroFillSection(void* startPtr, void* endPtr);
 
+/**
+ * @brief Increments an integer threadsafe.
+ * This function guarantees that the value of integer will not pass maxval if only this function is used to increase the value.
+ * If the given integer was already at maxval or higher when this function started the value is unchanged and -1 is returned.
+ * This function will refuse to operate on an integer smaller then zero and always return -1 when one is passed
+ * @param unsPtr A pointer to the integer which's value you want to change
+ * @param maxval The maximumval, this function will never increase the derefered unsPtr to beyond this value
+ * @return The value of the derefed unsPtr at the point where this function was done operating or -1
+ */
+int incrIntegerTS(int* intPtr, int maxval);
+
+/**
+ * @brief Decrements an integer threadsafe.
+ * This function guarantees that the value of unsPtr will not drop below zero (and subsequently wrap around) if only this function is used.
+ * If given integer was already zero or less, then this function will return -1;
+ * @param unsPtr A pointer to an integer which's value you want to change.
+ * @return The value of the derefed unsPtr at the point where this function was done operating or -1
+ */
+int decrIntegerTS(int* unsPtr);
 #endif //COREUTILS_H

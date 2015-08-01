@@ -15,3 +15,7 @@ void testMPUUpriv(void);
 
 void mainProcessLocker(void);
 void mutPasser(void);
+
+void tryLockPasser(void);
+void lockPasser(void);
+void spinlocktestMain(void);

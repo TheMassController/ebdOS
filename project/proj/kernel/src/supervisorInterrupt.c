@@ -22,8 +22,8 @@ extern struct Process* processesReady;
 extern struct Process* kernel;
 extern struct Process* newProcess;
 
-static struct SleepingProcessStruct* sleepProcessListHead = NULL;
-static struct SleepingProcessStruct* nextToWakeUp = NULL;
+static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
+static struct SleepingProcessStruct* nextToWakeUp           = NULL;
 
 void* volatile intrBlockObject;
 

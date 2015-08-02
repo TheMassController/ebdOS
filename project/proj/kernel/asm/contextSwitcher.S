@@ -10,15 +10,15 @@
     .thumb_func
     .type   pendSVHandler, %function
 pendSVHandler:
-    cpsid i                     @Disables all interrupts
+    cpsid i                     @Disables all configurable interrupts: hard fault and NMI can still happen
     @ Check if we are inside the pendSV
     mrs r2, PSR                 @ Load the PSR into r2
     and r2, r2, #0xE            @ If we are in the pendsv then the last seven bits are equal to 0xe, see datasheet pp 76 - 79. So after this and, we are inside the pendSV if r2 == 0xe
     cmp r2, #0xe                @ The compare instruction
     it ne                       @ If not equal..
-    bne .L3                     @ If not equal, jump to L3 (just exit the function
+    bne .L3                     @ If not equal, jump to L3 (just exit the function)
 
-    @First: the check if we even need to context switch
+    @Check if we even need to context switch
 	ldr	r2, .L4                 @ Load L4+0, which is currentprocess (r2 = &currentProcess)
 	ldr	r3, .L4+4               @ Load l4+4, which is processesReady (r3 = &processesReady)
 	ldr	r1, [r2]                @ Deref (r1 = currentProcess)
@@ -70,12 +70,12 @@ pendSVHandler:
     @ Decide the returnvar and return
     mvn lr, #0x16               @ lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
     it eq                       @ If the FP bit is not set, so the Z hw bit is set
-    orreq lr, lr, #0x10         @ nextProc does not use fp: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+    orreq lr, lr, #0x10         @ nextProc does not use hw FP: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
     ands r1, r12, #0x4          @ Test the MSP bit
     it eq                       @ If the MSP bit is not set, so the Z HW bit is set
-    orreq lr, lr, #0x4          @ If not equal, lr = 0xFFFFFFED (Continue from PSP, enable hw FP) or lr = 0xFFFFFFFD (Continue from PSP, no hardware FP)
+    orreq lr, lr, #0x4          @ If not equal, lr = 0xFFFFFF.D (Continue from PSP, hardware FP dependend on previous)
 .L3:
-    cpsie i                     @ Reenable all interrupts
+    cpsie i                     @ Reenable the configurable interrupts
     bx lr                       @ Branch to LR-addr, without linking
 .L4:
 	.word	currentProcess

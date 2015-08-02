@@ -17,11 +17,11 @@
 static struct Process* processesReady   = NULL;
 struct Process* nextProcess             = NULL;
 struct Process* currentProcess          = NULL;
-struct Process* idleProcess             = NULL;
+struct Process* idleProcess             = NULL;     // Initialized by process.c
 // Default values and consts related to systick and timeslicing
-static const unsigned ticksPerMS = 4000;
-static const unsigned maxSystickVal = 16777216;
-static unsigned timeSliceMS = 20;
+static const unsigned ticksPerMS        = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150
+static const unsigned maxSystickVal     = 16777216; // 2^24, see datasheet pp 118
+static unsigned timeSliceMS             = 20;       // Arbitrary default value, leads to a nice 20 ms.
 
 // Interrupt hanler
 void sysTickHandler(void){
@@ -30,8 +30,11 @@ void sysTickHandler(void){
 
 static void setSystick(unsigned timeSlices) {
     // The tickCount needs to be the requested ticks -1. see datasheet pp 135
-    unsigned tickCount = (timeSlices * timeSliceMS * ticksPerMS) - 1;
-    if (tickCount > maxSystickVal) tickCount = maxSystickVal;
+    unsigned tickCount = 0;
+    if (timeSlices > 0){
+        tickCount = (timeSlices * timeSliceMS * ticksPerMS) - 1;
+        if (tickCount > maxSystickVal) tickCount = maxSystickVal;
+    }
     if (tickCount != NVIC_ST_RELOAD_R){ //If the nextvalue is equal to the previous, do nothing
         if (tickCount > 0) {
             ROM_SysTickDisable();
@@ -108,13 +111,13 @@ static int processInList(struct Process* listHead, struct Process* proc){
 void addProcessToScheduler(struct Process* proc){
     if (isInSVCInterrupt() && !processInList(processesReady, proc))
         processesReady = appendProcessToList(processesReady, proc);
-    rescheduleImmediately();
+    if (nextProcess == idleProcess) rescheduleImmediately();
 }
 
 void removeProcessFromScheduler(struct Process* proc){
     if (isInSVCInterrupt() && processInList(processesReady, proc))
         processesReady = removeProcessFromList(processesReady, proc);
-    rescheduleImmediately();
+    if (nextProcess == proc) rescheduleImmediately();
 }
 
 int processInScheduler(struct Process* proc){

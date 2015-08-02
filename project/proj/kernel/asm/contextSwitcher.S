@@ -15,7 +15,6 @@ pendSVHandler:
     mrs r2, PSR                 @ Load the PSR into r2
     and r2, r2, #0xE            @ If we are in the pendsv then the last seven bits are equal to 0xe, see datasheet pp 76 - 79. So after this and, we are inside the pendSV if r2 == 0xe
     cmp r2, #0xe                @ The compare instruction
-    it ne                       @ If not equal..
     bne .L3                     @ If not equal, jump to L3 (just exit the function)
 
     @Check if we even need to context switch
@@ -35,7 +34,7 @@ pendSVHandler:
     @ The LR reg contains the return value and tells a lot about the currently active process, for example wether or not it was using the FPU
 
     @ Update pointers
-	str	r0, [r2]                @ currentProcess = top of processesReady
+	str	r0, [r2]                @ currentProcess = nextProcess
 
     @ Actual context switch
     ldr r2, [r1, #12]           @ Load the flags
@@ -66,13 +65,12 @@ pendSVHandler:
     ldr r2, [r0]                @ Load the sp of the new process
     msr psp, r2                 @ push r2 (= new stackpointer) to psp
 
-
     @ Decide the returnvar and return
     mvn lr, #0x16               @ lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
-    it eq                       @ If the FP bit is not set, so the Z hw bit is set
+    it eq                       @ If the FP bit is not set
     orreq lr, lr, #0x10         @ nextProc does not use hw FP: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
     ands r1, r12, #0x4          @ Test the MSP bit
-    it eq                       @ If the MSP bit is not set, so the Z HW bit is set
+    it eq                       @ If the MSP bit is not set
     orreq lr, lr, #0x4          @ If not equal, lr = 0xFFFFFF.D (Continue from PSP, hardware FP dependend on previous)
 .L3:
     cpsie i                     @ Reenable the configurable interrupts

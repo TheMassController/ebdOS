@@ -8,6 +8,7 @@
 #include "process.h"        // The struct Process, a lot of defines related to processes.
 #include "coreUtils.h"      // Contains some supporting functions
 #include "supervisorCall.h" // So that the sysTickHandler can call SVC_reschedule
+#include "kernUtils.h"      // To make the OS crash on error
 // Debug headers
 #ifdef DEBUG
 #include <uartstdio.h>      // Used for STDIO for this specific UART, written by TI
@@ -26,6 +27,16 @@ static unsigned timeSliceMS             = 20;       // Arbitrary default value, 
 // Interrupt hanler
 void sysTickHandler(void){
     CALLSUPERVISOR(SVC_yield);
+}
+
+void initScheduler(void) {
+    if (nextProcess != NULL){
+#ifdef DEBUG
+        UARTprintf("initScheduler runs for the second time, crashing..");
+#endif //DEBUG
+        generateCrash();
+    }
+    nextProcess = currentProcess;
 }
 
 static void setSystick(unsigned timeSlices) {

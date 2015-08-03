@@ -22,7 +22,7 @@ void tryLockPasser(void){
                 sleepS(1);
             }
         } else {
-            UARTprintf("My name is %s and I did not get the the try-spinlock. Error: \n", currentProcess->name, strerror(errorcode));
+            UARTprintf("My name is %s and I did not get the the try-spinlock. Error: %s (code: %d)\n", currentProcess->name, strerror(errorcode), errorcode);
             sleepS(1);
         }
     }

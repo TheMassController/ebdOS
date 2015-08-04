@@ -9,6 +9,9 @@ struct ProcessContext {
     int retVal;
     void* genericPtr;
 };
+
+extern struct ProcessContext* currentContext;
+
 // The following are the defenitions of the different syscall values
 #define SYSCALL_getpid 0
 

@@ -21,7 +21,7 @@ pendSVHandler:
 	ldr	r2, .L4                 @ Load L4+0, which is currentprocess (r2 = &currentProcess)
 	ldr	r3, .L4+4               @ Load l4+4, which is processesReady (r3 = &processesReady)
 	ldr	r1, [r2]                @ Deref (r1 = currentProcess)
-	ldr	r0, [r3]                @ Deref r3 (r3 = processesReady)
+	ldr	r0, [r3]                @ Deref r3 (r0 = processesReady)
     cmp r1, r0                  @ If the next process is equal to the current one
     beq .L3                     @ Do not switch context, but return
 
@@ -35,6 +35,9 @@ pendSVHandler:
 
     @ Update pointers
 	str	r0, [r2]                @ currentProcess = nextProcess
+    ldr r12, [r0, #16]          @ r12 = nextProcess->context 
+    ldr r3, .L4+8               @ r3 = &currentContext
+    str r12, [r3]               @ currentContext = nextProcess->context
 
     @ Actual context switch
     ldr r2, [r1, #12]           @ Load the flags
@@ -47,7 +50,7 @@ pendSVHandler:
     it eq                       @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
     vstmdbeq.f32 r12!, {s16-s31}@ Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
     str r12, [r1, #8]           @ Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
-    mrs r3, psp                 @ Move the PSP to R0
+    mrs r3, psp                 @ Move the PSP to R3
 	str	r3, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
     ldr r12, [r0, #12]          @ Load the hw flags
@@ -78,4 +81,5 @@ pendSVHandler:
 .L4:
 	.word	currentProcess
 	.word	nextProcess
+    .word   currentContext
 	.size	pendSVHandler, .-pendSVHandler

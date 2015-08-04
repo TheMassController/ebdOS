@@ -3,6 +3,7 @@
 #include <lm4f120h5qr.h> //Hardware regs
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "process.h"
 #include "coreUtils.h"
@@ -29,6 +30,7 @@ extern struct Process* idleProcess;
 struct Process* newProcess = NULL;
 // Declarations of core helper functions
 void __sleepProcessFunc(void);
+// TODO depricate in favor of the syscall exit function, or a derative
 void __processReturn(void);
 
 void releaseFromMemPool(struct Process* process){
@@ -70,7 +72,7 @@ void initializeProcesses(void){
     processPool[0].stack = NULL;
     processPool[0].stackPointer = NULL;
     processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
-    processPool[0].hwFlags = PROCESS_IS_PRIVILEGED;
+    processPool[0].hwFlags = PROCESS_IS_PRIVILEGED | PROCESS_USES_MSP;
     processPool[0].context = NULL; // The kernel does not need a context.
 
     //set some params
@@ -87,20 +89,28 @@ void initializeProcesses(void){
     kernel->nextProcess = NULL;
 }
 
-// TODO replace errors with POSIX errors
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged){
-    if (priority == 255) priority = 254; //Max 254, 255 is kernel only
-    if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
     if (currentProcess->pid != 1) {
-        return 3;
+        return EACCES;
     }
     struct Process* newProc = getProcessFromPool();
     if ( newProc == NULL) { //Insufficient mem
-       return 1;
+       return ENOMEM;
     }
     if (stacklen < 67){
-        return 4;
+        return EINVAL;
     }
+    //Create the stack + processcontext.
+    void* stack = malloc(stacklen + sizeof(struct ProcessContext));
+    if (stack == NULL){
+        releaseFromMemPool(newProc);
+        return ENOMEM;
+    }
+    if (priority == 255) priority = 254; //Max 254, 255 is kernel only
+    if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
+    //This pointer is kept for the freeing, later
+    newProc->stack = stack;
+
     //Set some vars
     newProc->mPid = mPid;
     newProc->nextProcess = NULL;
@@ -117,14 +127,6 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     } else {
         strcpy(newProc->name, name);
     }
-    //Create the stack + processcontext.
-    void* stack = malloc(stacklen + sizeof(struct ProcessContext));
-    if (stack == NULL){
-        releaseFromMemPool(newProc);
-        return 2;
-    }
-    //This pointer is kept for the freeing, later
-    newProc->stack = stack;
     // Set the context pointer
     newProc->context = (struct ProcessContext*)((long)newProc->stack + stacklen);
     //Because a stack moves down (from high to low) move the pointer to the last address and then move it down to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)

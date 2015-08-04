@@ -2,6 +2,7 @@
 #define SPINLOCK_H
 
 #include "process.h"
+#include "sysCalls.h"
 
 /**
  * @file spinlock.h
@@ -16,7 +17,7 @@
  */
 struct Spinlock {
     int value;
-    struct Process* owner;
+    struct ProcessContext* owner;
 };
 
 /**

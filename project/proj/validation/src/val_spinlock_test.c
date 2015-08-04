@@ -37,7 +37,7 @@ void lockPasser(void){
             sleepS(1);
             errorcode = unlockSpinlock(spin);
             if (errorcode != 0){
-                UARTprintf("Problem while releasing spinlock: %a (process name: %s)\n", strerror(errorcode), currentProcess->name);
+                UARTprintf("Problem while releasing spinlock: %s (process name: %s)\n", strerror(errorcode), currentProcess->name);
             } else {
                 sleepS(1);
             }

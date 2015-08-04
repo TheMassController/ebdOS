@@ -11,6 +11,7 @@
 #include "uartstdio.h"
 
 extern struct Process* currentProcess;
+struct ProcessContext* currentContext;
 
 void __sleepProcessFunc(void){
     while(1){

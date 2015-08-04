@@ -11,10 +11,10 @@
 #include "supervisorCall.h"
 #include "semaphore.h"
 #include "getSetRegisters.h"
+#include "kernUtils.h"
 
 #ifdef DEBUG
 #include <uartstdio.h>
-#include "kernUtils.h"
 #endif //DEBUG
 
 
@@ -49,12 +49,12 @@ struct Process* getProcessFromPool(void){
 }
 
 void initializeProcesses(void){
-#ifdef DEBUG
     if (kernel != NULL){
+#ifdef DEBUG
         UARTprintf("PANIC: second run of initilializeProcesses\r\n");
+#endif
         generateCrash();
     }
-#endif
     for (int i = 0; i < MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES; ++i){
         processPool[i].containsProcess = 0;
         processPool[i].pid = i+1;

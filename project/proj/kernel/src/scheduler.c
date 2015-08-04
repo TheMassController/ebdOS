@@ -122,7 +122,7 @@ static int processInList(struct Process* listHead, struct Process* proc){
 }
 
 void addProcessToScheduler(struct Process* proc){
-    if (isInSVCInterrupt() && !processInList(processesReady, proc)){
+    if (proc != NULL && isInSVCInterrupt() && !processInList(processesReady, proc)){
         processesReady = appendProcessToList(processesReady, proc);
         if (nextProcess == idleProcess) rescheduleImmediately();
     }

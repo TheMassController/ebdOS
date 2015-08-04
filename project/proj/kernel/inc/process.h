@@ -2,6 +2,7 @@
 #define PROCESS_H
 
 #include "sysSleep.h"
+#include "sysCalls.h"
 
 /* States are handled as different bit flags:
  * pos 0 = sleep
@@ -30,12 +31,13 @@
 #define PROCESS_ENABLE_FP 0x2
 #define PROCESS_USES_MSP 0x4
 
-//The order of the first three is vital to make the assembly work correctly
+//The order of the block is vital to make the assembly work correctly
 struct Process {
     void* stackPointer;                                             // The actual stackpointer
     unsigned pid;                                                   // Pid of the process
     void* savedRegsPointer;                                         // Points towards the point were the saved data needs to be retrieved from or stored to
     unsigned hwFlags;                                               // HWflags used for context switching
+    struct ProcessContext* context;                                 // The userspace context of the process
 
     unsigned savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  // Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
     unsigned mPid;                                                  // Mother pid

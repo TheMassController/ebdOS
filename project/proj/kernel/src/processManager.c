@@ -71,6 +71,7 @@ void initializeProcesses(void){
     processPool[0].stackPointer = NULL;
     processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE - 1]); //Because of decrement before write, set this pointer at the very end
     processPool[0].hwFlags = PROCESS_IS_PRIVILEGED;
+    processPool[0].context = NULL; // The kernel does not need a context.
 
     //set some params
     currentProcess = &processPool[0];
@@ -86,7 +87,7 @@ void initializeProcesses(void){
     kernel->nextProcess = NULL;
 }
 
-
+// TODO replace errors with POSIX errors
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged){
     if (priority == 255) priority = 254; //Max 254, 255 is kernel only
     if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
@@ -116,18 +117,20 @@ int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (
     } else {
         strcpy(newProc->name, name);
     }
-    //Create the stack.
-    void* stack = malloc(stacklen);
+    //Create the stack + processcontext.
+    void* stack = malloc(stacklen + sizeof(struct ProcessContext));
     if (stack == NULL){
         releaseFromMemPool(newProc);
         return 2;
     }
     //This pointer is kept for the freeing, later
     newProc->stack = stack;
+    // Set the context pointer
+    newProc->context = (struct ProcessContext*)((long)newProc->stack + stacklen);
     //Because a stack moves down (from high to low) move the pointer to the last address and then move it down to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
     //This new address is always lower then or equal to the highest address that is assigned this process.
     //stacklen -sizeof(void*) is because ptr + stacklen is one too much, the pointer itself is also assigned to the process
-    int* stackPointer = (int*)((((long)newProc->stack) + stacklen - sizeof(void*)) & ~((long)(0x3)));
+    int* stackPointer = (int*)(((long)newProc->stack + stacklen - 1) & ~((long)0x3));
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR

@@ -9,6 +9,7 @@
 #include "coreUtils.h"      // Contains some supporting functions
 #include "supervisorCall.h" // So that the sysTickHandler can call SVC_reschedule
 #include "kernUtils.h"      // To make the OS crash on error
+#include "sysCalls.h"       // Define the processContext struct, declares extern currentContext
 // Debug headers
 #ifdef DEBUG
 #include <uartstdio.h>      // Used for STDIO for this specific UART, written by TI
@@ -37,6 +38,7 @@ void initScheduler(void) {
         generateCrash();
     }
     nextProcess = currentProcess;
+    currentContext = currentProcess->context;
 }
 
 static void setSystick(unsigned timeSlices) {

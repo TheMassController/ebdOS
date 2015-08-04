@@ -6,8 +6,6 @@
 #include <errno.h>              // Contains the error values
 #include <stdlib.h>             // Contains the def of NULL
 
-extern struct Process* currentProcess;
-
 int initSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
         spinlock->value = 0;
@@ -31,11 +29,11 @@ int destroySpinlock(struct Spinlock* spinlock){
 int lockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
         while(incrIntegerTS(&spinlock->value, 1) == -1){
-            if (spinlock->owner == currentProcess)
+            if (spinlock->owner == currentContext)
                 return EDEADLK;
             CALLSUPERVISOR(SVC_yield);
         }
-        spinlock->owner = currentProcess;
+        spinlock->owner = currentContext;
         return 0;
     }
     return EINVAL;
@@ -44,10 +42,10 @@ int lockSpinlock(struct Spinlock* spinlock){
 int tryLockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
         if (incrIntegerTS(&spinlock->value, 1) == 1){
-            spinlock->owner = currentProcess;
+            spinlock->owner = currentContext;
             return 0;
         } else {
-            if (spinlock->owner == currentProcess)
+            if (spinlock->owner == currentContext)
                 return EDEADLK;
             else
                 return EBUSY;
@@ -63,7 +61,7 @@ int unlockSpinlock(struct Spinlock* spinlock){
             decrIntegerTS(&spinlock->value);
             return 0;
         } else {
-            if (spinlock->owner != currentProcess){
+            if (spinlock->owner != currentContext){
                 return EPERM;
             }
             spinlock->owner = NULL;

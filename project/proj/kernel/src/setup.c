@@ -22,6 +22,7 @@
 #include "reentrantMutex.h" // Everything related to mutexes
 #include "mpucontrol.h"     // Functions related to controlling the MPU
 #include "getSetRegisters.h"// Functions to interact with the registers directly
+#include "supervisorCall.h"
 // User headers
 #include "validation.h"     // Contains all validation functions
 
@@ -35,7 +36,6 @@ extern struct ReentrantMutex mallocMutex;
 extern int initialized;
 
 void initializeProcesses(void);
-void initKernelQueue(void);
 void initScheduler(void);
 void main(void);
 
@@ -133,8 +133,6 @@ void setupHardware(void){
     initializeProcesses();
     // Initialize the scheduler
     initScheduler();
-    // Setup the syscall layer
-    initKernelQueue();
 }
 
 // This is the last function to run before the scheduler starts.
@@ -154,5 +152,6 @@ void finishBoot(void){
     // __createNewProcess(currentProcess->pid, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
     // __createNewProcess(currentProcess->pid, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
+    CALLSUPERVISOR(SVC_serviced)
     // NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
 }

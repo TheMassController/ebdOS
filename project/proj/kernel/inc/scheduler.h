@@ -64,4 +64,20 @@ int processInScheduler(struct Process* proc);
  * @warning If this function is not called from SVC interrupt it silently fails.
  */
 void preemptCurrentProcess(void);
+
+/**
+ * @brief Gets the pointer to the process that is currently active.
+ * @return The pointer to the currently active process
+ * @warning This value is only guaranteed to be correct when this function is called from the SVC.
+ * @warning This function will cause a segfault if called from unprivileged mode.
+ */
+struct Process* getCurrentProcess(void);
+
+/**
+ * @brief Pops the current process from the scheduler and returns a pointer to it.
+ * This function will trigger a context switch
+ * @return The pointer to the currently active process
+ * @warning If this function is not called from SVC interrupt it always returns NULL
+ */
+struct Process* popCurrentProcess(void);
 #endif // SCHEDULER_H

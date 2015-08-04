@@ -17,6 +17,8 @@
 #define SVC_wakeup                              8
 #define SVC_wakeupCurrent                       9
 #define SVC_processAdd                          10
+#define SVC_serviceRequired                     11
+#define SVC_serviced                            12
 #ifdef DEBUG
 #define SVC_test                                255
 #endif // DEBUG

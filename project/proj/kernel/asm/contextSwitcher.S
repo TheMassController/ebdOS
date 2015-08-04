@@ -35,7 +35,7 @@ pendSVHandler:
 
     @ Update pointers
 	str	r0, [r2]                @ currentProcess = nextProcess
-    ldr r12, [r0, #16]          @ r12 = nextProcess->context 
+    ldr r12, [r0, #16]          @ r12 = nextProcess->context
     ldr r3, .L4+8               @ r3 = &currentContext
     str r12, [r3]               @ currentContext = nextProcess->context
 
@@ -56,9 +56,9 @@ pendSVHandler:
     ldr r12, [r0, #12]          @ Load the hw flags
     ands r3, r12, #0x1          @ Isolate the first bit, the privileged bit
     ite eq                      @ If the HW Z bit is not set, then the privileged bit was also not set
-    moveq r12, #0x1             @ Then set r12 to 1 (if we write 0x1 to control we set unprivileged)
-    movne r12, #0x0             @ else set r12 to 0 (Here we will set privileged if it was not set)
-    msr CONTROL, r12            @ Write the r12 to CONTROL to set the privilege
+    moveq r3, #0x1              @ Then set r3 to 1 (if we write 0x1 to control we set unprivileged)
+    movne r3, #0x0              @ else set r3 to 0 (Here we will set privileged if it was not set)
+    msr CONTROL, r3             @ Write the r3 to CONTROL to set the privilege
     ands r1, r12, #0x2          @ Isolate the FPU flag
 	ldr	r3, [r0, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     it ne                       @ If the FP bit is set, so if the Z hw bit is unset

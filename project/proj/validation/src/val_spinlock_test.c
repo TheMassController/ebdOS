@@ -1,5 +1,6 @@
 #include "spinlock.h"
 #include "sleep.h"
+#include "sysCalls.h"
 #include <uartstdio.h>
 #include <string.h>
 
@@ -29,11 +30,12 @@ void tryLockPasser(void){
 }
 
 void lockPasser(void){
+    unsigned pid = getPid();
     struct Spinlock* spin = &lSpinlock;
     while(1){
         int errorcode = lockSpinlock(spin);
         if (errorcode == 0){
-            UARTprintf("My name is %s and I have the lock-spinlock\n", currentProcess->name);
+            UARTprintf("My name is %s (pid:%d, %d) and I have the lock-spinlock\n", currentProcess->name, pid, currentProcess->pid);
             sleepS(1);
             errorcode = unlockSpinlock(spin);
             if (errorcode != 0){

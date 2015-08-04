@@ -1,19 +1,19 @@
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
+// The following are the defenitions of the different syscall values
+#define SYSCALL_getpid 0
 
 /**
  * @brief This struct is used by the syscall layer to forward necessary information for a syscall to the kernel.
  */
 struct ProcessContext {
-    int comVal;
-    int retVal;
+    unsigned comVal;
+    unsigned retVal;
     void* genericPtr;
 };
 
 extern struct ProcessContext* currentContext;
 
-// The following are the defenitions of the different syscall values
-#define SYSCALL_getpid 0
 
 /**
     RETCODES:

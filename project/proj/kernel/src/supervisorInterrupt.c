@@ -1,26 +1,28 @@
 // Handles the supervisor interrupt call
-#include <hw_nvic.h>        // Macros related to the NVIC hardware
-#include <hw_types.h>       // Common types and macros for the TI libs
-#include <uartstdio.h>      // UART stdio declarations
-#include <timer.h>          // Function prototypes for the timer module
-#include <hw_memmap.h>      // Address of GPIO etc
-#include <lm4f120h5qr.h>    // Hardware regs
-#include <hw_types.h>       // Contains the special types
-#include <rom_map.h>        // Call functions directly from the ROM if available
-#include <rom.h>            // Declare ROM addresses for rom funcs
-#include <stdlib.h>         // Contains C defs like NULL
+#include <hw_nvic.h>                // Macros related to the NVIC hardware
+#include <hw_types.h>               // Common types and macros for the TI libs
+#include <uartstdio.h>              // UART stdio declarations
+#include <timer.h>                  // Function prototypes for the timer module
+#include <hw_memmap.h>              // Address of GPIO etc
+#include <lm4f120h5qr.h>            // Hardware regs
+#include <hw_types.h>               // Contains the special types
+#include <rom_map.h>                // Call functions directly from the ROM if available
+#include <rom.h>                    // Declare ROM addresses for rom funcs
+#include <stdlib.h>                 // Contains C defs like NULL
 
-#include "process.h"        // Declares the OS's process structs and funcs
-#include "lockObject.h"     // Declarations for the lockobjects
-#include "sysSleep.h"       // Kernel facing sleep functions
-#include "sleep.h"          // User facing sleep functions
-#include "supervisorCall.h" // Supplies the SVC commands
-#include "scheduler.h"      // All functions related to the scheduler
+#include "process.h"                // Declares the OS's process structs and funcs
+#include "lockObject.h"             // Declarations for the lockobjects
+#include "sysSleep.h"               // Kernel facing sleep functions
+#include "sleep.h"                  // User facing sleep functions
+#include "supervisorCall.h"         // Supplies the SVC commands
+#include "scheduler.h"              // All functions related to the scheduler
+#include "kernMaintenanceQueue.h"   // The kernel maintenaince queue
 
 extern struct Process* currentProcess;
 extern struct Process* processesReady;
 extern struct Process* kernel;
 extern struct Process* newProcess;
+extern struct Process* kernMaintenacePtr;
 
 static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
 static struct SleepingProcessStruct* nextToWakeUp           = NULL;
@@ -255,8 +257,26 @@ void wakeupCurrentProcess(void){
 }
 
 void fallAsleep(void){
-    removeProcessFromScheduler(currentProcess);
-    addSleeperToList(&(currentProcess->sleepObj));
+    struct Process* curProcess = popCurrentProcess();
+    addSleeperToList(&(curProcess->sleepObj));
+}
+
+void currentProcessRequestsService(void){
+    struct Process* curProc = popCurrentProcess();
+    if (kernMaintenacePtr == NULL){
+        kernMaintenacePtr = curProc;
+        addProcessToScheduler(kernel);
+    } else {
+        kernQueue_push(curProc);
+    }
+}
+
+void kernelIsDoneServing(void){
+    addProcessToScheduler(kernMaintenacePtr);
+    kernMaintenacePtr = kernQueue_pop();
+    if (kernMaintenacePtr == NULL){
+        removeProcessFromScheduler(kernel);
+    }
 }
 
 #ifdef DEBUG
@@ -303,6 +323,12 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
             break;
         case SVC_processAdd:
             addNewProcess();
+            break;
+        case SVC_serviceRequired:
+            currentProcessRequestsService();
+            break;
+        case SVC_serviced:
+            kernelIsDoneServing();
             break;
 #ifdef DEBUG
         case SVC_test:

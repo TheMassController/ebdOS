@@ -54,11 +54,7 @@ struct Process {
 };
 
 /*
-    Codes:
-        0: Everything ok
-        1: out of PIDS
-        2: Out of mem
-        3: Wrong caller pid, only kernel (PID 0) can create processes
+   Uses POSIX retcodes.
 */
 int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
 #endif

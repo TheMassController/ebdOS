@@ -17,15 +17,14 @@
 #include "supervisorCall.h"         // Supplies the SVC commands
 #include "scheduler.h"              // All functions related to the scheduler
 #include "kernMaintenanceQueue.h"   // The kernel maintenaince queue
+#include "kernUtils.h"              // To escalate to NMI
 
-extern struct Process* currentProcess;
-extern struct Process* processesReady;
-extern struct Process* kernel;
-extern struct Process* newProcess;
-extern struct Process* kernMaintenacePtr;
-
+static struct Process* kernel = NULL;
 static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
 static struct SleepingProcessStruct* nextToWakeUp           = NULL;
+
+extern struct Process* processesReady;
+extern struct Process* kernMaintenacePtr;
 
 void* volatile intrBlockObject;
 
@@ -90,12 +89,6 @@ struct Process* removeProcessFromList(struct Process* listHead, struct Process* 
     return listHead;
 }
 
-void addNewProcess(void){
-    if (newProcess != NULL){
-        addProcessToScheduler(newProcess);
-        newProcess = NULL;
-    }
-}
 //Sleep related
 void wakeupProcess(struct SleepingProcessStruct* ptr){
     if (ptr->process->state & STATE_WAIT){
@@ -201,13 +194,14 @@ struct Process* popFromLockQueue(struct Process* listHead){
 
 //Used to signal increase/decrease
 void lockObjectModified(const char increase){
-    struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
+    struct Process* curProc = getCurrentProcess();
+    struct LockObject* lockObject = (struct LockObject*)curProc->blockAddress;
     if (increase){
         lockObject->processWaitingQueueIncrease = popFromLockQueue(lockObject->processWaitingQueueIncrease);
     } else {
         lockObject->processWaitingQueueDecrease = popFromLockQueue(lockObject->processWaitingQueueDecrease);
     }
-    currentProcess->blockAddress = NULL;
+    curProc->blockAddress = NULL;
 }
 
 void lockObjectModifiedIntr(const char increase){
@@ -223,37 +217,41 @@ void lockObjectModifiedIntr(const char increase){
  * Returns 1 if successful
  */
 int tryAddLockQueue(const char increase){
-    struct LockObject* lockObject = (struct LockObject*)currentProcess->blockAddress;
+    struct Process* curProc = getCurrentProcess();
+    struct LockObject* lockObject = (struct LockObject*)curProc->blockAddress;
     if (increase){
         if (lockObject->lock != 0) return 0;
-        removeProcessFromScheduler(currentProcess);
-        lockObject->processWaitingQueueIncrease = appendProcessToList(lockObject->processWaitingQueueIncrease, currentProcess);
+        removeProcessFromScheduler(curProc);
+        lockObject->processWaitingQueueIncrease = appendProcessToList(lockObject->processWaitingQueueIncrease, curProc);
     } else {
         if (lockObject->lock < lockObject->maxLockVal) return 0;
-        removeProcessFromScheduler(currentProcess);
-        lockObject->processWaitingQueueDecrease = appendProcessToList(lockObject->processWaitingQueueDecrease, currentProcess);
+        removeProcessFromScheduler(curProc);
+        lockObject->processWaitingQueueDecrease = appendProcessToList(lockObject->processWaitingQueueDecrease, curProc);
     }
     return 1;
 }
 
 void lockObjectBlock(const char increase) {
+    struct Process* curProc = getCurrentProcess();
     if (tryAddLockQueue(increase)){
         if (increase) {
-            currentProcess->state |= STATE_INC_WAIT;
+            curProc->state |= STATE_INC_WAIT;
         } else {
-            currentProcess->state |= STATE_DEC_WAIT;
+            curProc->state |= STATE_DEC_WAIT;
         }
     }
 }
 
 void lockObjectBlockAndSleep(const char increase){
+    struct Process* curProc = getCurrentProcess();
     lockObjectBlock(increase);
-    addSleeperToList(&(currentProcess->sleepObj));
-    currentProcess->state |= STATE_SLEEP;
+    addSleeperToList(&(curProc->sleepObj));
+    curProc->state |= STATE_SLEEP;
 }
 
 void wakeupCurrentProcess(void){
-   removeSleeperFromList(currentProcess);
+    struct Process* curProc = getCurrentProcess();
+    removeSleeperFromList(curProc);
 }
 
 void fallAsleep(void){
@@ -261,7 +259,7 @@ void fallAsleep(void){
     addSleeperToList(&(curProcess->sleepObj));
 }
 
-void currentProcessRequestsService(void){
+static void currentProcessRequestsService(void){
     struct Process* curProc = popCurrentProcess();
     if (kernMaintenacePtr == NULL){
         kernMaintenacePtr = curProc;
@@ -271,8 +269,12 @@ void currentProcessRequestsService(void){
     }
 }
 
-void kernelIsDoneServing(void){
-    addProcessToScheduler(kernMaintenacePtr);
+static void kernelIsDoneServing(void){
+    while (kernMaintenacePtr != NULL){
+        struct Process* tempPtr = kernMaintenacePtr->nextProcess;
+        addProcessToScheduler(kernMaintenacePtr);
+        kernMaintenacePtr = tempPtr;
+    }
     kernMaintenacePtr = kernQueue_pop();
     if (kernMaintenacePtr == NULL){
         removeProcessFromScheduler(kernel);
@@ -321,9 +323,6 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
         case SVC_wakeupCurrent:
             wakeupCurrentProcess();
             break;
-        case SVC_processAdd:
-            addNewProcess();
-            break;
         case SVC_serviceRequired:
             currentProcessRequestsService();
             break;
@@ -341,3 +340,12 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     }
 }
 
+void initSupervisor(struct Process* kern){
+    if (kernel != NULL){
+#ifdef DEBUG
+        UARTprintf("Failure: init supervisor runs for the second time\n");
+#endif //DEBUG
+        generateCrash();
+    }
+    kernel = kern;
+}

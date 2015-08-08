@@ -74,17 +74,20 @@ void setupHardware(void){
     // Start the UART0 with baud BAUD
     UARTStdioInitExpClk(0, BAUDRATE);
 
-    // Setup the interrupt priorities
-    NVIC_SYS_PRI1_R = 0;        // All faults get the highest priority: 0
-    NVIC_SYS_PRI2_R = 0;        // Implies that the SVC interrupt is now level 0.
-    NVIC_SYS_PRI3_R = 0;        // All level 3 interrupt (= debug, pendsv, systick) are now zero.
-    NVIC_SYS_PRI3_R |= 7<<21;   // pendSV gets 7. Datasheet pp 167.
-    NVIC_SYS_PRI3_R |= 1<<29;   // Systick gets 1. Datasheet pp 167.
+    // Setup the interrupt priorities. 0 is highest, 7 is lowest.
+    NVIC_SYS_PRI1_R = 0x00202020;   // All faults are reset to 1. See datasheet pp 165
+    NVIC_SYS_PRI2_R = 0;            // Implies that the SVC interrupt is now level 0.
+    NVIC_SYS_PRI3_R = 0;            // All level 3 interrupt (= debug, pendsv, systick) are now zero.
+    NVIC_SYS_PRI3_R |= 7<<21;       // pendSV gets 7. Datasheet pp 167.
     // The pendSV has this low priority so that context switches can be called from an interrupt (regset is in a wrong state when inside an interrupt)
-    // The standard here is that all other interrupts get a prio higher then 7. Per default every single interrupt is zero, so that works out.
+    // The standard here is that all other interrupts get a prio higher then 7, excluding the system faults (those are fixed anyway).
     // So when you request a context switcher from an interrupt, the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled.
     // This has two advantages: first you actually can context switch (all stacks and the regset being in the right state and all), second: the context switch can be called multiple times but will only run once per interrupt session
     // During the actual context switch all interupts are disabled (cpsi instruction)
+    // Under the current construction errors can call the supervisor, which can subsequently call the kernel to handle the error.
+    // This is because despite the fact that they are in a higher handler priority, their actual priority is lower.
+    // For much of the same reason the systick handler is 0: we do not want any interrupt to override it, becuase the SVC and the systick cannot run at the same time.
+    // One issue is that if the systick or the svc create an error it will immediately be escalated to a hard fault. But thats ok.
 
     // For scheduling: systick
     // It is connected to the PIOSC/4, which means that is it connected to a very precise 4 Mhz clock (see datasheet pp 118)
@@ -150,7 +153,7 @@ void finishBoot(void){
     //__createNewProcess(currentProcess->pid, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
     //__createNewProcess(currentProcess->pid, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
     __createNewProcess(currentProcess->pid, 256, "I seek the truth", findPrimeNumbers, (void*)500000, 80, 0);
-    __createNewProcess(currentProcess->pid, 256, "I seek to flicker", val_ledsFlicker, (void*)5000, 80, 0);
+    __createNewProcess(currentProcess->pid, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
     // __createNewProcess(currentProcess->pid, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
     // __createNewProcess(currentProcess->pid, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer

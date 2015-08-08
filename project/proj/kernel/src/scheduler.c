@@ -25,10 +25,6 @@ static const unsigned ticksPerMS        = 4000;     // The systick timer is conn
 static const unsigned maxSystickVal     = 16777216; // 2^24, see datasheet pp 118
 static unsigned timeSliceMS             = 20;       // Arbitrary default value, leads to a nice 20 ms.
 
-// Interrupt hanler
-void sysTickHandler(void){
-    CALLSUPERVISOR(SVC_yield);
-}
 
 void initScheduler(void) {
     if (nextProcess != NULL){
@@ -157,4 +153,9 @@ void preemptCurrentProcess(void){
         removeProcessFromScheduler(currentProcess);
         addProcessToScheduler(currentProcess);
     }
+}
+
+void sysTickHandler(void){
+    // Interrupt hanler
+    preemptCurrentProcess();
 }

@@ -41,6 +41,7 @@ struct Process {
 
     unsigned savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  // Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
     unsigned mPid;                                                  // Mother pid
+    unsigned stacklen;                                              // The length of the stack. Used to detect stack underflows
     void* stack;                                                    // refers to the address returned by Malloc
     char name[21];                                                  // The name can be 20 chars max, the last char is a /0
     char state;                                                     // Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
@@ -54,7 +55,7 @@ struct Process {
 };
 
 /*
-   Uses POSIX retcodes.
+   Uses errno.
 */
-int __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
+struct Process* __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
 #endif

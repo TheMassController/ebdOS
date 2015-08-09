@@ -28,7 +28,7 @@
 
 #define BAUDRATE 115200
 
-extern struct Process* kernMaintenacePtr;
+extern struct Process* kernMaintenancePtr;
 
 extern unsigned sleepClocksPerMS;
 extern struct ReentrantMutex mallocMutex;
@@ -145,7 +145,7 @@ void setupHardware(void){
 // This is the last function to run before the scheduler starts.
 // At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
 void finishBoot(void){
-    kernMaintenacePtr = NULL;
+    kernMaintenancePtr = NULL;
     // Create the main process
     // __createNewProcess(1, 256, "main", main, NULL, 75, 0);
     // __createNewProcess(1, 256, "testMPUPriv", testMPUPriv, NULL, 80, 1);
@@ -157,8 +157,8 @@ void finishBoot(void){
     //__createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
     //__createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
     //__createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
-    kernMaintenacePtr = __createNewProcess(1, 256, "I seek the truth", findPrimeNumbers, (void*)500000, 80, 0);
-    kernMaintenacePtr->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
+    kernMaintenancePtr = __createNewProcess(1, 256, "I seek the truth", findPrimeNumbers, (void*)500000, 80, 0);
+    kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer

@@ -25,20 +25,6 @@ static const unsigned ticksPerMS        = 4000;     // The systick timer is conn
 static const unsigned maxSystickVal     = 16777216; // 2^24, see datasheet pp 118
 static unsigned timeSliceMS             = 20;       // Arbitrary default value, leads to a nice 20 ms.
 
-void initScheduler(struct Process* idleProc, struct Process* currentProc) {
-    if (nextProcess != NULL){
-#ifdef DEBUG
-        UARTprintf("initScheduler runs for the second time, crashing..");
-#endif //DEBUG
-        generateCrash();
-    }
-    processesReady = currentProc;
-    idleProcess = idleProc;
-    currentProcess = currentProc;
-    nextProcess = currentProc;
-    currentContext = currentProc->context;
-}
-
 static void setSystick(unsigned timeSlices) {
     // The tickCount needs to be the requested ticks -1. see datasheet pp 135
     unsigned tickCount = 0;
@@ -156,8 +142,24 @@ void preemptCurrentProcess(void){
         addProcessToScheduler(currentProcess);
     }
 }
-
-void sysTickHandler(void){
-    // Interrupt hanler
+// Init process, only runs once
+void initScheduler(struct Process* idleProc, struct Process* currentProc) {
+    if (nextProcess != NULL){
+#ifdef DEBUG
+        UARTprintf("initScheduler runs for the second time, crashing..");
+#endif //DEBUG
+        generateCrash();
+    }
+    processesReady = currentProc;
+    idleProcess = idleProc;
+    currentProcess = currentProc;
+    nextProcess = currentProc;
+    currentContext = currentProc->context;
+}
+// Interrupt handlers
+#ifdef __GNUC__
+void sysTickHandler(void) __attribute__ ((interrupt ("IRQ")));
+#endif
+void sysTickHandler(void) {
     preemptCurrentProcess();
 }

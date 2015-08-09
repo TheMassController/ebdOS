@@ -24,7 +24,7 @@ static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
 static struct SleepingProcessStruct* nextToWakeUp           = NULL;
 
 extern struct Process* processesReady;
-extern struct Process* kernMaintenacePtr;
+extern struct Process* kernMaintenancePtr;
 
 void* volatile intrBlockObject;
 
@@ -261,8 +261,8 @@ void fallAsleep(void){
 
 static void currentProcessRequestsService(void){
     struct Process* curProc = popCurrentProcess();
-    if (kernMaintenacePtr == NULL){
-        kernMaintenacePtr = curProc;
+    if (kernMaintenancePtr == NULL){
+        kernMaintenancePtr = curProc;
         addProcessToScheduler(kernel);
     } else {
         kernQueue_push(curProc);
@@ -270,13 +270,13 @@ static void currentProcessRequestsService(void){
 }
 
 static void kernelIsDoneServing(void){
-    while (kernMaintenacePtr != NULL){
-        struct Process* tempPtr = kernMaintenacePtr->nextProcess;
-        addProcessToScheduler(kernMaintenacePtr);
-        kernMaintenacePtr = tempPtr;
+    while (kernMaintenancePtr != NULL){
+        struct Process* tempPtr = kernMaintenancePtr->nextProcess;
+        addProcessToScheduler(kernMaintenancePtr);
+        kernMaintenancePtr = tempPtr;
     }
-    kernMaintenacePtr = kernQueue_pop();
-    if (kernMaintenacePtr == NULL){
+    kernMaintenancePtr = kernQueue_pop();
+    if (kernMaintenancePtr == NULL){
         removeProcessFromScheduler(kernel);
     }
 }

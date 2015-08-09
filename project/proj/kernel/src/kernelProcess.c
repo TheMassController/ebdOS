@@ -4,14 +4,14 @@
 #include "sysCalls.h"
 #include "supervisorCall.h"
 
-struct Process* kernMaintenacePtr;
+struct Process* kernMaintenancePtr;
 
 void kernelMain(void){
     while(1){
-        struct ProcessContext* context = kernMaintenacePtr->context;
+        struct ProcessContext* context = kernMaintenancePtr->context;
         switch(context->comVal){
             case SYSCALL_getpid:
-                context->retVal = kernMaintenacePtr->pid;
+                context->retVal = kernMaintenancePtr->pid;
                 break;
             default:
                 UARTprintf("Unknown code for kernel service: %d", context->comVal);

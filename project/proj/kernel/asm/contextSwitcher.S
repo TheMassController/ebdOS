@@ -16,28 +16,23 @@ pendSVHandler:
     and r2, r2, #0xE            @ If we are in the pendsv then the last seven bits are equal to 0xe, see datasheet pp 76 - 79. So after this and, we are inside the pendSV if r2 == 0xe
     cmp r2, #0xe                @ The compare instruction
     bne .L3                     @ If not equal, jump to L3 (just exit the function)
-
-    @Check if we even need to context switch
-	ldr	r2, .L4                 @ Load L4+0, which is currentprocess (r2 = &currentProcess)
-	ldr	r3, .L4+4               @ Load l4+4, which is processesReady (r3 = &processesReady)
-	ldr	r1, [r2]                @ Deref (r1 = currentProcess)
-	ldr	r0, [r3]                @ Deref r3 (r0 = processesReady)
-    cmp r1, r0                  @ If the next process is equal to the current one
-    beq .L3                     @ Do not switch context, but return
-
+    
+    @ Load the currentProcess and the nextProcess, update the globalcontext
+    push {lr}                   @ Save the current lr, we are going to need it
+    bl getCurrentProcess        @ Jump to getCurrentProcess. CurrentProcess will now be in r0
+    push {r0}                   @ Push r0 (=currentProcess) to the stack
+    bl getNextActiveProcess     @ Jump to getNextActiveProcess. nextProcess will now be in r0
+    push {r0}                   @ Push r0 (=nextPrcess) to the stack
+    bl changeGlobalContext      @ Change the globalContext to the context related to the nextProcess
+    pop {r0, r1, lr}            @ Pop all data back from the stack (stack is now back to before interrupt)
+    
+    @ At this point r0 should be nextProcess and r1 currentProcess. All other registers are unused, except for lr
     @ The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
     @ The first half of the FP regs (s0-s15) get pushed by lazy stacking: when the FP regs are used they are switched out automatically. See setup.c for more details
     @ This function pushes the other regs to the process control block.
     @ During the switch, if the FP regs have been used by this process they are also written to the main memory.
     @ Then it loads the other regs from the process control block of the next process.
-
     @ The LR reg contains the return value and tells a lot about the currently active process, for example wether or not it was using the FPU
-
-    @ Update pointers
-	str	r0, [r2]                @ currentProcess = nextProcess
-    ldr r12, [r0, #16]          @ r12 = nextProcess->context
-    ldr r3, .L4+8               @ r3 = &currentContext
-    str r12, [r3]               @ currentContext = nextProcess->context
 
     @ Actual context switch
     ldr r2, [r1, #12]           @ Load the flags
@@ -79,7 +74,4 @@ pendSVHandler:
     cpsie i                     @ Reenable the configurable interrupts
     bx lr                       @ Branch to LR-addr, without linking
 .L4:
-	.word	currentProcess
-	.word	nextProcess
-    .word   currentContext
 	.size	pendSVHandler, .-pendSVHandler

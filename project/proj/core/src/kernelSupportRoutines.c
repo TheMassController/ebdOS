@@ -9,9 +9,9 @@
 #include "coreUtils.h"
 #include "process.h"
 #include "uartstdio.h"
+#include "sysCalls.h"
 
 extern struct Process* currentProcess;
-struct ProcessContext* currentContext;
 
 void __sleepProcessFunc(void){
     while(1){
@@ -20,8 +20,7 @@ void __sleepProcessFunc(void){
 }
 
 void __processReturn(void){
-    //TODO implement syscall
-    UARTprintf("Process %s with pid %d has just returned.\r\n",currentProcess->name, currentProcess->pid);
+    UARTprintf("Process with pid %d has just returned.\r\n", getPid());
     while(1){
         waitForInterrupt();
     }

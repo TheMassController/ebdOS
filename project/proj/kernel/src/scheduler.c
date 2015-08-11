@@ -17,8 +17,7 @@
 #endif //DEBUG
 
 static struct Process* processesReady   = NULL;
-struct Process* nextProcess             = NULL;
-struct Process* currentProcess          = NULL;
+static struct Process* currentProcess   = NULL;
 static struct Process* idleProcess      = NULL;
 // Default values and consts related to systick and timeslicing
 static const unsigned ticksPerMS        = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150
@@ -45,22 +44,13 @@ static void setSystick(unsigned timeSlices) {
     }
 }
 
+/**
+ * The size of the timeslice needs to be written to the systick timer. The systick timer can only contain 24 bit, and thus this is the maxlength of the timeslice.
+ * The slice is get and set in MS. The maxlength depends on the clock source.
+ * @see setup.c to find out which clock source is used by the systick timer.
+ */
 static void rescheduleImmediately(void){
-    if (currentProcess != processesReady){
-        unsigned nextSliceLength = 1;
-        if (processesReady == NULL){
-            nextProcess = idleProcess;
-            nextSliceLength = 0;
-        } else {
-            nextProcess = processesReady;
-        }
-#ifdef DEBUG
-        if (nextProcess == NULL){
-            UARTprintf("The context switcher is trying to switch to NULL. Cannot continue");
-            generateCrash();
-        }
-#endif //DEBUG
-        setSystick(nextSliceLength);
+    if (currentProcess != getNextActiveProcess()){
         NVIC_INT_CTRL_R |= (1<<28); // Set the pendSV to pending (Datasheet pp 156)
     }
 }
@@ -108,14 +98,14 @@ static int processInList(struct Process* listHead, struct Process* proc){
 void addProcessToScheduler(struct Process* proc){
     if (proc != NULL && isInSVCInterrupt() && !processInList(processesReady, proc)){
         processesReady = appendProcessToList(processesReady, proc);
-        if (nextProcess == idleProcess) rescheduleImmediately();
+        if (currentProcess == idleProcess) rescheduleImmediately();
     }
 }
 
 void removeProcessFromScheduler(struct Process* proc){
     if (isInSVCInterrupt() && processInList(processesReady, proc)){
         processesReady = removeProcessFromList(processesReady, proc);
-        if (nextProcess == proc) rescheduleImmediately();
+        if (currentProcess == proc) rescheduleImmediately();
     }
 }
 
@@ -142,9 +132,27 @@ void preemptCurrentProcess(void){
         addProcessToScheduler(currentProcess);
     }
 }
+
+struct Process* getNextActiveProcess(void){
+    if (processesReady == NULL)
+        return idleProcess;
+    return processesReady;
+}
+
+void changeGlobalContext(struct Process* newProcPtr){
+    if (newProcPtr == NULL) generateCrash();
+    unsigned nextSliceLength = 1;
+    if (newProcPtr == idleProcess){
+        nextSliceLength = 0;
+    }
+    setSystick(nextSliceLength);
+    currentProcess = newProcPtr;
+    currentContext = newProcPtr->context;
+}
+
 // Init process, only runs once
 void initScheduler(struct Process* idleProc, struct Process* currentProc) {
-    if (nextProcess != NULL){
+    if (currentProcess != NULL){
 #ifdef DEBUG
         UARTprintf("initScheduler runs for the second time, crashing..");
 #endif //DEBUG
@@ -152,10 +160,9 @@ void initScheduler(struct Process* idleProc, struct Process* currentProc) {
     }
     processesReady = currentProc;
     idleProcess = idleProc;
-    currentProcess = currentProc;
-    nextProcess = currentProc;
-    currentContext = currentProc->context;
+    changeGlobalContext(currentProc);
 }
+
 // Interrupt handlers
 #ifdef __GNUC__
 void sysTickHandler(void) __attribute__ ((interrupt ("IRQ")));

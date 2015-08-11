@@ -6,16 +6,15 @@
 #include <uartstdio.h>
 #include <lm4f120h5qr.h>
 
+#include "scheduler.h"
 #include "coreUtils.h"
 #include "process.h"
 #endif //DEBUG
 
-#ifdef DEBUG
-extern struct Process* currentProcess;
-#endif //DEBUG
 
 void faultISRHandler(void){
 #ifdef DEBUG
+    struct Process* currentProcess = getCurrentProcess();
     UARTprintf("Hard fault\r\nReset the device to continue...\r\n");
     UARTprintf("HFAULTSTAT info:\r\n");
     UARTprintf("\tDebug Event: %d\r\n", (NVIC_HFAULT_STAT_R & NVIC_HFAULT_STAT_DBG) ? 1 : 0);
@@ -50,6 +49,7 @@ void faultISRHandler(void){
 
 void usageFaultHandler(void){
 #ifdef DEBUG
+    struct Process* currentProcess = getCurrentProcess();
     UARTprintf("Usage fault occured\r\n");
     UARTprintf("UFAULTSTAT info:\r\n");
     UARTprintf("\tDivide-by-Zero Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_DIV0) ? 1 : 0);
@@ -58,12 +58,14 @@ void usageFaultHandler(void){
     UARTprintf("\tInvalid PC Load Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_INVPC) ? 1 : 0);
     UARTprintf("\tInvalid State Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_INVSTAT) ? 1 : 0);
     UARTprintf("\tUndefined Instruction Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_UNDEF) ? 1 : 0);
+    UARTprintf("\tCurrent process name: %s\r\n", currentProcess->name);
 #endif //DEBUG
     while(1) waitForInterrupt();
 }
 
 void mpuFaultHandler(void){
 #ifdef DEBUG
+    struct Process* currentProcess = getCurrentProcess();
     UARTprintf("MPU fault occured\r\n");
     UARTprintf("UFAULTSTAT info:\r\n");
     UARTprintf("\tMemory Management Fault Address Register Valid: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MMARV) ? 1 : 0);

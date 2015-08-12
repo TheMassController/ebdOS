@@ -17,7 +17,7 @@
 #endif //DEBUG
 
 static struct Process* processesReady   = NULL;
-static struct Process* currentProcess   = NULL;
+struct Process* currentProcess   = NULL;
 static struct Process* idleProcess      = NULL;
 // Default values and consts related to systick and timeslicing
 static const unsigned ticksPerMS        = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150

@@ -154,9 +154,9 @@ void finishBoot(void){
     // __createNewProcess(1, 256, "locktestmain", mainProcessLocker, NULL, 80, 1);
     // __createNewProcess(1, 256, "mutPasser1", mutPasser, NULL, 75, 0);
     // __createNewProcess(1, 256, "mutPasser2", mutPasser, NULL, 75, 0);
-    //__createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
-    //__createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
-    //__createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
+    //kernMaintenancePtr = __createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
+    //kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
+    //kernMaintenancePtr->nextProcess->nextProcess =  __createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
     kernMaintenancePtr = __createNewProcess(1, 256, "I seek the truth", findPrimeNumbers, (void*)500000, 80, 0);
     kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);

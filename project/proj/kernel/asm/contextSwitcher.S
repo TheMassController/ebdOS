@@ -14,19 +14,20 @@ pendSVHandler:
     @ Check if we are inside the pendSV
     mrs r2, PSR                 @ Load the PSR into r2
     and r2, r2, #0xE            @ If we are in the pendsv then the last seven bits are equal to 0xe, see datasheet pp 76 - 79. So after this and, we are inside the pendSV if r2 == 0xe
-    cmp r2, #0xe                @ The compare instruction
+    cmp r2, #0xE                @ The compare instruction
     bne .L3                     @ If not equal, jump to L3 (just exit the function)
-    
+
     @ Load the currentProcess and the nextProcess, update the globalcontext
-    push {lr}                   @ Save the current lr, we are going to need it
+    sub sp, sp, #12             @ Create the stackspace we need
+    str lr, [sp, #8]            @ Store the lr at the very bottom
     bl getCurrentProcess        @ Jump to getCurrentProcess. CurrentProcess will now be in r0
-    push {r0}                   @ Push r0 (=currentProcess) to the stack
+    str r0, [sp, #4]            @ Push currentProcess to the stack
     bl getNextActiveProcess     @ Jump to getNextActiveProcess. nextProcess will now be in r0
-    push {r0}                   @ Push r0 (=nextPrcess) to the stack
+    str r0, [sp, #0]            @ Push nextProcess to the stack
     bl changeGlobalContext      @ Change the globalContext to the context related to the nextProcess
     pop {r0, r1, lr}            @ Pop all data back from the stack (stack is now back to before interrupt)
-    
-    @ At this point r0 should be nextProcess and r1 currentProcess. All other registers are unused, except for lr
+
+    @ At this point r0 should be nextProcess and r1 currentProcess. All other temp registers are unused, except for lr
     @ The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
     @ The first half of the FP regs (s0-s15) get pushed by lazy stacking: when the FP regs are used they are switched out automatically. See setup.c for more details
     @ This function pushes the other regs to the process control block.
@@ -50,9 +51,7 @@ pendSVHandler:
 
     ldr r12, [r0, #12]          @ Load the hw flags
     ands r3, r12, #0x1          @ Isolate the first bit, the privileged bit
-    ite eq                      @ If the HW Z bit is not set, then the privileged bit was also not set
-    moveq r3, #0x1              @ Then set r3 to 1 (if we write 0x1 to control we set unprivileged)
-    movne r3, #0x0              @ else set r3 to 0 (Here we will set privileged if it was not set)
+    eor r3, r3, #1              @ Flip the first bit of r3
     msr CONTROL, r3             @ Write the r3 to CONTROL to set the privilege
     ands r1, r12, #0x2          @ Isolate the FPU flag
 	ldr	r3, [r0, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)

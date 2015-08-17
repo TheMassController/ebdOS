@@ -31,11 +31,11 @@ pendSVHandler:
     @ The r0, r1, r2, r3, r12, LR, PC and XPSR registers are already pushed to the currently active stack on interrupt.
     @ The first half of the FP regs (s0-s15) get pushed by lazy stacking: when the FP regs are used they are switched out automatically. See setup.c for more details
     @ This function pushes the other regs to the process control block.
-    @ During the switch, if the FP regs have been used by this process they are also written to the main memory.
+    @ During the switch, if the FP regs have been used by this process s16-s31 are also written to the main memory.
     @ Then it loads the other regs from the process control block of the next process.
     @ The LR reg contains the return value and tells a lot about the currently active process, for example wether or not it was using the FPU
 
-    @ Actual context switch
+    @ Actual context switch: switch out
     ldr r2, [r1, #12]           @ Load the flags
     ands lr, lr, #0x10          @ Test if the 5th bit is 0. If it is, then the FPU was activated
     itt eq                      @ If the fith bit is zero, then the Z HW flag is set
@@ -48,10 +48,10 @@ pendSVHandler:
     str r12, [r1, #8]           @ Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     mrs r3, psp                 @ Move the PSP to R3
 	str	r3, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
-
+    @ And switch in
     ldr r12, [r0, #12]          @ Load the hw flags
     ands r3, r12, #0x1          @ Isolate the first bit, the privileged bit
-    eor r3, r3, #1              @ Flip the first bit of r3
+    eor r3, r3, #1              @ Flip the lsb of r3: the CONTROL needs a 0 if privileged and a 1 if privileged. This is the inverse of the hw_flags lsb
     msr CONTROL, r3             @ Write the r3 to CONTROL to set the privilege
     ands r1, r12, #0x2          @ Isolate the FPU flag
 	ldr	r3, [r0, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)

@@ -28,7 +28,7 @@
 //The HWFlags
 #define PROCESS_DEFAULT 0x0
 #define PROCESS_IS_PRIVILEGED 0x1
-#define PROCESS_ENABLE_FP 0x2
+#define PROCESS_ENABLE_FP 0x10
 #define PROCESS_USES_MSP 0x4
 
 //The order of the block is vital to make the assembly work correctly

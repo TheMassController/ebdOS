@@ -35,25 +35,25 @@ pendSVHandler:
     @ Then it loads the other regs from the process control block of the next process.
     @ The LR reg contains the return value and tells a lot about the currently active process, for example wether or not it was using the FPU
 
-    @ Actual context switch: switch out
-    ldr r2, [r1, #12]           @ Load the flags
-    ands lr, lr, #0x10          @ Test if the 5th bit is 0. If it is, then the FPU was activated
-    itt eq                      @ If the fith bit is zero, then the Z HW flag is set
-    orreq r2, r2, #0x2          @ Set the FP flag if the ands operation resulted in lr being zero: the zero flag is now set and this translates to eq
-    streq r2, [r1, #12]         @ write the data about the fp flag to currentProcess
+    @ Actual context switch: switch out. Does not test for MSP usage: this should not change ever after init phase
     ldr r12, [r1, #8]           @ r12 = savedRegsPointer of currentProcess
+    ldr r2, [r1, #12]           @ Load the current HW flags
     stmdb r12!, {r4-r11}        @ Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
-    it eq                       @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
+    ands lr, lr, #0x10          @ Test if the 5th bit is 0. If it is, then the FPU was activated
+    ittt eq                     @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
+    orreq lr, lr, r2            @ Add the "using FP" flag to hwflags
+    streq lr, [r1, #12]         @ write the new hw flags
     vstmdbeq.f32 r12!, {s16-s31}@ Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
     str r12, [r1, #8]           @ Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     mrs r3, psp                 @ Move the PSP to R3
 	str	r3, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
+
     @ And switch in
     ldr r12, [r0, #12]          @ Load the hw flags
     ands r3, r12, #0x1          @ Isolate the first bit, the privileged bit
     eor r3, r3, #1              @ Flip the lsb of r3: the CONTROL needs a 0 if privileged and a 1 if privileged. This is the inverse of the hw_flags lsb
     msr CONTROL, r3             @ Write the r3 to CONTROL to set the privilege
-    ands r1, r12, #0x2          @ Isolate the FPU flag
+    ands r1, r12, #0x10         @ Isolate the FPU flag
 	ldr	r3, [r0, #8]            @ Deref r3 + 8 (r0 = processesReady->savedRegsPointer)
     it ne                       @ If the FP bit is set, so if the Z hw bit is unset
     vldmiane.f32 r3!, {s16-s31} @ Load the fp regs. Increment after.
@@ -62,13 +62,15 @@ pendSVHandler:
     ldr r2, [r0]                @ Load the sp of the new process
     msr psp, r2                 @ push r2 (= new stackpointer) to psp
 
-    @ Decide the returnvar and return
+    @ Decide the returnvar and return. R12 is assumed to contain the entire HW flag param of nextProcess.
+    and r12, r12, #0x14         @ Test only the MSP, FP flags
     mvn lr, #0x16               @ lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
-    it eq                       @ If the FP bit is not set
-    orreq lr, lr, #0x10         @ nextProc does not use hw FP: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
-    ands r1, r12, #0x4          @ Test the MSP bit
-    it eq                       @ If the MSP bit is not set
-    orreq lr, lr, #0x4          @ If not equal, lr = 0xFFFFFF.D (Continue from PSP, hardware FP dependend on previous)
+    orr lr, lr, r12             @ Push the MSP, FP flags into the LR
+    @it eq                      @ If the FP bit is not set
+    @orreq lr, lr, #0x10        @ nextProc does not use hw FP: lr = 0xFFFFFFF9 (Continue from MSP, no hardware FP)
+    @ands r1, r12, #0x4         @ Test the MSP bit
+    @it eq                      @ If the MSP bit is not set
+    @orreq lr, lr, #0x4         @ If not equal, lr = 0xFFFFFF.D (Continue from PSP, hardware FP dependend on previous)
 .L3:
     cpsie i                     @ Reenable the configurable interrupts
     bx lr                       @ Branch to LR-addr, without linking

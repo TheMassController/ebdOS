@@ -1,5 +1,5 @@
 LINKRECEIPE = $(LD) $(LDFLAGS) -o $@ $^ $(LIB)
-OBJCOPYRECEIPE = $(OBJCOPY) $(OBJCPYFLAGS) -O binary $< $@
+OBJCOPYRECEIPE = $(OBJCOPY) $(OBJCPYFLAGS) $< $@
 CCRECEIPE = $(CC) $(CFLAGS) -c $< -o $@
 ASMRECEIPE = $(AS) $(ASMFLAGS) -c $< -o $@
 ARRECEIPE = $(AR) $(ARFLAGS) $@ $^

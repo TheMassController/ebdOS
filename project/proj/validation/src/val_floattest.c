@@ -197,34 +197,56 @@ void testFloatOutputBig(void){
 
 #define UNUSED(x) (void)(x)
 
+unsigned findNextPrimeNumber(unsigned num){
+    num++;
+    if (num % 2 == 0) num++;
+    for (unsigned i = num; i < UINT_MAX; i += 2){
+        float sqrtIf = sqrtf(i);
+        unsigned sqrtIu = (unsigned)sqrtIf;
+        int isPrime = 1;
+        for (unsigned j = 3; j <= sqrtIu; ++j){
+            float out = (float)i / j;
+            unsigned output = i / j;
+            //get the diff
+            if (out - output < 0.000244140625){
+                isPrime = 0;
+                break;
+            }
+        }
+        if (isPrime){
+            return i;
+        }
+    }
+    return 0;
+}
+
 void findPrimeNumbers(void* amount){
     const unsigned maxCount = (unsigned) amount;
     if (maxCount != 0){
-        unsigned curCount = 1;
         UARTprintf("2");
-        for (unsigned i = 3; i < UINT_MAX; i += 2){
-            float sqrtIf = sqrtf(i);
-            unsigned sqrtIu = (unsigned)sqrtIf;
-            int isPrime = 1;
-            for (unsigned j = 3; j <= sqrtIu; ++j){
-                float out = (float)i / j;
-                unsigned output = i / j;
-                //get the diff
-                if (out - output < 0.000244140625){
-                    isPrime = 0;
-                    break;
-                }
-            }
-            if (isPrime){
-                curCount++;
-                UARTprintf(", %u", i);
-            }
-            if (curCount == maxCount) break;
+        unsigned prevPrimeNum = 2;
+        for (unsigned i = 1; i <= maxCount; ++i){
+            prevPrimeNum = findNextPrimeNumber(prevPrimeNum);
+            if (prevPrimeNum == 0) break;
+            UARTprintf(", %u", prevPrimeNum);
         }
-
         UARTprintf(".\r\nDone!\r\n");
     }
     while(1) sleepS(1000);
+}
+
+void findNthPrimeNumber(void* num){
+    const unsigned maxCount = (unsigned)num;
+    if (maxCount != 0){
+        unsigned prevPrimeNum = 2;
+        for (unsigned i = 1; i < maxCount; ++i){
+            prevPrimeNum = findNextPrimeNumber(prevPrimeNum);
+            if (prevPrimeNum == 0) break;
+        }
+        UARTprintf("The %uth prime number is: %u. My pid is: %u\n", maxCount, prevPrimeNum, getPid());
+    }
+    while(1) sleepS(1000);
+
 }
 
 void testFloatMain(void){

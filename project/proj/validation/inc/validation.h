@@ -10,7 +10,7 @@ int testSVCcall(void);
 int testScheduler(void);
 void testFloatMain(void);
 void findPrimeNumbers(void*);
-
+void findNthPrimeNumber(void*);
 
 void val_ledsFlicker(void);
 

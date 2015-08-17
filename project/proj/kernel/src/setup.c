@@ -157,8 +157,12 @@ void finishBoot(void){
     //kernMaintenancePtr = __createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
     //kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
     //kernMaintenancePtr->nextProcess->nextProcess =  __createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
-    kernMaintenancePtr = __createNewProcess(1, 256, "I seek the truth", findPrimeNumbers, (void*)500000, 80, 0);
+    kernMaintenancePtr = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0);
     kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
+    kernMaintenancePtr->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0);
+    kernMaintenancePtr->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0);
+    kernMaintenancePtr->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0);
+    kernMaintenancePtr->nextProcess->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer

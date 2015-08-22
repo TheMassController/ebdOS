@@ -42,9 +42,14 @@ extern char _stack_top;
 /* All sorts of declarations that we want to use here, but nowhere else.
  * So these functions are not declared in headers but here.
  */
-void setupHardware(void);           // Declared in setup.c
-void finishBoot(void);              // Declared in setup.c
-void kernelMain(void);              // Declared in kernelProcess.c
+
+// Declared in setup.c
+#ifdef __GNUC__
+void kernelStart(void) __attribute__ ((noreturn));
+#else
+void kernelStart(void);
+#endif //__GNUC__
+
 void pendSVHandler(void);           // Declared in contextSwitcher.S
 void svcHandler(void);              // Declared in supervisorHandler.S
 void sysTickHandler(void);          // Declared in scheduler.c
@@ -292,12 +297,8 @@ void ResetISR(void)
     zeroFillSection(&_core_bss, &_core_ebss);
     zeroFillSection(&_bss, &_ebss);
 
-	//Call the hardware init
-	setupHardware();
-    //Kick off the scheduler etc
-    finishBoot();
-    //Actual kernel process
-    kernelMain();
+	//Jump to the software init
+	kernelStart();
 }
 
 //*****************************************************************************

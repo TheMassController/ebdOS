@@ -12,7 +12,8 @@ OPENOCDSCRIPT=/usr/local/share/openocd/scripts/board/ek-lm4f120xl.cfg
 LOGDIR=log/
 PROJDIR=proj/
 RELEASEEXEC=$PROJDIR/release/jackoOS_stripped
-DEBUGEXEC=$PROJDIR/debug/jackoOS
+DEBUGEXEC=$PROJDIR/debug/jackoOS_stripped
+DEBUGEXEC_GDB=$PROJDIR/debug/jackoOS
 GDBDIR=gdb/
 
 function runMake {
@@ -50,9 +51,9 @@ function debugRun {
 function launchGDB {
     pkill openocd || true
     $OPENOCD --file $OPENOCDSCRIPT -l$LOGDIR/openocdLog.txt &
-    arm-none-eabi-gdb $DEBUGEXEC -x $GDBDIR/gdb.script
+    arm-none-eabi-gdb $DEBUGEXEC_GDB -x $GDBDIR/gdb.script
     pkill $OPENOCD
-    
+
 }
 
 function printUsage {
@@ -99,7 +100,7 @@ function commandDistribution {
             printUsage
             ;;
         *)
-            echo "Unknown command $1"   
+            echo "Unknown command $1"
             ;;
     esac
 }

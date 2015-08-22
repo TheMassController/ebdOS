@@ -41,7 +41,7 @@ debug: CFLAGS += -DDEBUG -g3 -Og
 debug: LDFLAGS +=
 debug: ASMFLAGS +=
 debug: pre-build
-debug: $(DEBUGTARGET)
+debug: $(DEBUGTARGETBIN)
 
 -include $(DIRS)
 

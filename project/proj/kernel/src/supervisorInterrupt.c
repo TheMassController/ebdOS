@@ -19,12 +19,13 @@
 #include "kernMaintenanceQueue.h"   // The kernel maintenaince queue
 #include "kernUtils.h"              // To escalate to NMI
 
-static struct Process* kernel = NULL;
+static struct Process* kernel                               = NULL;
 static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
 static struct SleepingProcessStruct* nextToWakeUp           = NULL;
+static struct Process* kernMaintenancePtr                   = NULL;
 
 extern struct Process* processesReady;
-extern struct Process* kernMaintenancePtr;
+extern struct Process* kernReturnList;
 
 void* volatile intrBlockObject;
 
@@ -270,10 +271,10 @@ static void currentProcessRequestsService(void){
 }
 
 static void kernelIsDoneServing(void){
-    while (kernMaintenancePtr != NULL){
-        struct Process* tempPtr = kernMaintenancePtr->nextProcess;
-        addProcessToScheduler(kernMaintenancePtr);
-        kernMaintenancePtr = tempPtr;
+    while (kernReturnList != NULL){
+        struct Process* tempPtr = kernReturnList->nextProcess;
+        addProcessToScheduler(kernReturnList);
+        kernReturnList = tempPtr;
     }
     kernMaintenancePtr = kernQueue_pop();
     if (kernMaintenancePtr == NULL){
@@ -340,7 +341,7 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
     }
 }
 
-void initSupervisor(struct Process* kern){
+struct Process** initSupervisor(struct Process* kern){
     if (kernel != NULL){
 #ifdef DEBUG
         UARTprintf("Failure: init supervisor runs for the second time\n");
@@ -348,4 +349,5 @@ void initSupervisor(struct Process* kern){
         generateCrash();
     }
     kernel = kern;
+    return &kernMaintenancePtr;
 }

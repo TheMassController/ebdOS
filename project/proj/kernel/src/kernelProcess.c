@@ -4,17 +4,20 @@
 #include "sysCalls.h"
 #include "supervisorCall.h"
 
-struct Process* kernMaintenancePtr;
+struct Process* kernReturnList;
 
-void kernelMain(void){
+void kernelMain(volatile const struct Process** kernMaintenancePtr){
     while(1){
-        struct ProcessContext* context = kernMaintenancePtr->context;
+        struct Process* kernMaintenanceProc = (struct Process*)*kernMaintenancePtr;
+        struct ProcessContext* context = kernMaintenanceProc->context;
         switch(context->comVal){
             case SYSCALL_getpid:
-                context->retVal = kernMaintenancePtr->pid;
+                context->retVal = kernMaintenanceProc->pid;
+                kernReturnList = kernMaintenanceProc;
                 break;
             default:
                 UARTprintf("Unknown code for kernel service: %d", context->comVal);
+                break;
         }
         CALLSUPERVISOR(SVC_serviced);
     }

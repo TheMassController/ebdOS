@@ -28,20 +28,26 @@
 
 #define BAUDRATE 115200
 
-extern struct Process* kernMaintenancePtr;
+extern struct Process* kernReturnList;
 
 extern unsigned sleepClocksPerMS;
 extern struct ReentrantMutex mallocMutex;
 extern int initialized;
+extern struct Process* kernMaintenancePtr;
 
+#ifdef __GNUC__
+void kernelMain(volatile const struct Process** kernMaintenancePtr) __attribute__ ((noreturn));
+#else
+void kernelMain(volatile const struct Process** kernMaintenancePtr);
+#endif //__GNUC__
 void initializeProcesses(void);
 void initScheduler(struct Process* idleProc, struct Process* currentProc);
-void initSupervisor(struct Process* kern);
+volatile const struct Process** initSupervisor(struct Process* kern);
 void main(void);
 struct Process* createKernel(void);
 struct Process* createIdleProcess(void);
 
-void setupHardware(void){
+void kernelStart(void){
     // Setup the PLL
     // Datasheet pp 217
     // Driver API pp 284
@@ -139,13 +145,8 @@ void setupHardware(void){
     struct Process* kernel = createKernel();
     struct Process* idleProcess = createIdleProcess();
     initScheduler(idleProcess, kernel);
-    initSupervisor(kernel);
-}
+    volatile const struct Process** kernMaintenancePtr = initSupervisor(kernel);
 
-// This is the last function to run before the scheduler starts.
-// At this point everything is setup, including the main user processes. After this function the kernel will fall asleep and only wake up to handle requests from other processes
-void finishBoot(void){
-    kernMaintenancePtr = NULL;
     // Create the main process
     // __createNewProcess(1, 256, "main", main, NULL, 75, 0);
     // __createNewProcess(1, 256, "testMPUPriv", testMPUPriv, NULL, 80, 1);
@@ -157,15 +158,17 @@ void finishBoot(void){
     //kernMaintenancePtr = __createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
     //kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
     //kernMaintenancePtr->nextProcess->nextProcess =  __createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
-    kernMaintenancePtr = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0);
-    kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
-    kernMaintenancePtr->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0);
-    kernMaintenancePtr->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0);
-    kernMaintenancePtr->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0);
-    kernMaintenancePtr->nextProcess->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0);
+    kernReturnList = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0);
+    kernReturnList->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
+    kernReturnList->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0);
+    kernReturnList->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0);
+    kernReturnList->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0);
+    kernReturnList->nextProcess->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
     CALLSUPERVISOR(SVC_serviced)
     // NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
+    kernelMain(kernMaintenancePtr);
+
 }

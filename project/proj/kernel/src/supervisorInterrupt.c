@@ -262,6 +262,7 @@ void fallAsleep(void){
 
 static void currentProcessRequestsService(void){
     struct Process* curProc = popCurrentProcess();
+    curProc->state = STATE_WAIT;
     if (kernMaintenancePtr == NULL){
         kernMaintenancePtr = curProc;
         addProcessToScheduler(kernel);
@@ -273,6 +274,7 @@ static void currentProcessRequestsService(void){
 static void kernelIsDoneServing(void){
     while (kernReturnList != NULL){
         struct Process* tempPtr = kernReturnList->nextProcess;
+        kernReturnList->state = STATE_READY;
         addProcessToScheduler(kernReturnList);
         kernReturnList = tempPtr;
     }

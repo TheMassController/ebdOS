@@ -42,7 +42,7 @@ void zeroFillSection(void* startPtr, void* endPtr);
  * @param maxval The maximumval, this function will never increase the derefered unsPtr to beyond this value
  * @return The value of the derefed unsPtr at the point where this function was done operating or -1
  */
-int incrIntegerTS(int* intPtr, int maxval);
+int incrIntegerTSMax(int* intPtr, int maxval);
 
 /**
  * @brief Decrements an integer threadsafe.
@@ -51,5 +51,5 @@ int incrIntegerTS(int* intPtr, int maxval);
  * @param unsPtr A pointer to an integer which's value you want to change.
  * @return The value of the derefed unsPtr at the point where this function was done operating or -1
  */
-int decrIntegerTS(int* unsPtr);
+int decrIntegerTSMax(int* unsPtr);
 #endif //COREUTILS_H

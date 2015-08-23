@@ -28,7 +28,7 @@ int destroySpinlock(struct Spinlock* spinlock){
 
 int lockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
-        while(incrIntegerTS(&spinlock->value, 1) == -1){
+        while(incrIntegerTSMax(&spinlock->value, 1) == -1){
             if (spinlock->owner == currentContext)
                 return EDEADLK;
             CALLSUPERVISOR(SVC_yield);
@@ -41,7 +41,7 @@ int lockSpinlock(struct Spinlock* spinlock){
 
 int tryLockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
-        if (incrIntegerTS(&spinlock->value, 1) == 1){
+        if (incrIntegerTSMax(&spinlock->value, 1) == 1){
             spinlock->owner = currentContext;
             return 0;
         } else {
@@ -56,16 +56,16 @@ int tryLockSpinlock(struct Spinlock* spinlock){
 
 int unlockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
-        if (incrIntegerTS(&spinlock->value, 1) == 1){
+        if (incrIntegerTSMax(&spinlock->value, 1) == 1){
             // The spinlock was not locked, do nothing
-            decrIntegerTS(&spinlock->value);
+            decrIntegerTSMax(&spinlock->value);
             return 0;
         } else {
             if (spinlock->owner != currentContext){
                 return EPERM;
             }
             spinlock->owner = NULL;
-            decrIntegerTS(&spinlock->value);
+            decrIntegerTSMax(&spinlock->value);
             return 0;
         }
     }

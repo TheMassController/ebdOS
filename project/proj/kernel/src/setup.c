@@ -22,11 +22,11 @@
 #include "reentrantMutex.h" // Everything related to mutexes
 #include "mpucontrol.h"     // Functions related to controlling the MPU
 #include "getSetRegisters.h"// Functions to interact with the registers directly
-#include "supervisorCall.h"
+#include "supervisorCall.h" // Defines what a supervisor call is
+#include "clockSetup.h"     // Defines clock speed and related settings
 // User headers
 #include "validation.h"     // Contains all validation functions
 
-#define BAUDRATE 115200
 
 extern struct Process* kernReturnList;
 
@@ -49,12 +49,7 @@ struct Process* createIdleProcess(void);
 
 void kernelStart(void){
     // Setup the PLL
-    // Datasheet pp 217
-    // Driver API pp 284
-    // Sysclock = 80 Mhz (maxmimum)
-    // PLL = 400, predivide = /2, 200/80 = 2.5, so we want to enable the default PLL setup and then divide by 2.5
-    //                 Divide input by 2.5|Use the PLL |Use the main oscillator|Main oscillator is 16 Mhz
-    ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL          |SYSCTL_OSC_MAIN        |SYSCTL_XTAL_16MHZ);
+    ROM_SysCtlClockSet(EBD_SYSCTL_SETUP);
 
     // Enable all possible sys interrupts
     // Datasheet pp 168
@@ -79,8 +74,7 @@ void kernelStart(void){
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
     // Setup GPIO A as UART
     ROM_GPIOPinTypeUART(GPIO_PORTA_BASE,GPIO_PIN_0|GPIO_PIN_1);
-    // Start the UART0 with baud BAUD
-    UARTStdioInitExpClk(0, BAUDRATE);
+    UARTStdioInitExpClk(0, PC_BAUDRATE);
 
     // Setup the interrupt priorities. 0 is highest, 7 is lowest.
     NVIC_SYS_PRI1_R = 0x00202020;   // All faults are reset to 1. See datasheet pp 165
@@ -113,7 +107,7 @@ void kernelStart(void){
     // The timer runs from high to low
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Setup wide timer 0, part A.
-    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, 40000); // Setup the pre-scaler
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); // Load it with initial value unsigned32_max
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); // Let it run until it reaches 0
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Clear the correct interrupt
@@ -124,7 +118,7 @@ void kernelStart(void){
     sleepClocksPerMS = 2;
 
     // Configure timer B, the other vital timer in sleeping
-    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, 40000); // Setup the pre-scaler
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
     ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); // Let it interrupt on match
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); // Enable the correct interrupt
     ROM_IntEnable(INT_WTIMER0B);
@@ -146,6 +140,7 @@ void kernelStart(void){
     struct Process* idleProcess = createIdleProcess();
     initScheduler(idleProcess, kernel);
     volatile const struct Process** kernMaintenancePtr = initSupervisor(kernel);
+    // UARTprintf("0x%x, 0x%x, %d, %d\n", EBD_SYSCTL_SETUP, SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ, EBD_BASE_CLOCK_SPEED, MAP_SysCtlClockGet());
 
     // Create the main process
     // __createNewProcess(1, 256, "main", main, NULL, 75, 0);

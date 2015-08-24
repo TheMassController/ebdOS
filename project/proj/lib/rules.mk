@@ -1,5 +1,5 @@
 SYSLIBDIR := $(TOP)$(notdir $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))/
-INCDIRS += $(shell find $(SYSLIBDIR)$(INCDIR) -type d)
+SYSINCDIRS += $(shell find $(SYSLIBDIR)$(INCDIR) -type d)
 LIBS += driver-cm4f uartstdio
 LIBDIRS += $(SYSLIBDIR)/hardfp
 

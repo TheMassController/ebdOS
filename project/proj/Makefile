@@ -46,6 +46,7 @@ debug: $(DEBUGTARGETBIN)
 -include $(DIRS)
 
 INC := $(addprefix -I,$(INCDIRS))
+INC += $(addprefix -isystem,$(SYSINCDIRS))
 LIBDIR := $(addprefix -L,$(LIBDIRS))
 LIB := $(addprefix -l,$(LIBS))
 

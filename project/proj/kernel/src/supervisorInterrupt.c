@@ -118,7 +118,7 @@ void setSleepTimerWB(void){
             }
             break;
         } else {
-            unsigned curValWTA = getCurrentSleepTimerValue();
+            unsigned curValWTA = getCurrentSytemTimerValue();
             if (curValWTA <= sleepProcessListHead->sleepUntil){
                 wakeupProcess(sleepProcessListHead);
                 sleepProcessListHead = sleepProcessListHead->nextPtr;

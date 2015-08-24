@@ -27,9 +27,9 @@
 // User headers
 #include "validation.h"     // Contains all validation functions
 
+#define SLEEPTIMERPRIORITY 0xc0 //11000000, lowest possible priority of major group, highest possible of subgroup
 
 extern struct Process* kernReturnList;
-
 extern unsigned sleepClocksPerMS;
 extern struct ReentrantMutex mallocMutex;
 extern int initialized;
@@ -105,24 +105,33 @@ void kernelStart(void){
     // 32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
     // 2 clocks is a ms, 2000 clocks is a second
     // The timer runs from high to low
+    sleepClocksPerMS = 2;
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable the timer
-    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Setup wide timer 0, part A.
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1); // Enable the timer
+    ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Part A wraps around and starts again, part B shoots once. Used for sleeping
+    ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); // Part A shoots once. Used for futex
+    // Configure timer 0A, the system timer
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); // Load it with initial value unsigned32_max
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); // Let it run until it reaches 0
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Clear the correct interrupt
-    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Enable the timeout interrupt
-    ROM_IntEnable(INT_WTIMER0A);
-    ROM_IntPrioritySet(INT_WTIMER0A, 200);
-
-    sleepClocksPerMS = 2;
-
-    // Configure timer B, the other vital timer in sleeping
+    // Configure timer 0B, the sleep timer
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); // Let it interrupt on match
+    // Configure timer 1A, the futex timer
+    ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
+    // Enable all interrupts
+    ROM_IntPrioritySet(INT_WTIMER0A, SLEEPTIMERPRIORITY);
+    ROM_IntPrioritySet(INT_WTIMER0B, SLEEPTIMERPRIORITY);
+    ROM_IntPrioritySet(INT_WTIMER1A, SLEEPTIMERPRIORITY);
+    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Enable the timeout interrupt
+    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Clear the correct interrupt
     ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); // Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); // Let it interrupt on match
+    ROM_TimerIntEnable(WTIMER1_BASE, TIMER_TIMA_MATCH); // Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER1_BASE, TIMER_TIMA_MATCH); // Let it interrupt on match
+    ROM_IntEnable(INT_WTIMER0A);
     ROM_IntEnable(INT_WTIMER0B);
-    ROM_IntPrioritySet(INT_WTIMER0B, 200);
+    ROM_IntEnable(INT_WTIMER1A);
+
     // NVIC_PRI27_R |= 7<<5;
     // UARTprintf("%d\r\n",NVIC_PRI27_R);
 #ifdef DEBUG

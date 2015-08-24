@@ -41,7 +41,7 @@ void sleepTimerWBInterrupt(void){
 void prepareSleep(int64_t sleepTicks){
     if (isInInterrupt()) return; // Silently fail
     unsigned overflows = 0;
-    int64_t curval = (int64_t)getCurrentSleepTimerValue();
+    int64_t curval = (int64_t)getCurrentSytemTimerValue();
     sleepTicks = curval - sleepTicks;
     while(sleepTicks < 0){
         overflows++;
@@ -62,7 +62,7 @@ void sleepTickCount(long sleepTicks){
     CALLSUPERVISOR(SVC_sleep);
 }
 
-unsigned getCurrentSleepTimerValue(void){
+unsigned getCurrentSytemTimerValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }
 

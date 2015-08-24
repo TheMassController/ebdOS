@@ -21,20 +21,20 @@ int isInInterrupt(void);
 /* @brief Checks wether or not the current interrupt is SVC interrupt.
  *
  * This function will also return false if the CPU is not in an interrupt at all, you do not need to check isInInterrupt first
- * @return 0 if we are not, nonzero if we are in an interrupt.
+ * @return 0 if we are not, nonzero if we are in the Supervisor Call interrupt.
  */
 int isInSVCInterrupt(void);
 
 /* @brief Fills the section in between startPtr and endPtr with zeros. Inclusive start, exclusive end.
  *
- * There are no alignment requirements, other that byte-alignment offcourse (minimum addressable). 
+ * There are no alignment requirements, other that byte-alignment offcourse (minimum addressable).
  * @param startPtr The pointer that points to the first address, the data behind this address is also set to zero
  * @param endPtr The pointer that points to the last address, the data behind this address is not set to zero
  */
 void zeroFillSection(void* startPtr, void* endPtr);
 
 /**
- * @brief Increments an integer threadsafe.
+ * @brief Increments an integer threadsafe, using a max value.
  * This function guarantees that the value of integer will not pass maxval if only this function is used to increase the value.
  * If the given integer was already at maxval or higher when this function started the value is unchanged and -1 is returned.
  * This function will refuse to operate on an integer smaller then zero and always return -1 when one is passed
@@ -45,11 +45,29 @@ void zeroFillSection(void* startPtr, void* endPtr);
 int incrIntegerTSMax(int* intPtr, int maxval);
 
 /**
- * @brief Decrements an integer threadsafe.
+ * @brief Decrements an integer which is also used by the incrIntegerTSMax function threadsafe.
  * This function guarantees that the value of unsPtr will not drop below zero (and subsequently wrap around) if only this function is used.
- * If given integer was already zero or less, then this function will return -1;
- * @param unsPtr A pointer to an integer which's value you want to change.
+ * If given integer was already zero or less, then this function will return -1.
+ * This function guarantees that the integer is usable afterwards with the incrIntegerTSMax function
+ * @param intPtr A pointer to an integer which's value you want to change.
  * @return The value of the derefed unsPtr at the point where this function was done operating or -1
  */
-int decrIntegerTSMax(int* unsPtr);
+int decrIntegerTSMax(int* intPtr);
+
+
+/**
+ * @brief Increments an integer threadsafe.
+ * Does not provide any protection against overflows. The returnvalue is the value as written by this function
+ * @param intPtr A pointer to the integer which's value you want to increment.
+ * @return the written value.
+ */
+int incrIntegerTS(int* intPtr);
+
+/**
+ * @brief Decrements an integer threadsafe.
+ * Does not provide any protection against overflows. The returnvalue is the value as written by this function
+ * @param intPtr A pointer to the integer which's value you want to decrement.
+ * @return the written value.
+ */
+int decrIntegerTS(int* intPtr);
 #endif //COREUTILS_H

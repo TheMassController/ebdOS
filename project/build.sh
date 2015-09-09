@@ -4,10 +4,23 @@ source arm-gcc-locations
 
 DEFAULT="all"
 
-MAKEFLAGS="-j15"
 MAKE=$(which make)
+if [ $? -ne 0 ]; then
+    echo "Make was not found in the PATH"
+    exit 1
+fi
 FLASH=$(which lm4flash)
+if [ $? -ne 0 ]; then
+    echo "lm4flash was not found in the PATH"
+    exit 1
+fi
 OPENOCD=$(which openocd)
+if [ $? -ne 0 ]; then
+    echo "openocd was not found in the PATH"
+    exit 1
+fi
+
+MAKEFLAGS="-j15"
 OPENOCDSCRIPT=/usr/local/share/openocd/scripts/board/ek-lm4f120xl.cfg
 LOGDIR=log/
 PROJDIR=proj/
@@ -57,16 +70,19 @@ function launchGDB {
 }
 
 function printUsage {
+    echo "Buildscript for EBD OS, uses Make, LM4Flash and OpenOCD."
+    echo "The script serves as an abstraction layer around these three programs"
     echo "Usage: $0 params"
     echo "Example: $0 clean all debug"
     echo "params:"
     echo "help          Print this message"
     echo "all           Release build"
     echo "debug         Debug build"
+    echo "full          Debug and Release build"
     echo "flash         Compile and flash. Implies all"
     echo "debugFlash    Compile and flash. Implies debug"
     echo "launchGDB     Connects the GDB debugger the the board and loads the debug symbols"
-    echo "debugRun      Same as debug debugflash launchGDB"
+    echo "debugRun      Same as $0 debug debugflash launchGDB"
     echo "clean         Remove all .o files"
     echo "distclean     Remove all files that are not created by the user"
     echo "screen        Connect to the stellaris using GNU screen"
@@ -83,6 +99,10 @@ function commandDistribution {
     case "$1" in
         all|clean|debug|distclean|echo)
             runMake $1
+            ;;
+        full)
+            runMake all
+            runMake debug
             ;;
         flash|debugflash)
             runFlash $1

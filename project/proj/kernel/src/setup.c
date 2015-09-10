@@ -24,6 +24,7 @@
 #include "getSetRegisters.h"// Functions to interact with the registers directly
 #include "supervisorCall.h" // Defines what a supervisor call is
 #include "clockSetup.h"     // Defines clock speed and related settings
+#include "kernUtils.h"      // Contains the generateCrash function
 // User headers
 #include "validation.h"     // Contains all validation functions
 
@@ -49,7 +50,7 @@ struct Process* createIdleProcess(void);
 
 void kernelStart(void){
     // Setup the PLL
-    ROM_SysCtlClockSet(EBD_SYSCTL_SETUP);
+    ROM_SysCtlClockSet(CLOCKSPEEDS_SYSCTL[EDB_SYSCTL_ENTRY]);
 
     // Enable all possible sys interrupts
     // Datasheet pp 168
@@ -105,19 +106,24 @@ void kernelStart(void){
     // 32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
     // 2 clocks is a ms, 2000 clocks is a second
     // The timer runs from high to low
+    if (MAP_SysCtlClockGet() % 1000000){
+        UARTprintf("The current clock speed is not high enough for the OS to function\n");
+        generateCrash();
+    }
+    const unsigned ticksPerUs = MAP_SysCtlClockGet() / 1000000;
     sleepClocksPerMS = 2;
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable the timer
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1); // Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Part A wraps around and starts again, part B shoots once. Used for sleeping
     ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); // Part A shoots once. Used for futex
     // Configure timer 0A, the system timer
-    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs*500); // Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); // Load it with initial value unsigned32_max
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); // Let it run until it reaches 0
     // Configure timer 0B, the sleep timer
-    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, ticksPerUs*500); // Setup the pre-scaler
     // Configure timer 1A, the futex timer
-    ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, EBD_SLEEP_CLOCK_INCREASE_CYCLES*500); // Setup the pre-scaler
+    ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, ticksPerUs*500); // Setup the pre-scaler
     // Enable all interrupts
     ROM_IntPrioritySet(INT_WTIMER0A, SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER0B, SLEEPTIMERPRIORITY);

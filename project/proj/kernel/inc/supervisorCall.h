@@ -19,6 +19,7 @@
 #define SVC_wakeupKernel                        10
 #define SVC_serviceRequired                     11
 #define SVC_serviced                            12
+#define SVC_mainClockInterrupt                  13
 #ifdef DEBUG
 #define SVC_test                                255
 #endif // DEBUG

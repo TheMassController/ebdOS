@@ -23,8 +23,8 @@ struct Spinlock {
 
 /**
  * @brief Initializes the spinlock. Requires the pointer to point to an existing memory location.
- * It is advisable to destroy every spinlock created by this function with the destroySpinlock function.
- * It is allowed to skip this function and manually make sure the struct location is all zero.
+ * It is advisable to destroy every spinlock created by this function with the destroySpinlock function
+ * This function promises to set every field of the spinlock to NULL/0, e.g. a spinlock in the .BSS section does not have to be initialized.
  * @param spinlock The spinlock we want tot initialize
  * @return 0 if everything was ok, nonzero if not.
  */

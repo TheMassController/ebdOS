@@ -103,7 +103,7 @@ void kernelStart(void){
     // Setup the sleep clock.
     // The first 32 bit timer is the sleep clock. It counts slow and interrupts on overflow.
     // 32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
-    // 2 clocks is a ms, 2000 clocks is a second
+    // 1 toik is a us.
     // The timer runs from high to low
     if (MAP_SysCtlClockGet() % 1000000){
         UARTprintf("The current clock speed is not high enough for the OS to function\n");
@@ -116,14 +116,14 @@ void kernelStart(void){
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Part A wraps around and starts again, part B shoots once. Used for sleeping
     ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); // Part A shoots once. Used for futex
     // Configure timer 0A, the system timer
-    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs*500); // Setup the pre-scaler
-    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967295); // Load it with initial value unsigned32_max
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
+    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967294); // Load it with initial value unsigned32_max - 1. This -1 is because it costs one cycle to reload and restart
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); // Let it run until it reaches 0
     // Configure timer 0B, the sleep timer
-    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, ticksPerUs*500); // Setup the pre-scaler
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, ticksPerUs); // Setup the pre-scaler
     // Configure timer 1A, the futex timer
-    ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, ticksPerUs*500); // Setup the pre-scaler
-    // Enable all interrupts
+    ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
+    // Clear and enable the timer related interrupts
     ROM_IntPrioritySet(INT_WTIMER0A, SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER0B, SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER1A, SLEEPTIMERPRIORITY);

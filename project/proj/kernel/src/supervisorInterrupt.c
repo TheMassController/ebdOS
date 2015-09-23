@@ -292,6 +292,9 @@ static void kernelIsDoneServing(void){
     }
 }
 
+static void handleSystemTimerOverflow(void){
+}
+
 #ifdef DEBUG
 static void sayHi(void){
     UARTprintf("Hi from your favorite supervisor!\r\n");
@@ -343,6 +346,9 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
         case SVC_serviced:
             kernelIsDoneServing();
             break;
+        case SVC_mainClockInterrupt:
+            if (fromHandlerMode)
+                handleSystemTimerOverflow();
 #ifdef DEBUG
         case SVC_test:
             sayHi();

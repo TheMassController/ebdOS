@@ -14,53 +14,42 @@
 #endif //DEBUG
 
 static struct Process* sleepList = NULL;
-static struct Spinlock spinlock;
-static volatile char intrTried;
-
-static void generateSleepInterrupt(void){
-    //TODO
-}
 
 static struct Process* internalAddSleeper(struct Process* proc){
     struct SleepingProcessStruct* sleepStruct = &(proc->sleepObj);
-    int errcode;
-    if (sleepStruct->overflows == 0 && sleepStruct->sleepUntil <= getSystemclockValue()) return proc;
-#ifdef DEBUG
-    if (!(errcode = tryLockSpinlock(&spinlock))){
-        UARTprintf("internalAddSleeper: getting the spinlock failed! returncode: %d, (POSIX? %s)\n", errorcode, strerror(errorcode));
-        generateCrash();
+    if (sleepStruct->overflows == 0 && sleepStruct->sleepUntil <= getSystemclockValue()){
+        return proc;
     }
-#else
-    if (!(errcode = lockSpinlock(&spinlock))){
-        UARTprintf("Fatal error in kernel: %s\n", strerror(errorcode));
-    }
-#endif //DEBUG
     // Sort the process into the sleeplist
-    if (sleepList = NULL){
+    if (sleepList == NULL){
         sleepList = proc;
         proc->nextProcess = NULL;
     } else {
-        // TODO fix
-        struct Process* current = sleepList;
+        // The item needs to go in between prev and cur
+        struct Process* prevNode = NULL;
+        struct Process* curNode = sleepList;
         // First part of search: sort into the correct amount of overflows
-         for (; current->nextProcess != NULL; current = current->nextProcess){
-             if ((current->sleepObj).overflows >= (proc->sleepObj).overflows)
+         for (; curNode != NULL; curNode = curNode->nextProcess){
+             if ((curNode->sleepObj).overflows >= (proc->sleepObj).overflows){
                  break;
+             }
+            prevNode = curNode;
          }
          // Then sort into the correct wakeup moment. Higher goes first
-         for (; current->nextProcess != NULL; current = current->nextProcess){
-             if ((current->sleepObj).sleepUntil > (proc->sleepObj).sleepUntil)
+         for (; curNode != NULL; curNode = curNode->nextProcess){
+             if ((curNode->sleepObj).sleepUntil < (proc->sleepObj).sleepUntil){
                  break;
+             }
+             prevNode = curNode;
          }
-         if (current == sleepList){
+         if (prevNode == NULL){
              sleepList = proc;
-             proc->nextProcess = current;
+             proc->nextProcess = curNode;
          } else {
-
+             prevNode->nextProcess = proc;
+             proc->nextProcess = curNode;
          }
-        
     }
-    unlockSpinlock(&spinlock);
     return NULL;
 }
 

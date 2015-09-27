@@ -1,15 +1,15 @@
-#include <hw_nvic.h>        // Macros for NVIC
+#include <rom.h>            // Declare ROM addresses for rom funcs
 #include <hw_types.h>       // Defines for TI libs
 #include <timer.h>          // Function prototypes for timer hw interaction
-#include <lm4f120h5qr.h>    // Hardware regs
+#include <hw_memmap.h>      // address of GPIO etc
 
 #include "systemClockManagement.h"
 #include "supervisorCall.h"
 
 void systemTimerInterrupt(void){
-    CALLSUSUPERVISOR(SVC_mainClockInterrupt);
+    CALLSUPERVISOR(SVC_mainClockInterrupt);
 }
 
-void getSystemClockValue(void){
+unsigned getSystemClockValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }

@@ -21,11 +21,13 @@
 
 #include "process.h"
 
-enum {
+#define KERNMESSAGEBUFFERSIZE 14
+
+enum KernBufferMessageCodes{
     noMessageAvailable,
     sleepTimerExpired,
     mutexSleepTimerExpired
-} KernBufferMessageCodes;
+};
 
 /**
  * @brief Used to pass a message to the kernel
@@ -45,17 +47,17 @@ void passProcessToKernel(const struct Process* proc);
  * @brief Used by the kernel to determine if there is work available
  * @return non 0 if there is work, 0 if there is no work.
  */
-const unsigned kernelBufferNotEmpty(void);
+unsigned kernelBufferNotEmpty(void);
 
 /**
  * @brief pops a process from the buffer and returns that process
  * @return NULL if there were no processes, a process if there was a process in the buffer.
  */
-const struct Process* kernelBufferGetProcess(void);
+struct Process* kernelBufferGetProcess(void);
 
 /**
  * @brief Pops a kernelcode from the buffer and returns it.
  * @return noMessageAvailable if there is no message, else it returns the message.
  */
-const enum KernBufferMessageCodes kernelBufferGetCode(void);
+enum KernBufferMessageCodes kernelBufferGetCode(void);
 #endif //KERINTERACTBUFFER_H

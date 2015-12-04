@@ -127,7 +127,6 @@ function commandDistribution {
 
 PATH=$PATH:$ARMGCCBIN
 export PATH
-echo $(which arm-none-eabi-gcc)
 export ARMGCCEXLIB
 export ARMGCCLIB
 

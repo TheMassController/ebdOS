@@ -4,17 +4,17 @@ source arm-gcc-locations
 
 DEFAULT="all"
 
-MAKE=$(which make)
+MAKE=$(which make 2>/dev/null)
 if [ $? -ne 0 ]; then
     echo "Make was not found in the PATH"
     exit 1
 fi
-FLASH=$(which lm4flash)
+FLASH=$(which lm4flash 2>/dev/null)
 if [ $? -ne 0 ]; then
     echo "lm4flash was not found in the PATH"
     exit 1
 fi
-OPENOCD=$(which openocd)
+OPENOCD=$(which openocd 2>/dev/null)
 if [ $? -ne 0 ]; then
     echo "openocd was not found in the PATH"
     exit 1
@@ -127,6 +127,7 @@ function commandDistribution {
 
 PATH=$PATH:$ARMGCCBIN
 export PATH
+echo $(which arm-none-eabi-gcc)
 export ARMGCCEXLIB
 export ARMGCCLIB
 

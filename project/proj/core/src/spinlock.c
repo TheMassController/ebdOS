@@ -1,7 +1,7 @@
 // User headers
-#include "spinlock.h"           // Implies include process.h. Used to define the Spinlock struct
-#include "supervisorCall.h"     // Needed for supervisor calls
-#include "coreUtils.h"          // Needed for threadsafe integer operations
+#include "spinlock.h"                   // Implies include process.h. Used to define the Spinlock struct
+#include "supervisorCall.h"             // Needed for supervisor calls
+#include "atomicIntegerOperations.h"    // Needed for threadsafe integer operations
 // System headers
 #include <errno.h>              // Contains the error values
 #include <stdlib.h>             // Contains the def of NULL
@@ -28,7 +28,7 @@ int destroySpinlock(struct Spinlock* spinlock){
 
 int lockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
-        while(incrIntegerTSMax(&spinlock->value, 1) == -1){
+        while(atomicIncreaseIntWithMax(&spinlock->value, 1) == -1){
             if (spinlock->owner == currentContext)
                 return EDEADLK;
             CALLSUPERVISOR(SVC_yield);
@@ -41,7 +41,7 @@ int lockSpinlock(struct Spinlock* spinlock){
 
 int tryLockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
-        if (incrIntegerTSMax(&spinlock->value, 1) == 1){
+        if (atomicIncreaseIntWithMax(&spinlock->value, 1) == 1){
             spinlock->owner = currentContext;
             return 0;
         } else {
@@ -56,16 +56,16 @@ int tryLockSpinlock(struct Spinlock* spinlock){
 
 int unlockSpinlock(struct Spinlock* spinlock){
     if (spinlock != NULL){
-        if (incrIntegerTSMax(&spinlock->value, 1) == 1){
+        if (atomicIncreaseIntWithMax(&spinlock->value, 1) == 1){
             // The spinlock was not locked, do nothing
-            decrIntegerTSMax(&spinlock->value);
+            atomicDecreaseIntWithMax(&spinlock->value);
             return 0;
         } else {
             if (spinlock->owner != currentContext){
                 return EPERM;
             }
             spinlock->owner = NULL;
-            decrIntegerTSMax(&spinlock->value);
+            atomicDecreaseIntWithMax(&spinlock->value);
             return 0;
         }
     }

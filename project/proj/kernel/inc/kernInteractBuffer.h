@@ -24,7 +24,8 @@
 #define KERNMESSAGEBUFFERSIZE 14
 
 enum KernBufferMessageCodes{
-    noMessageAvailable,
+    noMessageAvailable = 0, // This way, a buffer specified in the .bss section will be set to all 0 on reset and thus will be set to noMessageAvailable.
+                            // Note that this is not necessary: the C standard specifies that the first value of an enum gets 0 per default.
     sleepTimerExpired,
     mutexSleepTimerExpired
 };
@@ -33,8 +34,9 @@ enum KernBufferMessageCodes{
  * @brief Used to pass a message to the kernel
  * @param code The code you want to pass to the kernel
  * @warning Do not call this function from unsupervised, you will get a memory violation
+ * @return 0 if everything was fine, ENOMEM if the buffer was full.
  */
-void passMessageToKernel(const enum KernBufferMessageCodes code);
+int passMessageToKernel(const enum KernBufferMessageCodes code);
 
 /**
  * @brief Used by the SVC to pass processes to the kernel for handling

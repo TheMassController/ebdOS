@@ -3,12 +3,20 @@ ARM-GCC-None-EABI. Download it and extract the folder somewhere. Then set the pa
 Download location: https://launchpad.net/gcc-arm-embedded/
 Extract somewhere and update the arm-gcc-locations file in this folder to point to the correct location
 
+Flasing:
+For flashing lm4flash is used. This is part of the lm4tools package, which you can find on github:
+https://github.com/utzig/lm4tools
+Clone it, compile it and place the lm4flash executable on the PATH somewhere (/home/USER/bin?).
+
 Debugging:
 Half of the debugging is included in the above: GDB. This will also be handled by BASH and Make
 The other half is OpenOCD
 
 Steps to install:
-1. sudo apt-get install git-core libtool autoconf texinfo libusb-dev libusb-1.0 screen vim
+1a. sudo apt-get install git-core libtool autoconf texinfo libusb-dev libusb-1.0 screen vim
+1b. sudo pacman -S --needed git-core libtool autoconf texinfo libusb screen vim lib32-glibc 
+    You will need to activate 32 bit libraries, since the toolchain is 32 bit. See: 
+    https://wiki.archlinux.org/index.php/Migrating_Between_Architectures_Without_Reinstalling#Install_lib32-glibc
 2. git clone http://git.code.sf.net/p/openocd/code openocd; cd openocd
 3. git checkout v0.7.0
 4. ./bootstrap

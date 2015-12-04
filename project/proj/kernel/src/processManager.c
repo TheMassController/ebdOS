@@ -17,7 +17,6 @@
 #include <uartstdio.h>
 #endif //DEBUG
 
-
 //And the other defines
 #define DEFAULT_KERNEL_PROCESSES 2
 #define IDLEFUNCSTACKLEN 128
@@ -72,7 +71,7 @@ static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen
     proc->stackPointer = (void*)stackPointer;
 
     //Init the saved temp reg space
-    proc->savedRegsPointer = &(proc->savedRegSpace[16]); //Let it point to the first GP space.
+    proc->savedRegsPointer = &(proc->savedRegSpace[16]); //Let it point to the first space.
 #ifdef DEBUG
     //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11

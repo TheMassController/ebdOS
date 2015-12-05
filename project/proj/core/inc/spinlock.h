@@ -9,7 +9,8 @@
  * @author Jacko Dirks
  *
  * This file specifies the spinlock interface.
- * The spinlock is an unmanaged lockobject which does not allow waiting for it.
+ * The spinlock is an unmanaged lockobject which does not provide any guarantees about order.
+ * The spinlock has an owner and cannot be used in an interrupt.
  */
 
 /**

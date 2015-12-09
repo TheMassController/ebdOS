@@ -287,7 +287,9 @@ static void kernelIsDoneServing(void){
         tempPtr = kernRetQueuePop();
     }
     //TODO test if both eventQueue and processQueue are empty
-    suspendKernel();
+    if(KernelProcessBufferIsEmpty()){
+        suspendKernel();
+    }
 }
 
 #ifdef DEBUG

@@ -27,7 +27,7 @@ struct Process* kernRetQueuePop(void);
  * @brief get the entire queue (linkedlist) and empty out the internal buffer
  * @return The entire kernelQueue or NULL if there was none
  */
-struct Process* kernRetQueueGet(void);
+struct Process* kernRetQueueEmpty(void);
 
 /**
  * @brief Used by the SVC to pass processes to the kernel for handling
@@ -39,6 +39,13 @@ void passProcessToKernel(struct Process* const proc);
 /**
  * @brief pops a process from the buffer and returns that process
  * @return NULL if there were no processes, a process if there was a process in the buffer.
+ * @warning Do not call this function from any other process then Kernel
  */
 struct Process* kernelBufferGetProcess(void);
+
+/**
+ * @brief Test if the Kernel has any processes left to handle
+ * @return 1 if there are processes in the buffer, 0 if there are none
+ */
+int KernelProcessBufferIsEmpty(void);
 #endif //KERNMAINTENANCEQUEUE_H

@@ -22,6 +22,22 @@ void kernRetQueuePush(struct Process* procPtr){
     }
 }
 
+void kernRetQueueAddList(struct Process* procPtr){
+    if (procQueueStart == NULL){
+        procQueueStart = procPtr;
+        procQueueEnd = procPtr;
+        while(procQueueEnd->nextProcess != NULL){
+           procQueueEnd = procQueueEnd->nextProcess;
+        }
+    } else {
+        procQueueEnd->nextProcess = procPtr;
+        procQueueEnd = procPtr;
+        while(procQueueEnd->nextProcess != NULL){
+           procQueueEnd = procQueueEnd->nextProcess;
+        }
+    }
+}
+
 struct Process* kernRetQueuePop(void){
     struct Process* retProc = NULL;
     if (procQueueStart != NULL){
@@ -35,7 +51,7 @@ struct Process* kernRetQueuePop(void){
     return retProc;
 }
 
-struct Process* kernRetQueueGet(void){
+struct Process* kernRetQueueEmpty(void){
     struct Process* retProc = procQueueStart;
     procQueueStart = NULL;
     procQueueEnd = NULL;
@@ -49,7 +65,12 @@ void passProcessToKernel(struct Process* const proc){
 }
 
 struct Process* kernelBufferGetProcess(void){
-   if (processReadPos == processWritePos) return NULL; 
+   if (processReadPos == processWritePos) return NULL;
     processWritePos = (processWritePos + 1) % (PROCESSBUFSIZE);
     return processBuf[processWritePos];
+}
+
+int KernelProcessBufferIsEmpty(void){
+    if (processReadPos == processWritePos) return 1;
+    return 0;
 }

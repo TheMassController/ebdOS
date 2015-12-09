@@ -35,7 +35,7 @@ SECTIONS
         _kernel_ebss = .;
     } > SRAM
 
-    .core.text : ALIGN(4096)  /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
+    .core.text :   /*Aligned on 4096 */ /*Disputable wether or not alignment is useful here because rw and execute are different things: user can still execute code that it cannot read. */
     {
         _core_text = .;
         core.a(.text*)
@@ -44,7 +44,15 @@ SECTIONS
         _core_flash_data = .;
     } > FLASH
 
-    .core.bss :  /* Aligned on 2048*/
+    .core.data : ALIGN(2 << 10) /* Aligned on 1024*/
+    {
+        _core_data = .;
+        core.a(vtable)
+        core.a(.data*)
+        _core_edata = .;
+    } >SRAM AT > FLASH
+
+    .core.bss : ALIGN(2 << 10)
     {
         _core_bss = .;
         core.a(.bss*)
@@ -52,13 +60,6 @@ SECTIONS
         _core_ebss = .;
     } > SRAM
 
-    .core.data : /*ALIGN(0x800) /*Only if .core.data size is not null this alignment is useful */
-    {
-        _core_data = .;
-        core.a(vtable)
-        core.a(.data*)
-        _core_edata = .;
-    } >SRAM AT > FLASH
 
 
     .text : /*ALIGN(0x1000) /*Aligned on 1024 */
@@ -67,7 +68,7 @@ SECTIONS
         *(.text*)
         *(.rodata*)
         _etext = .;
-        _flash_data = ALIGN(0x4);
+        _flash_data = .;
     } > FLASH
 
     .data : /*ALIGN(0x400) */

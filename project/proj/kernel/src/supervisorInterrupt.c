@@ -29,6 +29,8 @@ extern struct Process* kernReturnList;
 
 void* volatile intrBlockObject;
 
+volatile int kernelIsActive = 1;
+
 //----- Functions related to the moving of functions from one queue to another
 
 //Common

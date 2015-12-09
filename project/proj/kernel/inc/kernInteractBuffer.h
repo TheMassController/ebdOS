@@ -33,7 +33,8 @@ enum KernBufferMessageCodes{
 /**
  * @brief Used to pass a message to the kernel
  * @param code The code you want to pass to the kernel
- * @warning Do not call this function from unsupervised, you will get a memory violation
+ * @warning Do not call this function from unsupervised.
+ * @warning Do not call this function from Supervisor.
  * @return 0 if everything was fine, ENOMEM if the buffer was full.
  */
 int passMessageToKernel(const enum KernBufferMessageCodes code);
@@ -41,7 +42,7 @@ int passMessageToKernel(const enum KernBufferMessageCodes code);
 /**
  * @brief Used by the SVC to pass processes to the kernel for handling
  * @param proc The process passed to the kernel for handling
- * @warning Do not call this function when not in SVC, undefined behaviour might happen.
+ * @warning Do not call this function when not in Supervisor.
  */
 void passProcessToKernel(const struct Process* proc);
 

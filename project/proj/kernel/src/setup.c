@@ -41,11 +41,8 @@ void kernelMain(void) __attribute__ ((noreturn));
 void kernelMain(void);
 #endif //__GNUC__
 void initializeProcesses(void);
-void initScheduler(struct Process* idleProc, struct Process* currentProc);
-void initSupervisor(struct Process* kern);
+void initScheduler(struct Process* currentProc);
 void main(void);
-struct Process* createKernel(void);
-struct Process* createIdleProcess(void);
 
 void kernelStart(void){
     // Setup the PLL
@@ -150,10 +147,7 @@ void kernelStart(void){
     initReentrantMutex(&(mallocMutex));
     // Process initialization (after this function we are suddenly the kernel)
     initializeProcesses();
-    struct Process* kernel = createKernel();
-    struct Process* idleProcess = createIdleProcess();
-    initScheduler(idleProcess, kernel);
-    initSupervisor(kernel);
+    initScheduler(&kernelStruct);
     // UARTprintf("0x%x, 0x%x, %d, %d\n", EBD_SYSCTL_SETUP, SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ, EBD_BASE_CLOCK_SPEED, MAP_SysCtlClockGet());
 
     // Create the main process

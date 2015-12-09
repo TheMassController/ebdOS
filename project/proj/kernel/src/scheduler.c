@@ -17,8 +17,8 @@
 #endif //DEBUG
 
 static struct Process* processesReady   = NULL;
-struct Process* currentProcess   = NULL;
-static struct Process* idleProcess      = NULL;
+struct Process* currentProcess          = NULL;
+static struct Process* idleProcess      = &idleProcessStruct;
 // Default values and consts related to systick and timeslicing
 static const unsigned ticksPerMS        = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150
 static const unsigned maxSystickVal     = 16777216; // 2^24, see datasheet pp 118
@@ -151,7 +151,7 @@ void changeGlobalContext(struct Process* newProcPtr){
 }
 
 // Init process, only runs once
-void initScheduler(struct Process* idleProc, struct Process* currentProc) {
+void initScheduler(struct Process* currentProc) {
     if (currentProcess != NULL){
 #ifdef DEBUG
         UARTprintf("initScheduler runs for the second time, crashing..");
@@ -159,7 +159,6 @@ void initScheduler(struct Process* idleProc, struct Process* currentProc) {
         generateCrash();
     }
     processesReady = currentProc;
-    idleProcess = idleProc;
     changeGlobalContext(currentProc);
 }
 

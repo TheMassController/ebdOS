@@ -18,11 +18,41 @@
 #endif //DEBUG
 
 //And the other defines
-#define DEFAULT_KERNEL_PROCESSES 2
 #define IDLEFUNCSTACKLEN 128
 
-static struct Process processPool[MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES];
+static struct Process processPool[MAXTOTALPROCESSES];
 static char idleProcStack[IDLEFUNCSTACKLEN + sizeof(struct ProcessContext)];
+
+struct Process kernelStruct = {
+    .mPid = 0,
+    .pid = 0,
+    .containsProcess = 1,
+    .nextProcess = NULL,
+    .priority = 100,
+    .state = STATE_READY,
+    .blockAddress = NULL,
+    .stack = NULL,
+    .stackPointer = NULL,
+    .savedRegsPointer = &(kernelStruct.savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE]), // At the very end
+    .hwFlags = PROCESS_IS_PRIVILEGED | PROCESS_USES_MSP,
+    .context = NULL, //The Kernel does not need a process
+    .stacklen = 0,
+    .name = "Kernel",
+    .sleepObj = {
+        .process = &kernelStruct
+    }
+};
+
+struct Process idleProcessStruct = {
+    .mPid = 0,
+    .pid = 1, 
+    .containsProcess = 1,
+    .state = STATE_READY,
+    .hwFlags = PROCESS_DEFAULT,
+    .sleepObj = {
+        .process = &idleProcessStruct
+    }
+};
 
 // TODO depricate in favor of the syscall exit function, or a derative
 void __processReturn(void);
@@ -35,7 +65,7 @@ static void releaseFromMemPool(struct Process* process){
 //This function is not threadsafe: only the kernel can run it!
 static struct Process* getProcessFromPool(void){
     //Starts at one because process zero is always the kernel. If that process does not exist then something real is going on.
-    for (int i = 1; i < MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES; ++i){
+    for (int i = 0; i < MAXTOTALPROCESSES; ++i){
         if (!processPool[i].containsProcess){
             return &processPool[i];
         }
@@ -90,44 +120,11 @@ static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen
 #endif //DEBUG
 }
 
-struct Process* createKernel(void){
-    //Create the kernel
-    processPool[0].mPid = 0;
-    processPool[0].containsProcess = 1;
-    processPool[0].nextProcess = NULL;
-    processPool[0].priority = 100;
-    processPool[0].state = STATE_READY;
-    processPool[0].blockAddress = NULL;
-    processPool[0].sleepObj.process = &processPool[0];
-    strcpy(processPool[0].name, "Kernel");
-    // Because the kernel works from the MSP, there is no kernel stack and the kernelstackpointer is set on first context switch
-    processPool[0].stack = NULL;
-    processPool[0].stackPointer = NULL;
-    processPool[0].savedRegsPointer = &(processPool[0].savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE]); //Because of decrement before write, set this pointer at the very end
-    processPool[0].hwFlags = PROCESS_IS_PRIVILEGED | PROCESS_USES_MSP;
-    processPool[0].context = NULL; // The kernel does not need a context.
-    processPool[0].nextProcess = NULL;
-    processPool[0].stacklen = 0;
-    return &processPool[0];
-}
-
-struct Process* createIdleProcess(void){
-    struct Process* idleProc = &processPool[1];
-    idleProc->mPid = 0;
-    idleProc->containsProcess = 1;
-    idleProc->state = STATE_READY;
-    idleProc->hwFlags = PROCESS_DEFAULT;
-    idleProc->sleepObj.process = idleProc;
-    strcpy(idleProc->name, "IdleProc");
-    setupDynamicMem(idleProc, (void*)&idleProcStack, IDLEFUNCSTACKLEN, __sleepProcessFunc, NULL);
-    return idleProc;
-}
-
 void initializeProcesses(void){
-    for (int i = 0; i < MAXTOTALPROCESSES + DEFAULT_KERNEL_PROCESSES; ++i){
-        processPool[i].containsProcess = 0;
-        processPool[i].pid = i + 1;
+    for (int i = 0; i < MAXTOTALPROCESSES; ++i){
+        processPool[i].pid = i + 2;
     }
+    setupDynamicMem(&idleProcessStruct, (void*)&idleProcStack, IDLEFUNCSTACKLEN, __sleepProcessFunc, NULL);
 }
 
 struct Process* __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged){

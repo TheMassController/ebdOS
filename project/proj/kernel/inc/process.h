@@ -54,6 +54,9 @@ struct Process {
     struct Process* nextProcess;                                    // Makes the thing a linkedlist
 };
 
+extern struct Process kernelStruct;
+extern struct Process idleProcessStruct;
+
 /*
    Uses errno.
 */

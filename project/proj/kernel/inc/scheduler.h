@@ -26,10 +26,9 @@
 /**
  * @brief Initializes the scheduler by setting the global context to given currentProcess and accepting the idleProcess
  * @param currentProc The current process at the very start of the OS. Usually the kernel.
- * @param idleProd The idle process, this process runs when no other process runs.
  * @warning If this process runs twice it crashes the OS.
  */
-void initScheduler(struct Process* idleProc, struct Process* currentProc);
+void initScheduler(struct Process* currentProc);
 
 /**
  * @brief Get the current length of the timeslice in ms. This function can be called by any function.

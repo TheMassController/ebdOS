@@ -1,6 +1,6 @@
 #include <errno.h>
 
-#include "kernInteractBuffer.h"
+#include "kernEventNotifier.h"
 #include "spinlock.h"
 #include "atomicIntegerOperations.h"
 #include "supervisorCall.h"
@@ -14,13 +14,9 @@
 
 static enum KernBufferMessageCodes messageBuf[KERNMESSAGEBUFFERSIZE];
 static struct Spinlock messageBufLock;
-//static struct Process* processBuf[MAXTOTALPROCESSES];
-static struct Spinlock messageBufLock;
 static int messageReadPos;
 static int messageWritePos;
-//static int processReadPos;
-//static int processWritePos;
-//
+
 extern volatile const int kernelIsActive;
 
 static void activateKernel(void) {
@@ -74,8 +70,10 @@ enum KernBufferMessageCodes kernelBufferGetCode(void){
         generateCrash();
     }
 #endif //DEBUG
+    if (messageReadPos == messageWritePos){
+        return noMessageAvailable;
+    }
     lockSpinlock(&messageBufLock);
-    if (messageReadPos == messageWritePos) return noMessageAvailable;
     enum KernBufferMessageCodes message = messageBuf[messageReadPos];
     messageWritePos = (messageWritePos + 1) % KERNMESSAGEBUFFERSIZE;
     unlockSpinlock(&messageBufLock);

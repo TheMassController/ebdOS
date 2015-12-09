@@ -27,11 +27,26 @@ static struct Process* kernMaintenancePtr                   = NULL;
 extern struct Process* processesReady;
 extern struct Process* kernReturnList;
 
+//TODO depricate
 void* volatile intrBlockObject;
 
 volatile int kernelIsActive = 1;
 
 //----- Functions related to the moving of functions from one queue to another
+
+static void activateKernel(void){
+    if (!kernelIsActive){
+        addProcessToScheduler(kernel);
+        kernelIsActive = 1;
+    }
+}
+
+static void suspendKernel(void){
+    if (kernelIsActive){
+        removeProcessFromScheduler(kernel);
+        kernelIsActive = 0;
+    }
+}
 
 //Common
 int processInList(struct Process* listHead, struct Process* proc){
@@ -265,29 +280,23 @@ void fallAsleep(void){
 static void currentProcessRequestsService(void){
     struct Process* curProc = popCurrentProcess();
     curProc->state = STATE_WAIT;
-    if (kernMaintenancePtr == NULL){
-        kernMaintenancePtr = curProc;
-        addProcessToScheduler(kernel);
-    } else {
-        kernQueue_push(curProc);
-    }
+    passProcessToKernel(curProc);
+    activateKernel();
 }
 
 static void kernelIsDoneServing(void){
-    while (kernReturnList != NULL){
-        struct Process* tempPtr = kernReturnList->nextProcess;
-        kernReturnList->state = STATE_READY;
-        addProcessToScheduler(kernReturnList);
-        kernReturnList = tempPtr;
+    struct Process* tempPtr = kernRetQueuePop();
+    while(tempPtr != NULL){
+        tempPtr->state = STATE_READY;
+        addProcessToScheduler(tempPtr);
+        tempPtr = kernRetQueuePop();
     }
-    kernMaintenancePtr = kernQueue_pop();
-    if (kernMaintenancePtr == NULL){
-        removeProcessFromScheduler(kernel);
-    }
+    //TODO test if both eventQueue and processQueue are empty
+    suspendKernel();
 }
 
 #ifdef DEBUG
-void sayHi(void){
+static void sayHi(void){
     UARTprintf("Hi from your favorite supervisor!\r\n");
 }
 #endif //DEBUG
@@ -324,6 +333,9 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
             break;
         case SVC_wakeup:
             wakeupFromWBInterrupt();
+            break;
+        case SVC_wakeupKernel:
+            activateKernel();
             break;
         case SVC_wakeupCurrent:
             wakeupCurrentProcess();

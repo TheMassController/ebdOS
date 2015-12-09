@@ -1,36 +1,55 @@
 #include "kernMaintenanceQueue.h"   // Contains the function defenitions, contains #include process.h
-#include "coreUtils.h"              // Contains isInSVCInterrupt
 // System headers
 #include <stdlib.h>
+
+#define PROCESSBUFSIZE MAXTOTALPROCESSES+1
 
 static struct Process* procQueueStart;
 static struct Process* procQueueEnd;
 
-void kernQueue_push(struct Process* procPtr){
-    if (procPtr != NULL && isInSVCInterrupt()){
-        procPtr->nextProcess = NULL;
-        if (procQueueStart == NULL){
-            procQueueStart = procPtr;
-            procQueueEnd = procPtr;
-        } else {
-            procQueueEnd->nextProcess = procPtr;
-            procQueueEnd = procPtr;
-        }
+static struct Process* processBuf[PROCESSBUFSIZE];
+static int processReadPos;
+static int processWritePos;
+
+void kernRetQueuePush(struct Process* procPtr){
+    procPtr->nextProcess = NULL;
+    if (procQueueStart == NULL){
+        procQueueStart = procPtr;
+        procQueueEnd = procPtr;
+    } else {
+        procQueueEnd->nextProcess = procPtr;
+        procQueueEnd = procPtr;
     }
 }
 
-struct Process* kernQueue_pop(void){
-    if (isInSVCInterrupt()){
-        struct Process* retProc = NULL;
-        if (procQueueStart != NULL){
-            retProc = procQueueStart;
-            procQueueStart = procQueueStart->nextProcess;
-            retProc->nextProcess = NULL;
-            if (retProc == procQueueEnd){
-                procQueueEnd = NULL;
-            }
+struct Process* kernRetQueuePop(void){
+    struct Process* retProc = NULL;
+    if (procQueueStart != NULL){
+        retProc = procQueueStart;
+        procQueueStart = procQueueStart->nextProcess;
+        retProc->nextProcess = NULL;
+        if (retProc == procQueueEnd){
+            procQueueEnd = NULL;
         }
-        return retProc;
     }
-    return NULL;
+    return retProc;
+}
+
+struct Process* kernRetQueueGet(void){
+    struct Process* retProc = procQueueStart;
+    procQueueStart = NULL;
+    procQueueEnd = NULL;
+    return retProc;
+}
+
+void passProcessToKernel(struct Process* const proc){
+    proc->nextProcess = NULL;
+    processReadPos = (processReadPos + 1) % (PROCESSBUFSIZE);
+    processBuf[processReadPos] = proc;
+}
+
+struct Process* kernelBufferGetProcess(void){
+   if (processReadPos == processWritePos) return NULL; 
+    processWritePos = (processWritePos + 1) % (PROCESSBUFSIZE);
+    return processBuf[processWritePos];
 }

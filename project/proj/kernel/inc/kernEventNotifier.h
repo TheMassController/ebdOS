@@ -5,8 +5,7 @@
  * This is the header file for the functions responsible for the communication towards the kernel from the rest of the world.
  * The functions defined here make sure that everything happens threadsafely.
  *
- * There are two types of communication.
- * The first one is messages, that usually indicate an interrupt happend and the kernel should do something about it and processes which need service.
+ * The communication is based on messages, that usually indicate an interrupt happend and the kernel should do something about it.
  * The process service part is mainly handled in sysCalls.h (core). The messages are defined as an enum here.
  * The second one is processes. The SVC is always in this chain, allthough the root cause can be an interrupt.
  * An example is the segfault: this happens because of an interrupt, which tells the SVC, which removes the current process from running and passes it on to the kernel.
@@ -38,25 +37,6 @@ enum KernBufferMessageCodes{
  * @return 0 if everything was fine, ENOMEM if the buffer was full.
  */
 int passMessageToKernel(const enum KernBufferMessageCodes code);
-
-/**
- * @brief Used by the SVC to pass processes to the kernel for handling
- * @param proc The process passed to the kernel for handling
- * @warning Do not call this function when not in Supervisor.
- */
-void passProcessToKernel(const struct Process* proc);
-
-/**
- * @brief Used by the kernel to determine if there is work available
- * @return non 0 if there is work, 0 if there is no work.
- */
-unsigned kernelBufferNotEmpty(void);
-
-/**
- * @brief pops a process from the buffer and returns that process
- * @return NULL if there were no processes, a process if there was a process in the buffer.
- */
-struct Process* kernelBufferGetProcess(void);
 
 /**
  * @brief Pops a kernelcode from the buffer and returns it.

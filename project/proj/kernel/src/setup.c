@@ -16,34 +16,33 @@
 #include <hw_ints.h>        // Memory addresses of hw interrupts
 #include <interrupt.h>      // Function prototypes for hardware interrupt setup
 // System headers provided by kernel or core
-#include "coreUtils.h"      // Core functions that need to be written in assembly
-#include "process.h"        // Everything related to the processes
-#include "mutex.h"          // Everything related to mutexes
-#include "reentrantMutex.h" // Everything related to mutexes
-#include "mpucontrol.h"     // Functions related to controlling the MPU
-#include "getSetRegisters.h"// Functions to interact with the registers directly
-#include "supervisorCall.h" // Defines what a supervisor call is
-#include "clockSetup.h"     // Defines clock speed and related settings
-#include "kernUtils.h"      // Contains the generateCrash function
+#include "coreUtils.h"              // Core functions that need to be written in assembly
+#include "process.h"                // Everything related to the processes
+#include "mutex.h"                  // Everything related to mutexes
+#include "reentrantMutex.h"         // Everything related to mutexes
+#include "mpucontrol.h"             // Functions related to controlling the MPU
+#include "getSetRegisters.h"        // Functions to interact with the registers directly
+#include "supervisorCall.h"         // Defines what a supervisor call is
+#include "clockSetup.h"             // Defines clock speed and related settings
+#include "kernUtils.h"              // Contains the generateCrash function
+#include "kernMaintenanceQueue.h"   // Contains kernRetQueuePush
 // User headers
 #include "validation.h"     // Contains all validation functions
 
 #define SLEEPTIMERPRIORITY 0xc0 //11000000, lowest possible priority of major group, highest possible of subgroup
 
-extern struct Process* kernReturnList;
 extern unsigned sleepClocksPerMS;
 extern struct ReentrantMutex mallocMutex;
 extern int initialized;
-extern struct Process* kernMaintenancePtr;
 
 #ifdef __GNUC__
-void kernelMain(volatile const struct Process** kernMaintenancePtr) __attribute__ ((noreturn));
+void kernelMain(void) __attribute__ ((noreturn));
 #else
-void kernelMain(volatile const struct Process** kernMaintenancePtr);
+void kernelMain(void);
 #endif //__GNUC__
 void initializeProcesses(void);
 void initScheduler(struct Process* idleProc, struct Process* currentProc);
-volatile const struct Process** initSupervisor(struct Process* kern);
+void initSupervisor(struct Process* kern);
 void main(void);
 struct Process* createKernel(void);
 struct Process* createIdleProcess(void);
@@ -154,7 +153,7 @@ void kernelStart(void){
     struct Process* kernel = createKernel();
     struct Process* idleProcess = createIdleProcess();
     initScheduler(idleProcess, kernel);
-    volatile const struct Process** kernMaintenancePtr = initSupervisor(kernel);
+    initSupervisor(kernel);
     // UARTprintf("0x%x, 0x%x, %d, %d\n", EBD_SYSCTL_SETUP, SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ, EBD_BASE_CLOCK_SPEED, MAP_SysCtlClockGet());
 
     // Create the main process
@@ -168,17 +167,17 @@ void kernelStart(void){
     //kernMaintenancePtr = __createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
     //kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
     //kernMaintenancePtr->nextProcess->nextProcess =  __createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
-    kernReturnList = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0);
-    kernReturnList->nextProcess = __createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0);
-    kernReturnList->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0);
-    kernReturnList->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0);
-    kernReturnList->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0);
-    kernReturnList->nextProcess->nextProcess->nextProcess->nextProcess->nextProcess = __createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0);
+    kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0));
+    kernRetQueuePush(__createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0));
+    kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0));
+    kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0));
+    kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0));
+    kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0));
     // __createNewProcess(1, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
     // __createNewProcess(1, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
     CALLSUPERVISOR(SVC_serviced)
     // NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
-    kernelMain(kernMaintenancePtr);
+    kernelMain();
 
 }

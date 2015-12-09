@@ -16,7 +16,7 @@ SECTIONS
         kernel.a(.text*)
         kernel.a(.rodata*)
         _kernel_etext = .;
-        _kernel_flash_data = ALIGN(0x4);
+        _kernel_flash_data = .;
     } > FLASH
 
     .kernel.data : /*AT(ADDR(.text) + SIZEOF(.text))*/ /*contains initialized data*/  /*This one is usually empty, which makes the linker misbehave.*/
@@ -41,10 +41,10 @@ SECTIONS
         core.a(.text*)
         core.a(.rodata*)
         _core_etext = .;
-        _core_flash_data = ALIGN(0x4);
+        _core_flash_data = .;
     } > FLASH
 
-    .core.bss : ALIGN(2048) /* Aligned on 2048*/
+    .core.bss :  /* Aligned on 2048*/
     {
         _core_bss = .;
         core.a(.bss*)

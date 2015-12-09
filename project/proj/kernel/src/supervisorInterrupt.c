@@ -19,14 +19,9 @@
 #include "kernMaintenanceQueue.h"   // The kernel maintenaince queue
 #include "kernUtils.h"              // To escalate to NMI
 
-static struct Process* kernel                               = NULL;
+static struct Process* kernel                               = &kernelStruct;
 static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
 static struct SleepingProcessStruct* nextToWakeUp           = NULL;
-static struct Process* kernMaintenancePtr                   = NULL;
-
-extern struct Process* processesReady;
-extern struct Process* kernReturnList;
-
 //TODO depricate
 void* volatile intrBlockObject;
 
@@ -355,15 +350,4 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
             UARTprintf("Supervisor call handler: unknown code %d\r\n",reqCode);
             break;
     }
-}
-
-struct Process** initSupervisor(struct Process* kern){
-    if (kernel != NULL){
-#ifdef DEBUG
-        UARTprintf("Failure: init supervisor runs for the second time\n");
-#endif //DEBUG
-        generateCrash();
-    }
-    kernel = kern;
-    return &kernMaintenancePtr;
 }

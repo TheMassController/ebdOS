@@ -60,14 +60,14 @@ struct Process* kernRetQueueEmpty(void){
 
 void passProcessToKernel(struct Process* const proc){
     proc->nextProcess = NULL;
-    processReadPos = (processReadPos + 1) % (PROCESSBUFSIZE);
-    processBuf[processReadPos] = proc;
+    processWritePos = (processWritePos + 1) % (PROCESSBUFSIZE);
+    processBuf[processWritePos] = proc;
 }
 
 struct Process* kernelBufferGetProcess(void){
    if (processReadPos == processWritePos) return NULL;
-    processWritePos = (processWritePos + 1) % (PROCESSBUFSIZE);
-    return processBuf[processWritePos];
+    processReadPos = (processReadPos + 1) % (PROCESSBUFSIZE);
+    return processBuf[processReadPos];
 }
 
 int KernelProcessBufferIsEmpty(void){

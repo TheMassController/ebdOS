@@ -15,8 +15,8 @@ isInInterrupt:                  @ Params: void. Tests if we are currently in an 
     MRS r0, psr                 @ Load the psr register via the load move special reg to reg instruction
     AND r0, r0, #0xFF           @ PSR & 255 is the ISRNUM reg. If this is 0, then we are not in an interrupt
     BX lr                       @ return
-
-zeroFillSection:               @params: first addr, last addr. Last is exclusive
+@ The idea of this function is that is writes bytes until it is aligned to 8 byte, then writes double words, as much as possible, then writes bytes until done
+zeroFillSection:                @params: first addr, last addr. Last is exclusive
     push {lr}                   @ Push lr: more regs
     cmp r0, r1
     bcs endFunction             @ if r0 >= r1, return right here
@@ -48,6 +48,7 @@ endByteLoop:                    @ Write bytes until done
     b endByteLoop
 endFunction:
     pop {pc}                    @ Pop lr to pc to return
+    nop                         @ Safety nop
 
 isInSVCInterrupt:
     mrs r0, PSR                 @ Load the PSR register, this special reg contains the current interrupt code

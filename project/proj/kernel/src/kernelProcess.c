@@ -6,6 +6,7 @@
 #include "sysCalls.h"
 #include "supervisorCall.h"
 #include "kernMaintenanceQueue.h"
+#include "kernEventNotifier.h"
 
 void kernelMain(void){
     while(1){
@@ -22,6 +23,15 @@ void kernelMain(void){
                     break;
             }
             kernMaintenanceProc = kernelBufferGetProcess();
+        }
+        enum KernBufferMessageCodes code = kernelBufferGetCode();
+        while(code != noMessageAvailable){
+            switch(code) {
+                default:
+                    UARTprintf("Unknown event code: %d\n");
+                    break;
+            }
+            code = kernelBufferGetCode();
         }
         CALLSUPERVISOR(SVC_serviced);
     }

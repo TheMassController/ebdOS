@@ -31,7 +31,7 @@
 #define PROCESS_ENABLE_FP 0x10
 #define PROCESS_USES_MSP 0x4
 
-//The order of the block is vital to make the assembly work correctly
+//The order of the first block is vital to make the assembly work correctly
 struct Process {
     void* stackPointer;                                             // The actual stackpointer
     unsigned pid;                                                   // Pid of the process

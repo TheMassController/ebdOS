@@ -22,7 +22,7 @@
 static struct Process* kernel                               = &kernelStruct;
 static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
 static struct SleepingProcessStruct* nextToWakeUp           = NULL;
-//TODO depricate
+//TODO depricate: Futex! Well, this should become a kernel thing.
 void* volatile intrBlockObject;
 
 volatile int kernelIsActive = 1;

@@ -1,7 +1,7 @@
 SYSLIBDIR := $(TOP)$(notdir $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))/
 SYSINCDIRS += $(shell find $(SYSLIBDIR)$(INCDIR) -type d)
 LIBS += driver-cm4f uartstdio
-LIBDIRS += $(SYSLIBDIR)/hardfp
+LIBDIRS += $(SYSLIBDIR)hardfp
 
 #External libs, these will become obsolete eventually. Maybe
 LIBDIRS += $(ARMGCCGCCLIBSDIR)

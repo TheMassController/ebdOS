@@ -54,6 +54,16 @@ struct Process {
     struct Process* nextProcess;                                    // Makes the thing a linkedlist
 };
 
+struct ProcessCreateParams {
+    unsigned mPid;
+    unsigned long stacklen;
+    char* name;
+    void (*procFunc)();
+    void* param;
+    char priority;
+    char isPrivileged;
+};
+
 extern struct Process kernelStruct;
 extern struct Process idleProcessStruct;
 
@@ -61,4 +71,5 @@ extern struct Process idleProcessStruct;
    Uses errno.
 */
 struct Process* __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
+struct Process* createNewProcess(struct ProcessCreateParams params);
 #endif

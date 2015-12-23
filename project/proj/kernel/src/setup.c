@@ -145,8 +145,8 @@ void kernelStart(void){
     // Initialize malloc mutex
     initReentrantMutex(&(mallocMutex));
     // Process initialization (after this function we are suddenly the kernel)
-    initializeProcesses();
     initScheduler(&kernelStruct);
+    initializeProcesses();
 
     kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0));
     kernRetQueuePush(__createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0));

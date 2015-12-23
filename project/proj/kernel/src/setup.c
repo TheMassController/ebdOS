@@ -80,8 +80,11 @@ void kernelStart(void){
     NVIC_SYS_PRI3_R |= 7<<21;       // pendSV gets 7. Datasheet pp 167.
     // The pendSV has this low priority so that context switches can be called from an interrupt (regset is in a wrong state when inside an interrupt)
     // The standard here is that all other interrupts get a prio higher then 7, excluding the system faults (those are fixed anyway).
-    // So when you request a context switcher from an interrupt, the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled.
-    // This has two advantages: first you actually can context switch (all stacks and the regset being in the right state and all), second: the context switch can be called multiple times but will only run once per interrupt session
+    // So when you request a context switcher from an interrupt,
+    // the context switch will happen after every currently running interrupt is finished and every higher level interrupt is handled.
+    //
+    // This has two advantages: first you actually can context switch (all stacks and the regset being in the right state and all),
+    // second: the context switch can be called multiple times but will only run once per interrupt session
     // During the actual context switch all interupts are disabled (cpsi instruction)
     // Under the current construction errors can call the supervisor, which can subsequently call the kernel to handle the error.
     // This is because despite the fact that they are in a higher handler priority, their actual priority is lower.
@@ -157,5 +160,4 @@ void kernelStart(void){
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
     CALLSUPERVISOR(SVC_serviced)
     kernelMain();
-
 }

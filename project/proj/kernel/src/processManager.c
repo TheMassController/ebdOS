@@ -12,6 +12,7 @@
 #include "semaphore.h"
 #include "getSetRegisters.h"
 #include "kernUtils.h"
+#include "context.h"
 
 #ifdef DEBUG
 #include <uartstdio.h>
@@ -22,6 +23,7 @@
 
 static struct Process processPool[MAXTOTALPROCESSES];
 static char idleProcStack[IDLEFUNCSTACKLEN + sizeof(struct ProcessContext)];
+static struct ProcessContext kernelContext;
 
 struct Process kernelStruct = {
     .mPid = 0,
@@ -35,7 +37,7 @@ struct Process kernelStruct = {
     .stackPointer = NULL,
     .savedRegsPointer = &(kernelStruct.savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE]), // At the very end
     .hwFlags = PROCESS_IS_PRIVILEGED | PROCESS_USES_MSP,
-    .context = NULL, //The Kernel does not need a process
+    .context = &kernelContext, 
     .stacklen = 0,
     .name = "Kernel",
     .sleepObj = {

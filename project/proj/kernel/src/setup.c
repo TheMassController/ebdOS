@@ -140,7 +140,6 @@ void kernelStart(void){
     // The following setting stalls both the sleep timers when the CPU is stopped for debugging.
     ROM_TimerControlStall(WTIMER0_BASE, TIMER_BOTH, 1);
 #endif //DEBUG
-
     // Initialize the MPU
     // initializeMPU();
     // Initialize malloc mutex
@@ -148,30 +147,15 @@ void kernelStart(void){
     // Process initialization (after this function we are suddenly the kernel)
     initializeProcesses();
     initScheduler(&kernelStruct);
-    // UARTprintf("0x%x, 0x%x, %d, %d\n", EBD_SYSCTL_SETUP, SYSCTL_SYSDIV_2_5| SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ, EBD_BASE_CLOCK_SPEED, MAP_SysCtlClockGet());
 
-    // Create the main process
-    // __createNewProcess(1, 256, "main", main, NULL, 75, 0);
-    // __createNewProcess(1, 256, "testMPUPriv", testMPUPriv, NULL, 80, 1);
-    // __createNewProcess(1, 256, "testMPUUPriv", testMPUUpriv, NULL, 75, 0);
-    //
-    // __createNewProcess(1, 256, "locktestmain", mainProcessLocker, NULL, 80, 1);
-    // __createNewProcess(1, 256, "mutPasser1", mutPasser, NULL, 75, 0);
-    // __createNewProcess(1, 256, "mutPasser2", mutPasser, NULL, 75, 0);
-    //kernMaintenancePtr = __createNewProcess(1, 256, "spinlocktestmain", spinlocktestMain, NULL, 80, 0);
-    //kernMaintenancePtr->nextProcess = __createNewProcess(1, 256, "spinlocktest_l_1", lockPasser, NULL, 80, 0);
-    //kernMaintenancePtr->nextProcess->nextProcess =  __createNewProcess(1, 256, "spinlocktest_l_2", lockPasser, NULL, 80, 0);
     kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0));
     kernRetQueuePush(__createNewProcess(1, 256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0));
     kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0));
     kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0));
     kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0));
     kernRetQueuePush(__createNewProcess(1, 256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0));
-    // __createNewProcess(1, 256, "spinlocktest_tl_1", tryLockPasser, NULL, 80, 0);
-    // __createNewProcess(1, 256, "spinlocktest_tl_2", tryLockPasser, NULL, 80, 0);
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
     CALLSUPERVISOR(SVC_serviced)
-    // NVIC_INT_CTRL_R |= (1<<28); //Set the pendSV to pending: kick-off the scheduler
     kernelMain();
 
 }

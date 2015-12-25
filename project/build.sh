@@ -21,7 +21,7 @@ if [ $? -ne 0 ]; then
 fi
 
 MAKEFLAGS="-j15"
-OPENOCDSCRIPT=/usr/local/share/openocd/scripts/board/ek-lm4f120xl.cfg
+OPENOCDSCRIPT=$OPENOCDSCRIPTLOCATION/ek-lm4f120xl.cfg
 LOGDIR=log/
 PROJDIR=proj/
 RELEASEEXEC=$PROJDIR/release/jackoOS_stripped

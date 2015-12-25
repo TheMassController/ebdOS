@@ -60,7 +60,8 @@ struct Process* addSleeper(struct Process* proc, struct SleepRequest* sleepReque
     /* The systemClock runs from max to min. So if we want to sleep for x time, we want to wait until reftime - x
      * First of all: we need the total amount of us we are going to sleep. */
     uint64_t wakeupMoment = sleepRequest->uSec + sleepRequest->mSec * 1000 + sleepRequest->sec * 1000000;
-    /* So now we need to find the overflow count. We basically remove the max count of the sysclock from the wakeupMoment and add 1 to the overflow until wakeupMoment <= sleepRequest->reftime
+    /* So now we need to find the overflow count. 
+     * We basically remove the max count of the sysclock from the wakeupMoment and add 1 to the overflow until wakeupMoment <= sleepRequest->reftime
      */
     sleepStruct->overflows = 0;
     for(; wakeupMoment > sleepRequest->refTime; wakeupMoment -= EBD_SYSCLOCKMAXVAL) {

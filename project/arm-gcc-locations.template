@@ -1,0 +1,5 @@
+ARMGCCBIN=/usr/bin/
+ARMGCCEXLIB=/usr/lib/gcc/arm-none-eabi/5.3.0/armv7e-m/fpu
+ARMGCCLIB=/usr/arm-none-eabi/lib/armv7e-m/fpu/
+
+OPENOCDSCRIPTLOCATION=/usr/share/openocd/scripts/board/

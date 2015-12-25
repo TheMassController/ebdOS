@@ -86,7 +86,7 @@ static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen
     int* stackPointer = (int*)(((long)proc->stack + stacklen - 1) & ~((long)0x3));
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
-    //These are in order from up to down: R0, R1, R2, R3, R12, LR, PC, XSPR
+    //These are in order from down to up: R0, R1, R2, R3, R12, LR, PC, XSPR
     *stackPointer-- = 0x01000000; //XPSR, standard stuff
     *stackPointer-- = (int)procFunc; //PC, initally points to start of function
     *stackPointer-- = (int)&__processReturn; //LR, return func
@@ -129,43 +129,66 @@ void initializeProcesses(void){
     setupDynamicMem(&idleProcessStruct, (void*)&idleProcStack, IDLEFUNCSTACKLEN, __sleepProcessFunc, NULL);
 }
 
-struct Process* __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged){
+struct Process* createNewProcess(const struct ProcessCreateParams* params, struct Process* parentProc){
+    // Sanity of parameter test
+    if (params->stacklen < 67 || strlen(params->name) > 31){
+        errno = EINVAL;
+        return NULL;
+    }
     struct Process* newProc = getProcessFromPool();
     if ( newProc == NULL) { //Insufficient mem
         errno = ENOMEM;
         return NULL;
     }
-    if (stacklen < 67){
-        errno = EINVAL;
-        return NULL;
-    }
     //Create the stack + processcontext.
-    void* stack = malloc(stacklen + sizeof(struct ProcessContext));
+    void* stack = malloc(params->stacklen + sizeof(struct ProcessContext));
     if (stack == NULL){
         releaseFromMemPool(newProc);
         errno = ENOMEM;
         return NULL;
     }
+    strcpy(newProc->name, params->name);
+    char priority = params->priority;
     if (priority == 255) priority = 254; //Max 254, 255 is kernel only
     if (priority == 0) priority = 1;    //Min 1, 0 is sleeper only
-
-    //Set some vars
     newProc->containsProcess = 1;
-    newProc->mPid = mPid;
+    newProc->mPid = parentProc->pid;
     newProc->nextProcess = NULL;
+    newProc->nextChildPtr = NULL;
     newProc->priority = priority;
     newProc->state = STATE_READY;
     newProc->hwFlags = PROCESS_DEFAULT;
-    if (isPrivileged) newProc->hwFlags |= PROCESS_IS_PRIVILEGED;
+    if (params->isPrivileged) newProc->hwFlags |= PROCESS_IS_PRIVILEGED;
     newProc->blockAddress = NULL;
     newProc->sleepObj.process = newProc;
-    if (strlen(name) > 20){
-        //Name too long, only copy first 20 characters
-        memcpy(newProc->name, name, 20);
-        newProc->name[20] = 0;
+    setupDynamicMem(newProc, stack, params->stacklen, params->procFunc, params->param);
+    /* Administrative side, add it as a child to its parent and vice versa */
+    // First: add it as a child to its parent
+    if (parentProc->childPtr == NULL){
+        parentProc->childPtr = newProc;
     } else {
-        strcpy(newProc->name, name);
+        struct Process* it = parentProc->childPtr;
+        for (; it->nextChildPtr != NULL; it = it->nextChildPtr);
+        it->nextChildPtr = newProc;
     }
-    setupDynamicMem(newProc, stack, stacklen, procFunc, param);
     return newProc;
+
+}
+
+struct Process* __createNewProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged, struct Process* parentProc){
+    struct ProcessCreateParams params;
+    params.stacklen = stacklen;
+    if (strlen(name) > 31){
+        //Name too long, only copy first 31 characters
+        memcpy(params.name, name, 31);
+        params.name[31] = 0;
+    } else {
+        strcpy(params.name, name);
+    }
+    params.procFunc = procFunc;
+    params.param = param;
+    params.priority = priority; 
+    params.isPrivileged = isPrivileged;
+    //Set some vars
+    return createNewProcess(&params, parentProc);
 }

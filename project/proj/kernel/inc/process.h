@@ -43,7 +43,7 @@ struct Process {
     unsigned mPid;                                                  // Mother pid
     unsigned stacklen;                                              // The length of the stack. Used to detect stack underflows
     void* stack;                                                    // refers to the address returned by Malloc
-    char name[21];                                                  // The name can be 20 chars max, the last char is a /0
+    char name[32];                                                  // The name can be 31 chars max, the last char always needs to be a zero.
     char state;                                                     // Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
     char priority;                                                  // Higher is higher: 255 is highest
     char containsProcess;                                           // Flag used for mempooling
@@ -52,12 +52,13 @@ struct Process {
     struct SleepingProcessStruct sleepObj;                          // The sleepobject, contains all data necessary for sleeping
 
     struct Process* nextProcess;                                    // Makes the thing a linkedlist
+    struct Process* childPtr;                                       // Refers to its first child
+    struct Process* nextChildPtr;                                   // Refers to its little brother
 };
 
 struct ProcessCreateParams {
-    unsigned mPid;
     unsigned long stacklen;
-    char* name;
+    char name[32];
     void (*procFunc)();
     void* param;
     char priority;
@@ -70,6 +71,6 @@ extern struct Process idleProcessStruct;
 /*
    Uses errno.
 */
-struct Process* __createNewProcess(unsigned mPid, unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged );
-struct Process* createNewProcess(struct ProcessCreateParams params);
+struct Process* __createNewProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged, struct Process* parentProc);
+struct Process* createNewProcess(const struct ProcessCreateParams* params, struct Process* parentProc);
 #endif

@@ -1,9 +1,11 @@
 //The functions of the actual kernel: this is the kernel process
 #include <stdlib.h>
+#include <errno.h>
 
 #include "process.h"
 #include "uartstdio.h"
 #include "sysCalls.h"
+#include "context.h"
 #include "supervisorCall.h"
 #include "kernMaintenanceQueue.h"
 #include "kernEventNotifier.h"
@@ -14,9 +16,23 @@ void kernelMain(void){
         while(kernMaintenanceProc != NULL){
             struct ProcessContext* context = kernMaintenanceProc->context;
             switch(context->comVal){
-                case SYSCALL_getpid:
+                case GETPID:
                     context->retVal = kernMaintenanceProc->pid;
                     kernRetQueuePush(kernMaintenanceProc);
+                    break;
+                case SPAWNCHILDPROCESS:
+                    kernRetQueuePush(kernMaintenanceProc);
+                    struct ProcessCreateParams* params = (struct ProcessCreateParams*)context->genericPtr;
+                    params->priority = kernMaintenanceProc->priority;
+                    params->isPrivileged = 0;
+                    struct Process* proc = createNewProcess(params, kernMaintenanceProc);
+                    if (proc == NULL){
+                        context->retVal = -1;
+                        context->context_errno = errno;
+                    } else {
+                        kernRetQueuePush(proc);
+                        context->retVal = proc->pid;
+                    }
                     break;
                 default:
                     UARTprintf("Unknown code for kernel service: %d, process name: %s, pid: %d\n", context->comVal, kernMaintenanceProc->name, kernMaintenanceProc->pid);

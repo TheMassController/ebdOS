@@ -37,7 +37,7 @@ struct Process kernelStruct = {
     .stackPointer = NULL,
     .savedRegsPointer = &(kernelStruct.savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE]), // At the very end
     .hwFlags = PROCESS_IS_PRIVILEGED | PROCESS_USES_MSP,
-    .context = &kernelContext, 
+    .context = &kernelContext,
     .stacklen = 0,
     .name = "Kernel",
     .sleepObj = {
@@ -47,7 +47,7 @@ struct Process kernelStruct = {
 
 struct Process idleProcessStruct = {
     .mPid = 0,
-    .pid = 1, 
+    .pid = 1,
     .containsProcess = 1,
     .state = STATE_READY,
     .hwFlags = PROCESS_DEFAULT,
@@ -187,7 +187,7 @@ struct Process* __createNewProcess(unsigned long stacklen, char* name, void (*pr
     }
     params.procFunc = procFunc;
     params.param = param;
-    params.priority = priority; 
+    params.priority = priority;
     params.isPrivileged = isPrivileged;
     //Set some vars
     return createNewProcess(&params, parentProc);

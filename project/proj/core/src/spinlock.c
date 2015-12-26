@@ -2,6 +2,7 @@
 #include "spinlock.h"                   // Implies include process.h. Used to define the Spinlock struct
 #include "supervisorCall.h"             // Needed for supervisor calls
 #include "atomicIntegerOperations.h"    // Needed for threadsafe integer operations
+#include "context.h"                    // Contains the def of the current context
 // System headers
 #include <errno.h>              // Contains the error values
 #include <stdlib.h>             // Contains the def of NULL

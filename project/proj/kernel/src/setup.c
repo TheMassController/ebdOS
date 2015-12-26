@@ -151,12 +151,7 @@ void kernelStart(void){
     initScheduler(&kernelStruct);
     initializeProcesses();
 
-    kernRetQueuePush(__createNewProcess(256, "I seek to flicker", val_ledsFlicker, NULL, 80, 0, &kernelStruct));
-    kernRetQueuePush(__createNewProcess(256, "I seek the truth", findNthPrimeNumber, (void*)50, 80, 0, &kernelStruct));
-    kernRetQueuePush(__createNewProcess(256, "I seek the truth", findNthPrimeNumber, (void*)117, 80, 0, &kernelStruct));
-    kernRetQueuePush(__createNewProcess(256, "I seek the truth", findNthPrimeNumber, (void*)500, 80, 0, &kernelStruct));
-    kernRetQueuePush(__createNewProcess(256, "I seek the truth", findNthPrimeNumber, (void*)5000, 80, 0, &kernelStruct));
-    kernRetQueuePush(__createNewProcess(256, "I seek the truth", findNthPrimeNumber, (void*)50000, 80, 0, &kernelStruct));
+    kernRetQueuePush(__createNewProcess(256, "main", main, NULL, 80, 0, &kernelStruct));
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
     CALLSUPERVISOR(SVC_serviced)
     kernelMain();

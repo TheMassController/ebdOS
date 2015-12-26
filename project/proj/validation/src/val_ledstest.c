@@ -22,12 +22,12 @@ void val_ledsFlicker(void){
     prepareHardware();
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);
-        sleepMS(500); 
+        sleepMS(500);
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_2);
-        sleepMS(500); 
+        sleepMS(500);
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_3);
-        sleepMS(500); 
+        sleepMS(500);
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1);
-        sleepMS(500); 
+        sleepMS(500);
     }
 }

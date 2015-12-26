@@ -25,7 +25,7 @@ void faultISRHandler(void){
     UARTprintf("\tUnaligned Access Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_UNALIGN) ? 1 : 0);
     UARTprintf("\tNo Coprocessor Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_NOCP) ? 1 : 0);
     UARTprintf("\tInvalid PC Load Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_INVPC) ? 1 : 0);
-    UARTprintf("\tInvalid State Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_INVSTAT) ? 1 : 0); 
+    UARTprintf("\tInvalid State Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_INVSTAT) ? 1 : 0);
     UARTprintf("\tUndefined Instruction Usage Fault: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_UNDEF) ? 1 : 0);
     UARTprintf("\tMemory Management Fault Address Register Valid: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MMARV) ? 1 : 0);
     UARTprintf("\tMemory Management Fault on Floating-Point Lazy State Preservation: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_MLSPERR) ? 1 : 0);

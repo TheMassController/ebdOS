@@ -15,19 +15,19 @@ int main(void){
     if (pid == -1){
         UARTprintf("Errors: pid: %d, code: %d (%s)\n", pid, errno, strerror(errno));
     } else {
-        UARTprintf("I seek to flicker has been created! Pid: %d\n", pid); 
+        UARTprintf("I seek to flicker has been created! Pid: %d\n", pid);
     }
     pid = createChildProcess(256, "prime_50000", findNthPrimeNumber, (void*)50000);
     if (pid == -1){
         UARTprintf("Errors: pid: %d, code: %d (%s)\n", pid, errno, strerror(errno));
     } else {
-        UARTprintf("prime_50000 has been created! Pid: %d\n", pid); 
+        UARTprintf("prime_50000 has been created! Pid: %d\n", pid);
     }
     pid = createChildProcess(256, "prime_25000", findNthPrimeNumber, (void*)25000);
     if (pid == -1){
         UARTprintf("Errors: pid: %d, code: %d (%s)\n", pid, errno, strerror(errno));
     } else {
-        UARTprintf("prime_25000 has been created! Pid: %d\n", pid); 
+        UARTprintf("prime_25000 has been created! Pid: %d\n", pid);
     }
 
     pid = getPid();

@@ -78,9 +78,6 @@ void ledsFlicker(void){
 
 void ledsDance(void){
     printProcessInfo();
-    if (createProcess(1024, "ledsFlicker", ledsFlicker, NULL, 20) != 0){
-        UARTprintf("My child did not spawn :(\r\n");
-    }
     while(1){
         ROM_GPIOPinWrite(GPIO_PORTB_BASE,GPIO_PIN_0,GPIO_PIN_0);
         sleepMS(500);

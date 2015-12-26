@@ -254,9 +254,6 @@ void testFloatMain(void){
     //    UARTprintf("My child did not spawn :(\r\n");
     //}
     //if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)203280221, 1) != 0){
-    if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)5, 1) != 0){
-        UARTprintf("My child did not spawn :(\r\n");
-    }
     while(1){
         sleepS(10);
     }

@@ -1,7 +1,7 @@
 #ifndef SYSTEMCLOCKMANAGEMENT_H
 #define SYSTEMCLOCKMANAGEMENT_H
 /**
- * @file mainClockManagement.h
+ * @file systemClockManagement.h
  * @author Jacko Dirks
  * @brief Manages the main system clock.
  *
@@ -14,6 +14,12 @@
  * @brief Returns the current value of the system clock
  * @return The current value of the system clock
  */
-unsigned getSystemclockValue(void);
+unsigned getSystemClockValue(void);
+
+/*
+ * These are two interrupthandlers
+ */
+void systemTimerInterrupt(void);
+void sleepTimerInterrupt(void);
 
 #endif //SYSTEMCLOCKMANAGEMENT_H

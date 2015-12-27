@@ -40,9 +40,6 @@ struct Process kernelStruct = {
     .context = &kernelContext,
     .stacklen = 0,
     .name = "Kernel",
-    .sleepObj = {
-        .process = &kernelStruct
-    }
 };
 
 struct Process idleProcessStruct = {
@@ -51,9 +48,6 @@ struct Process idleProcessStruct = {
     .containsProcess = 1,
     .state = STATE_READY,
     .hwFlags = PROCESS_DEFAULT,
-    .sleepObj = {
-        .process = &idleProcessStruct
-    }
 };
 
 // TODO depricate in favor of the syscall exit function, or a derative
@@ -160,7 +154,6 @@ struct Process* createNewProcess(const struct ProcessCreateParams* params, struc
     newProc->hwFlags = PROCESS_DEFAULT;
     if (params->isPrivileged) newProc->hwFlags |= PROCESS_IS_PRIVILEGED;
     newProc->blockAddress = NULL;
-    newProc->sleepObj.process = newProc;
     setupDynamicMem(newProc, stack, params->stacklen, params->procFunc, params->param);
     /* Administrative side, add it as a child to its parent and vice versa */
     // First: add it as a child to its parent
@@ -172,7 +165,6 @@ struct Process* createNewProcess(const struct ProcessCreateParams* params, struc
         it->nextChildPtr = newProc;
     }
     return newProc;
-
 }
 
 struct Process* __createNewProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged, struct Process* parentProc){

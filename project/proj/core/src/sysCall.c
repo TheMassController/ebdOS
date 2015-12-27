@@ -21,3 +21,9 @@ int createChildProcess(unsigned long stacklen, char* name, void (*procFunc)(), v
     CALLSUPERVISOR(SVC_serviceRequired);
     return currentContext->retVal;
 }
+
+int sysCallSleep(struct SleepRequest* sleepReq){
+    setContextParams(PROCESSSLEEP, sleepReq);
+    CALLSUPERVISOR(SVC_serviceRequired);
+    return currentContext->retVal;
+}

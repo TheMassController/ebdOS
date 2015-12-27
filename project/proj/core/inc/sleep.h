@@ -15,38 +15,33 @@ struct SleepRequest {
     unsigned mSec;      /**< The amount of milliseconds the process sleeps */
     unsigned sec;       /**< The amount of seconds the process sleeps */
 };
-/**
- * @brief Get the current value of the system timer (probably Wide Timer 0/A)
- * @return The value at the moment of reading
- */
-unsigned getCurrentSytemTimerValue(void);
 
 /**
  * @brief Makes the current process sleep for at least the amount of time as set in the sleepRequest struct.
  * The reftime is set by this function.
  * @param sleepRequest The sleepRequest struct containing all information about the sleep duration.
+ * @return -1 if interrupted. Errno will be set.
  */
-void sleep(struct SleepRequest* sleepReq);
+int sleep(struct SleepRequest* sleepReq);
 
 /**
  * @brief Makes the current process sleep for at least the amount of microseconds given
  * @param uSec The sleeptime in microseconds.
+ * @return -1 if interrupted. Errno will be set.
  */
-void uSleep(unsigned uSec);
+int sleepUS(unsigned uSec);
 
 /**
  * @brief Makes the current process sleep for at least the amount of milliseconds given
  * @param mSec The sleeptime in microseconds.
+ * @return -1 if interrupted. Errno will be set.
  */
-void mSleep(unsigned mSec);
+int sleepMS(unsigned mSec);
 
 /**
  * @brief Makes the current process sleep for at least the amount of seconds given
  * @param sec The sleeptime in seconds.
+ * @return -1 if interrupted. Errno will be set.
  */
-void sSleep(unsigned sec);
-
-//TODO old stuff, destroy
-void sleepMS(unsigned ms);
-void sleepS(unsigned seconds);
+int sleepS(unsigned sec);
 #endif //SLEEP_H

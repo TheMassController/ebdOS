@@ -22,10 +22,12 @@
 //
 //*****************************************************************************
 
-#include "hw_nvic.h"
-#include "hw_types.h"
+#include <hw_nvic.h>
+#include <hw_types.h>
+
 #include "uartstdio.h"
 #include "coreUtils.h"
+#include "systemClockManagement.h"  // Contains all the timer interrupts
 
 //*****************************************************************************
 //
@@ -53,13 +55,10 @@ void kernelStart(void);
 void pendSVHandler(void);           // Declared in contextSwitcher.S
 void svcHandler(void);              // Declared in supervisorHandler.S
 void sysTickHandler(void);          // Declared in scheduler.c
-void sleepTimerWAInterrupt(void);   // Declared in sleep.c
-void sleepTimerWBInterrupt(void);   // Declared in sleep.c
 void usageFaultHandler(void);       // Declared in fault.c
 void mpuFaultHandler(void);         // Declared in fault.c
 void busFaultHandler(void);         // Declared in fault.c
 void faultISRHandler(void);         // Declared in fault.c
-int main(void);                     // Declared in main.c
 
 /* Temporary handlers, not here to stay */
 void button2Interrupt(void);
@@ -185,8 +184,8 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     IntDefaultHandler,                      // Timer 5 subtimer A
     IntDefaultHandler,                      // Timer 5 subtimer B
-    sleepTimerWAInterrupt,                  // Wide Timer 0 subtimer A
-    sleepTimerWBInterrupt,                  // Wide Timer 0 subtimer B
+    systemTimerInterrupt,                   // Wide Timer 0 subtimer A
+    sleepTimerInterrupt,                    // Wide Timer 0 subtimer B
     IntDefaultHandler,                      // Wide Timer 1 subtimer A
     IntDefaultHandler,                      // Wide Timer 1 subtimer B
     IntDefaultHandler,                      // Wide Timer 2 subtimer A

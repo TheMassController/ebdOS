@@ -34,6 +34,11 @@ void kernelMain(void){
                         context->retVal = proc->pid;
                     }
                     break;
+                case PROCESSSLEEP:
+                    context->retVal = 0;
+                    struct Process* it = addSleeper(kernMaintenanceProc, context->genericPtr);
+                    kernRetQueueAddList(it);
+                    break;
                 default:
                     UARTprintf("Unknown code for kernel service: %d, process name: %s, pid: %d\n", context->comVal, kernMaintenanceProc->name, kernMaintenanceProc->pid);
                     break;
@@ -43,8 +48,17 @@ void kernelMain(void){
         enum KernBufferMessageCodes code = kernelBufferGetCode();
         while(code != noMessageAvailable){
             switch(code) {
+                struct Process* it;
+                case sysTimerOverflow:
+                    it = sleepHandleSysTimerOverflow();
+                    kernRetQueueAddList(it);
+                    break;
+                case sleepTimerExpired:
+                    it = refreshSleeplist();
+                    kernRetQueueAddList(it);
+                    break;
                 default:
-                    UARTprintf("Unknown event code: %d\n");
+                    UARTprintf("Unknown event code: %d\n", code);
                     break;
             }
             code = kernelBufferGetCode();

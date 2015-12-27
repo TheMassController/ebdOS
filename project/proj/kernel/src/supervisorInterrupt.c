@@ -12,16 +12,12 @@
 
 #include "process.h"                // Declares the OS's process structs and funcs
 #include "lockObject.h"             // Declarations for the lockobjects
-#include "sysSleep.h"               // Kernel facing sleep functions
-#include "sleep.h"                  // User facing sleep functions
 #include "supervisorCall.h"         // Supplies the SVC commands
 #include "scheduler.h"              // All functions related to the scheduler
 #include "kernMaintenanceQueue.h"   // The kernel maintenaince queue
 #include "kernUtils.h"              // To escalate to NMI
 
 static struct Process* kernel                               = &kernelStruct;
-static struct SleepingProcessStruct* sleepProcessListHead   = NULL;
-static struct SleepingProcessStruct* nextToWakeUp           = NULL;
 //TODO depricate: Futex! Well, this should become a kernel thing.
 void* volatile intrBlockObject;
 
@@ -102,91 +98,6 @@ struct Process* removeProcessFromList(struct Process* listHead, struct Process* 
     return listHead;
 }
 
-//Sleep related
-void wakeupProcess(struct SleepingProcessStruct* ptr){
-    if (ptr->process->state & STATE_WAIT){
-        struct LockObject* object = ptr->process->blockAddress;
-        if (ptr->process->state & STATE_INC_WAIT){
-            object->processWaitingQueueIncrease = removeProcessFromList(object->processWaitingQueueIncrease, ptr->process);
-        }
-        if (ptr->process->state & STATE_DEC_WAIT){
-            object->processWaitingQueueDecrease = removeProcessFromList(object->processWaitingQueueDecrease, ptr->process);
-        }
-        ptr->process->blockAddress = NULL;
-    }
-    ptr->process->state = STATE_READY;
-    addProcessToScheduler(ptr->process);
-}
-
-void setSleepTimerWB(void){
-    while (sleepProcessListHead != nextToWakeUp){
-        if (sleepProcessListHead == NULL){
-            ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
-            nextToWakeUp = NULL;
-        } else if (sleepProcessListHead->overflows != 0){
-            if (nextToWakeUp != NULL){
-                ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
-                nextToWakeUp = NULL;
-            }
-            break;
-        } else {
-            unsigned curValWTA = getCurrentSytemTimerValue();
-            if (curValWTA <= sleepProcessListHead->sleepUntil){
-                wakeupProcess(sleepProcessListHead);
-                sleepProcessListHead = sleepProcessListHead->nextPtr;
-            } else {
-                nextToWakeUp = sleepProcessListHead;
-                ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
-                ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepProcessListHead->sleepUntil);
-                ROM_TimerEnable(WTIMER0_BASE, TIMER_B);
-            }
-        }
-    }
-}
-
-void wakeupFromWBInterrupt(void){
-    if (nextToWakeUp == NULL) return;
-    wakeupProcess(nextToWakeUp);
-    sleepProcessListHead = sleepProcessListHead->nextPtr;
-    nextToWakeUp = NULL;
-    setSleepTimerWB();
-}
-
-void addSleeperToList(struct SleepingProcessStruct* ptr){
-    struct SleepingProcessStruct* current = sleepProcessListHead;
-    struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current->overflows <= ptr->overflows && current->sleepUntil >= ptr->sleepUntil){
-        previous = current;
-        current = current->nextPtr;
-        if (current == ptr) return;
-    }
-    if (previous == NULL){
-        ptr->nextPtr = current;
-        sleepProcessListHead = ptr;
-        setSleepTimerWB();
-    } else {
-        previous->nextPtr = ptr;
-        ptr->nextPtr = current;
-    }
-}
-
-void removeSleeperFromList(struct Process* proc){
-    struct SleepingProcessStruct* current = sleepProcessListHead;
-    struct SleepingProcessStruct* previous = NULL;
-    while(current != NULL && current != &(proc->sleepObj)){
-        previous = current;
-        current = current->nextPtr;
-    }
-    if (current != NULL){
-        if (previous == NULL){
-            sleepProcessListHead = current->nextPtr;
-            setSleepTimerWB();
-        } else {
-            previous->nextPtr = current->nextPtr;
-        }
-    }
-}
-
 //----------------
 
 struct Process* popFromLockQueue(struct Process* listHead){
@@ -255,23 +166,6 @@ void lockObjectBlock(const char increase) {
     }
 }
 
-void lockObjectBlockAndSleep(const char increase){
-    struct Process* curProc = getCurrentProcess();
-    lockObjectBlock(increase);
-    addSleeperToList(&(curProc->sleepObj));
-    curProc->state |= STATE_SLEEP;
-}
-
-void wakeupCurrentProcess(void){
-    struct Process* curProc = getCurrentProcess();
-    removeSleeperFromList(curProc);
-}
-
-void fallAsleep(void){
-    struct Process* curProcess = popCurrentProcess();
-    addSleeperToList(&(curProcess->sleepObj));
-}
-
 static void currentProcessRequestsService(void){
     struct Process* curProc = popCurrentProcess();
     curProc->state = STATE_WAIT;
@@ -290,9 +184,6 @@ static void kernelIsDoneServing(void){
     if(KernelProcessBufferIsEmpty()){
         suspendKernel();
     }
-}
-
-static void handleSystemTimerOverflow(void){
 }
 
 #ifdef DEBUG
@@ -322,23 +213,8 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
         case SVC_multiObjectWaitForDecrease:
             if (!fromHandlerMode) lockObjectBlock(0);
             break;
-        case SVC_multiObjectWaitForIncreaseAndSleep:
-            if (!fromHandlerMode) lockObjectBlockAndSleep(1);
-            break;
-        case SVC_multiObjectWaitForDecreaseAndSleep:
-            if (!fromHandlerMode) lockObjectBlockAndSleep(0);
-            break;
-        case SVC_sleep:
-            fallAsleep();
-            break;
-        case SVC_wakeup:
-            wakeupFromWBInterrupt();
-            break;
         case SVC_wakeupKernel:
             activateKernel();
-            break;
-        case SVC_wakeupCurrent:
-            wakeupCurrentProcess();
             break;
         case SVC_serviceRequired:
             currentProcessRequestsService();
@@ -346,9 +222,6 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
         case SVC_serviced:
             kernelIsDoneServing();
             break;
-        case SVC_mainClockInterrupt:
-            if (fromHandlerMode)
-                handleSystemTimerOverflow();
 #ifdef DEBUG
         case SVC_test:
             sayHi();

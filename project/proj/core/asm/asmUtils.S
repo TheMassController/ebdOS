@@ -52,7 +52,7 @@ endFunction:
 
 isInSVCInterrupt:
     mrs r0, PSR                 @ Load the PSR register, this special reg contains the current interrupt code
-    and r0, r0, #0xb            @ Clear all bits exept for 0xb, this set is all 1 if inside SVC
+    and r0, r0, #0xFF           @ Clear all bits exept for the interrupt bits
     cmp r0, #0xb                @ Test if r0 is exactly equal to  0xb
     it ne
     movne r0, 0                 @ If r0 != 0xb then r0 = 0

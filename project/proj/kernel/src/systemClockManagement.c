@@ -4,10 +4,14 @@
 #include <hw_memmap.h>      // address of GPIO etc
 
 #include "systemClockManagement.h"
-#include "supervisorCall.h"
+#include "kernEventNotifier.h"
 
 void systemTimerInterrupt(void){
-    CALLSUPERVISOR(SVC_mainClockInterrupt);
+    passMessageToKernel(sysTimerOverflow);
+}
+
+void sleepTimerInterrupt(void){
+    passMessageToKernel(sleepTimerExpired);
 }
 
 unsigned getSystemClockValue(void){

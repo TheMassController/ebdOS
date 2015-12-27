@@ -17,6 +17,14 @@
 void kernRetQueuePush(struct Process* procPtr);
 
 /**
+ * @brief Add a list of processes to the processQueue. It will be added to the end of it.
+ *
+ * The singly linked list structure of the Process struct is used. It is safe agains NULL additions.
+ * @param procPtr The pointer to the first process you want to add. If this pointer is NULL, nothing happens
+ */
+void kernRetQueueAddList(struct Process* procPtr);
+
+/**
  * @brief Pop a process from the kernelQueue. It will be popped from the top.
  * @return The popped Process pointer or NULL if there was none
  * @warning If this function is called by anything other then the supervisor it will silently fail

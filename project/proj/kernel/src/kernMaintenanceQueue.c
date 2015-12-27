@@ -12,6 +12,7 @@ static int processReadPos;
 static int processWritePos;
 
 void kernRetQueuePush(struct Process* procPtr){
+    if (procPtr == NULL) return;
     procPtr->nextProcess = NULL;
     if (procQueueStart == NULL){
         procQueueStart = procPtr;
@@ -23,6 +24,7 @@ void kernRetQueuePush(struct Process* procPtr){
 }
 
 void kernRetQueueAddList(struct Process* procPtr){
+    if (procPtr == NULL) return;
     if (procQueueStart == NULL){
         procQueueStart = procPtr;
         procQueueEnd = procPtr;

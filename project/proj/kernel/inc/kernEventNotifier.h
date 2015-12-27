@@ -1,5 +1,5 @@
 /**
- * @file kernInteractBuffer.h
+ * @file kernEventNotifier.h
  * @author Jacko Dirks
  *
  * This is the header file for the functions responsible for the communication towards the kernel from the rest of the world.
@@ -15,8 +15,8 @@
  *
  * @warning Do not attempt to call any of these functions from unsupervised, this causes a memory violation.
  */
-#ifndef KERINTERACTBUFFER_H
-#define KERINTERACTBUFFER_H
+#ifndef KERNEVENTNOTIFIER_H
+#define KERNEVENTNOTIFIER_H
 
 #include "process.h"
 
@@ -25,6 +25,7 @@
 enum KernBufferMessageCodes{
     noMessageAvailable = 0, // This way, a buffer specified in the .bss section will be set to all 0 on reset and thus will be set to noMessageAvailable.
                             // Note that this is not necessary: the C standard specifies that the first value of an enum gets 0 per default.
+    sysTimerOverflow,
     sleepTimerExpired,
     mutexSleepTimerExpired
 };
@@ -43,4 +44,4 @@ int passMessageToKernel(const enum KernBufferMessageCodes code);
  * @return noMessageAvailable if there is no message, else it returns the message.
  */
 enum KernBufferMessageCodes kernelBufferGetCode(void);
-#endif //KERINTERACTBUFFER_H
+#endif //KERNEVENTNOTIFIER_H

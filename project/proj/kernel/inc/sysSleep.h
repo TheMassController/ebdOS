@@ -3,44 +3,46 @@
 /**
  * @author Jacko Dirks
  * @file sysSleep.h
- * This is the kernel side of orinary sleeping. The compination synchronization/sleep is handled elsewhere.
+ * This is the kernel side of ordinary sleeping. The combination synchronization(mutexing)/sleep is handled elsewhere.
  * This sleep subsystem depends on the system timer, the one that changes every microsecond.
  * An internal interrupt and a specific SVC call is used to communicate processes that have awoken back to the scheduler.
  * This module is tightly coupled with the SVC.
  */
 
-#include "process.h"
-#include "sleep.h"
+#include "sleep.h" // Contains sleepRequest
 
-struct SleepingProcessStruct{
-    struct Process* process;
-    struct SleepingProcessStruct* nextPtr;
+struct SleepingProcessStruct {
     unsigned overflows;
     unsigned sleepUntil;
 };
 
-// Depricated
-void __sleepMSDelayBlock(unsigned ms);
+#include "process.h" // Contains process struct
 
 /**
  * @brief Adds a process to the sleep module
  * @param Proc A pointer to the process you want to add.
  * @param sleepRequest The full sleep request. This thing is processed, so the sleepingProcessStruct does not have to be set.
- * @return NULL if the process was successfully added, proc if not, because sleep time was already expired
+ * @return A list of processes that is done sleeping.
  * @warning Calling this function from interrupt causes crash
  * @warning Calling this function unprivileged causes MPU error
  */
-struct Process* addSleeper(struct Process* proc, struct SleepRequest* sleepRequest);
+struct Process* addSleeper(struct Process* proc, const struct SleepRequest* sleepRequest);
 
 /**
  * @brief removes a process from the sleep module.
- * The process is only removed, not passed on to the SVC
+ * Call refreshSleepList during runtime. It is assumed that the sleeper is in the list.
  * @param proc The process that is removed from the sleep module
- * @return NULL if the process was not found, the same process pointer as the first param else.
+ * @return A list of processes, including those who are done sleeping and the removed one.
  * @warning Calling this function from interrupt causes crash
  * @warning Calling this function unprivileged causes MPU error
  */
 struct Process* removeSleeper(struct Process* proc);
+
+/**
+ * @brief Refreshes sleeplist, resets the interrupt, returns the list of processes that are done.
+ * @return A linkedlist of processes whose sleeping times have passed.
+ */
+struct Process* refreshSleeplist(void);
 
 /**
  * @brief Handles the overflow of the system timer.

@@ -1,20 +1,20 @@
 // This file makes sure all the default settings are set
 // System headers, provided by the libs
-#include <hw_nvic.h>        // Macros for hardware interrupt setup
-#include <hw_types.h>       // Contains the types
-#include <sysctl.h>         // Contains defines for PLL regs
-#include <rom_map.h>        // Call functions directly from the ROM if available
-#include <rom.h>            // Declare ROM addresses for rom funcs
-#include <hw_memmap.h>      // address of GPIO etc
-#include <gpio.h>           // Address of GPIO stuff
-#include <uart.h>           // UART addresses and stuff
-#include <uartstdio.h>      // UART printf n stuff
-#include <stdlib.h>         // Malloc & Free
-#include <process.h>        // Process var
-#include <lm4f120h5qr.h>    // Hardware regs
-#include <timer.h>          // The subaddresses of timers
-#include <hw_ints.h>        // Memory addresses of hw interrupts
-#include <interrupt.h>      // Function prototypes for hardware interrupt setup
+#include <hw_nvic.h>                // Macros for hardware interrupt setup
+#include <hw_types.h>               // Contains the types
+#include <sysctl.h>                 // Contains defines for PLL regs
+#include <rom_map.h>                // Call functions directly from the ROM if available
+#include <rom.h>                    // Declare ROM addresses for rom funcs
+#include <hw_memmap.h>              // address of GPIO etc
+#include <gpio.h>                   // Address of GPIO stuff
+#include <uart.h>                   // UART addresses and stuff
+#include <uartstdio.h>              // UART printf n stuff
+#include <stdlib.h>                 // Malloc & Free
+#include <process.h>                // Process var
+#include <lm4f120h5qr.h>            // Hardware regs
+#include <timer.h>                  // The subaddresses of timers
+#include <hw_ints.h>                // Memory addresses of hw interrupts
+#include <interrupt.h>              // Function prototypes for hardware interrupt setup
 // System headers provided by kernel or core
 #include "coreUtils.h"              // Core functions that need to be written in assembly
 #include "process.h"                // Everything related to the processes
@@ -26,12 +26,9 @@
 #include "clockSetup.h"             // Defines clock speed and related settings
 #include "kernUtils.h"              // Contains the generateCrash function
 #include "kernMaintenanceQueue.h"   // Contains kernRetQueuePush
-// User headers
-#include "validation.h"     // Contains all validation functions
 
 #define SLEEPTIMERPRIORITY 0xc0 //11000000, lowest possible priority of major group, highest possible of subgroup
 
-extern unsigned sleepClocksPerMS;
 extern struct ReentrantMutex mallocMutex;
 extern int initialized;
 
@@ -47,7 +44,6 @@ void main(void);
 void kernelStart(void){
     // Setup the PLL
     ROM_SysCtlClockSet(CLOCKSPEEDS_SYSCTL[EDB_SYSCTL_ENTRY]);
-
     // Enable all possible sys interrupts
     // Datasheet pp 168
     // Enable the usage fault
@@ -105,16 +101,22 @@ void kernelStart(void){
     // 32-bit wide, one clock increase every 40000 cycles. At this point, the clock is 80.000.000 cycles per second. So this clock changes 2000 times per second
     // 1 toik is a us.
     // The timer runs from high to low
+#ifdef DEBUG
     if (MAP_SysCtlClockGet() % 1000000){
         UARTprintf("The current clock speed is not high enough for the OS to function\n");
-        generateCrash();
     }
+#endif //DEBUG
     const unsigned ticksPerUs = MAP_SysCtlClockGet() / 1000000;
-    sleepClocksPerMS = 2;
+    /* Intresting thing, this.
+     * There are three timers running related to sleep. The first one is WTIMER0_A, this one is the reference timer. It always runs, tics once per microsecond and automatically reloads.
+     * WTIMER0_A is called the system timer. It acts as a reference to everything.
+     * The second one is WTIMER0_B. This one interrupts when the next normal sleeping process needs to wake up.
+     * WTIMER1_A has the same role as WTIMER0_B, only for futex objects: acts as a help in sleep and wait for mutex.
+     */
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable the timer
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1); // Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Part A wraps around and starts again, part B shoots once. Used for sleeping
-    ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC); // Part A shoots once. Used for futex
+    ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_ONE_SHOT); // Part A shoots once. Used for futex
     // Configure timer 0A, the system timer
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967294); // Load it with initial value unsigned32_max - 1. This -1 is because it costs one cycle to reload and restart
@@ -124,30 +126,26 @@ void kernelStart(void){
     // Configure timer 1A, the futex timer
     ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
     // Clear and enable the timer related interrupts
-    ROM_IntPrioritySet(INT_WTIMER0A, SLEEPTIMERPRIORITY);
-    ROM_IntPrioritySet(INT_WTIMER0B, SLEEPTIMERPRIORITY);
-    ROM_IntPrioritySet(INT_WTIMER1A, SLEEPTIMERPRIORITY);
-    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Enable the timeout interrupt
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMA_TIMEOUT); // Clear the correct interrupt
-    ROM_TimerIntEnable(WTIMER0_BASE, TIMER_TIMB_MATCH); // Enable the correct interrupt
-    ROM_TimerIntClear(WTIMER0_BASE, TIMER_TIMB_MATCH); // Let it interrupt on match
-    ROM_TimerIntEnable(WTIMER1_BASE, TIMER_TIMA_MATCH); // Enable the correct interrupt
-    ROM_TimerIntClear(WTIMER1_BASE, TIMER_TIMA_MATCH); // Let it interrupt on match
-    ROM_IntEnable(INT_WTIMER0A);
-    ROM_IntEnable(INT_WTIMER0B);
-    ROM_IntEnable(INT_WTIMER1A);
-
-    // NVIC_PRI27_R |= 7<<5;
-    // UARTprintf("%d\r\n",NVIC_PRI27_R);
+    ROM_IntPrioritySet(INT_WTIMER0A,    SLEEPTIMERPRIORITY);
+    ROM_IntPrioritySet(INT_WTIMER0B,    SLEEPTIMERPRIORITY);
+    ROM_IntPrioritySet(INT_WTIMER1A,    SLEEPTIMERPRIORITY);
+    ROM_TimerIntEnable(WTIMER0_BASE,    TIMER_TIMA_TIMEOUT);    // Enable the timeout interrupt
+    ROM_TimerIntClear(WTIMER0_BASE,     TIMER_TIMA_TIMEOUT);    // Clear the correct interrupt
+    ROM_TimerIntEnable(WTIMER0_BASE,    TIMER_TIMB_MATCH);      // Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER0_BASE,     TIMER_TIMB_MATCH);      // Let it interrupt on match
+    ROM_TimerIntEnable(WTIMER1_BASE,    TIMER_TIMA_MATCH);      // Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER1_BASE,     TIMER_TIMA_MATCH);      // Let it interrupt on match
+    ROM_IntEnable(INT_WTIMER0A);                                // Enable the interupt on NVIC
+    ROM_IntEnable(INT_WTIMER0B);                                // Enable the interupt on NVIC
+    ROM_IntEnable(INT_WTIMER1A);                                // Enable the interupt on NVIC
 #ifdef DEBUG
-    // The following setting stalls both the sleep timers when the CPU is stopped for debugging.
+    // The following setting stalls all the sleep timers when the CPU is stopped for debugging.
     ROM_TimerControlStall(WTIMER0_BASE, TIMER_BOTH, 1);
+    ROM_TimerControlStall(WTIMER1_BASE, TIMER_A, 1);
 #endif //DEBUG
     // Initialize the MPU
     // initializeMPU();
-    // Initialize malloc mutex
     initReentrantMutex(&(mallocMutex));
-    // Process initialization (after this function we are suddenly the kernel)
     initScheduler(&kernelStruct);
     initializeProcesses();
 

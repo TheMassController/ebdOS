@@ -102,7 +102,7 @@ int modifyLockObjectBlockTimeout(struct LockObject* object, unsigned msTimeout, 
         retCode = modifyLockObject(object, 0);
     }
     if (retCode == -1){
-        __sleepMSDelayBlock(msTimeout);
+        sleepMS(msTimeout);
         while((currentProcess->state & STATE_SLEEP) && (retCode == -1)){
             if (increase){
                 //You want to increase, so you wait for a decrease

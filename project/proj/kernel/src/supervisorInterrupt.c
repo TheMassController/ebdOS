@@ -16,6 +16,7 @@
 #include "scheduler.h"              // All functions related to the scheduler
 #include "kernMaintenanceQueue.h"   // The kernel maintenaince queue
 #include "kernUtils.h"              // To escalate to NMI
+#include "kernEventNotifier.h"      // To check if there are no more events waiting for the kernel.
 
 static struct Process* kernel                               = &kernelStruct;
 //TODO depricate: Futex! Well, this should become a kernel thing.
@@ -180,8 +181,7 @@ static void kernelIsDoneServing(void){
         addProcessToScheduler(tempPtr);
         tempPtr = kernRetQueuePop();
     }
-    //TODO test if both eventQueue and processQueue are empty
-    if(KernelProcessBufferIsEmpty()){
+    if(KernelProcessBufferIsEmpty() && kernBufferIsEmpty()){
         suspendKernel();
     }
 }

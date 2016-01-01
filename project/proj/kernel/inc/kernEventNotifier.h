@@ -44,4 +44,10 @@ int passMessageToKernel(const enum KernBufferMessageCodes code);
  * @return noMessageAvailable if there is no message, else it returns the message.
  */
 enum KernBufferMessageCodes kernelBufferGetCode(void);
+
+/**
+ * @brief Checks if the kernel buffer is empty
+ * @return 1 if there is no message in the buffer, 0 if there is at least one.
+ */
+int kernBufferIsEmpty(void);
 #endif //KERNEVENTNOTIFIER_H

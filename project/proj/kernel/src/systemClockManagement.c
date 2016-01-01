@@ -7,10 +7,12 @@
 #include "kernEventNotifier.h"
 
 void systemTimerInterrupt(void){
+    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_CAPA_MATCH|TIMER_CAPA_EVENT|TIMER_TIMA_TIMEOUT);
     passMessageToKernel(sysTimerOverflow);
 }
 
 void sleepTimerInterrupt(void){
+    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_TIMB_MATCH);
     passMessageToKernel(sleepTimerExpired);
 }
 

@@ -11,6 +11,8 @@
 
 #include "sleep.h"
 
+#define SLEEPTIMEMS 250
+
 static void prepareHardware(void){
     //F gate: button 2
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
@@ -21,13 +23,17 @@ static void prepareHardware(void){
 void val_ledsFlicker(void){
     prepareHardware();
     while(1){
-        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);
-        sleepMS(500);
-        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_2);
-        sleepMS(500);
-        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_3);
-        sleepMS(500);
         ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1);
-        sleepMS(500);
+        sleepMS(SLEEPTIMEMS);
+        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_1 | GPIO_PIN_2);
+        sleepMS(SLEEPTIMEMS);
+        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_2);
+        sleepMS(SLEEPTIMEMS);
+        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_2 | GPIO_PIN_3);
+        sleepMS(SLEEPTIMEMS);
+        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_3);
+        sleepMS(SLEEPTIMEMS);
+        ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_3 | GPIO_PIN_1);
+        sleepMS(SLEEPTIMEMS);
     }
 }

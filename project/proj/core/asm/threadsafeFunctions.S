@@ -92,8 +92,7 @@ atomicSetInt:                   @ params pointer to signed int, newval, expcurva
     ldrex r3, [r0]              @ Deref the pointer, exclusive
     cmp r3, r2                  @ Compare, see if it equals
     bne L2                      @ if curval != expcurval, return -1
-    mov r3, r1                  @ set r3 to newval
-    strex r12, r3, [r0]         @ Store the value to the original memory location, exclusive
+    strex r12, r1, [r0]         @ Store the value to the original memory location, exclusive
     cmp r12, #1                 @ Test if the store was successfull, if not: try again.
     beq atomicSetInt            @ Jump to try again
     mov r0, #1                  @ Write 1 to to return reg to indicate success.

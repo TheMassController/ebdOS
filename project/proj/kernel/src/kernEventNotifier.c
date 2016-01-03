@@ -37,7 +37,7 @@ static int addMessageToBuffer(const enum KernBufferMessageCodes code){
         if (!enoughSpaceInBuffer(messageReadPos, messageWritePos, KERNMESSAGEBUFFERSIZE)) return ENOMEM;
         int writepos = atomicIncreaseIntWithMax(&messageWritePos, KERNMESSAGEBUFFERSIZE-1);
         if (writepos == -1){
-            if (!atomicSetInt(&messageWritePos, 0, writepos)) continue;
+            if (atomicSetInt(&messageWritePos, 0, KERNMESSAGEBUFFERSIZE-1) == -1) continue;
             writepos = 0;
         }
         messageBuf[writepos] = code;

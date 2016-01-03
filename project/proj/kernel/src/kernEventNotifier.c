@@ -76,6 +76,9 @@ enum KernBufferMessageCodes kernelBufferGetCode(void){
     lockSpinlock(&messageBufLock);
     messageReadPos = (messageReadPos + 1) % KERNMESSAGEBUFFERSIZE;
     enum KernBufferMessageCodes message = messageBuf[messageReadPos];
+#ifdef DEBUG
+    messageBuf[messageReadPos] = noMessageAvailable;
+#endif //DEBUG
     unlockSpinlock(&messageBufLock);
     return message;
 }

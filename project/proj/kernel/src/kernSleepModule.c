@@ -1,6 +1,5 @@
 #include <stdint.h>                     // uint64_t
 #include <stdlib.h>                     // NULL
-#include <string.h>                     // strerror
 
 #include <hw_nvic.h>                    // Macros related to the NVIC hardware
 #include <hw_types.h>                   // Common types and macros for the TI libs
@@ -12,16 +11,9 @@
 #include <rom_map.h>                    // Call functions directly from the ROM if available
 #include <rom.h>                        // Declare ROM addresses for rom funcs
 
-#include "supervisorCall.h"             // Contains the macro's necessary for making a supervisor call
 #include "process.h"                    // Contains information about the struct Process
 #include "sleep.h"                      // Contains information about the struct SleepRequest
-#include "systemClockManagement.h"      // Contains information and functions about the main clock
-#include "coreUtils.h"                  // For testing if inside SVC interrupt
-#include "spinlock.h"                   // For the spinlock
 #include "systemClockManagement.h"      // Contains the function getCurrentSytemTimerValue
-#ifdef DEBUG
-#include <uartstdio.h>                  // Printfs etc.
-#endif //DEBUG
 
 static struct Process* sleepList = NULL;
 

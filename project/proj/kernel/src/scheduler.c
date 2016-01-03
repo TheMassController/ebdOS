@@ -96,14 +96,14 @@ static int processInList(struct Process* listHead, struct Process* proc){
 }
 
 void addProcessToScheduler(struct Process* proc){
-    if (proc != NULL && isInSVCInterrupt() && !processInList(processesReady, proc)){
+    if (proc != NULL && !processInList(processesReady, proc)){
         processesReady = appendProcessToList(processesReady, proc);
         if (currentProcess == idleProcess) rescheduleImmediately();
     }
 }
 
 void removeProcessFromScheduler(struct Process* proc){
-    if (isInSVCInterrupt() && processInList(processesReady, proc)){
+    if (processInList(processesReady, proc)){
         processesReady = removeProcessFromList(processesReady, proc);
         if (currentProcess == proc) rescheduleImmediately();
     }
@@ -114,11 +114,8 @@ struct Process* getCurrentProcess(void){
 }
 
 struct Process* popCurrentProcess(void){
-    if (isInSVCInterrupt()){
-        removeProcessFromScheduler(currentProcess);
-        return currentProcess;
-    }
-    return NULL;
+    removeProcessFromScheduler(currentProcess);
+    return currentProcess;
 }
 
 int processInScheduler(struct Process* proc){
@@ -126,8 +123,7 @@ int processInScheduler(struct Process* proc){
 }
 
 void preemptCurrentProcess(void){
-    // TODO revise
-    if (isInSVCInterrupt() && processesReady != NULL && currentProcess->nextProcess != NULL){
+    if (processesReady != NULL && currentProcess->nextProcess != NULL){
         removeProcessFromScheduler(currentProcess);
         addProcessToScheduler(currentProcess);
     }

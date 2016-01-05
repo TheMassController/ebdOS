@@ -11,11 +11,8 @@
 #include "process.h"
 #endif //DEBUG
 
-
-void faultISRHandler(void){
-#ifdef DEBUG
+static void dumpInformation(void){
     struct Process* currentProcess = getCurrentProcess();
-    UARTprintf("Hard fault\r\nReset the device to continue...\r\n");
     UARTprintf("HFAULTSTAT info:\r\n");
     UARTprintf("\tDebug Event: %d\r\n", (NVIC_HFAULT_STAT_R & NVIC_HFAULT_STAT_DBG) ? 1 : 0);
     UARTprintf("\tForced Hard Fault: %d\r\n", (NVIC_HFAULT_STAT_R & NVIC_HFAULT_STAT_FORCED) ? 1 : 0);
@@ -43,9 +40,25 @@ void faultISRHandler(void){
     UARTprintf("\r\nBus Fault Address value: 0x%x\r\n", NVIC_FAULT_ADDR_R);
     UARTprintf("\tMMADDR value: 0x%X\r\n", NVIC_MM_ADDR_R);
     UARTprintf("\tCurrent process name: %s\r\n", currentProcess->name);
+}
+
+
+void faultISRHandler(void){
+#ifdef DEBUG
+    UARTprintf("Hard fault\r\nReset the device to continue...\r\n");
+    dumpInformation();
 #endif //DEBUG
     while(1) waitForInterrupt();
 }
+
+void NMIHandler(void){
+#ifdef DEBUG
+    UARTprintf("NMI fault\r\nReset the device to continue...\r\n");
+    dumpInformation();
+#endif //DEBUG
+    while(1) waitForInterrupt();
+}
+
 
 void usageFaultHandler(void){
 #ifdef DEBUG

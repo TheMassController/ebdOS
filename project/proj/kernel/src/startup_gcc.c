@@ -35,7 +35,6 @@
 //
 //*****************************************************************************
 void ResetISR(void);
-static void NmiSR(void);
 static void IntDefaultHandler(void);
 
 //System stack start, defined in linker script
@@ -59,6 +58,7 @@ void usageFaultHandler(void);       // Declared in fault.c
 void mpuFaultHandler(void);         // Declared in fault.c
 void busFaultHandler(void);         // Declared in fault.c
 void faultISRHandler(void);         // Declared in fault.c
+void NMIHandler(void);              // Declared in fault.c
 
 /* Temporary handlers, not here to stay */
 void button2Interrupt(void);
@@ -76,7 +76,7 @@ void (* const g_pfnVectors[])(void) =
 	(void (*)(void))((unsigned long)(&_stack_top)),
                                             // The initial stack pointer
     ResetISR,                               // The reset handler
-    NmiSR,                                  // The NMI handler
+    NMIHandler,                             // The NMI handler
     faultISRHandler,                        // The hard fault handler
     mpuFaultHandler,                        // The MPU fault handler
     busFaultHandler,                        // The bus fault handler
@@ -258,16 +258,6 @@ extern unsigned long _kernel_flash_data;
 extern unsigned long _core_flash_data;
 extern unsigned long _flash_data;
 
-//*****************************************************************************
-//
-// This is the code that gets called when the processor first starts execution
-// following a reset event.  Only the absolutely necessary set is performed,
-// after which the application supplied entry() routine is called.  Any fancy
-// actions (such as making decisions based on the reset cause register, and
-// resetting the bits in that register) are left solely in the hands of the
-// application.
-//
-//*****************************************************************************
 void ResetISR(void)
 {
     volatile unsigned long *pulSrc, *pulDest;
@@ -296,26 +286,8 @@ void ResetISR(void)
     zeroFillSection(&_core_bss, &_core_ebss);
     zeroFillSection(&_bss, &_ebss);
 
-	//Jump to the software init
+    //Jump to the software init
 	kernelStart();
-}
-
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives a NMI.  This
-// simply enters an infinite loop, preserving the system state for examination
-// by a debugger.
-//
-//*****************************************************************************
-static void
-NmiSR(void)
-{
-    //
-    // Enter an infinite loop.
-    //
-    while(1)
-    {
-    }
 }
 
 //*****************************************************************************

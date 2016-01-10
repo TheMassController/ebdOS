@@ -1,5 +1,7 @@
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
+#include <stdint.h>
+#include <stddef.h>
 
 #include "sleep.h"
 
@@ -7,7 +9,8 @@
 enum SyscallCodes {
     GETPID,
     SPAWNCHILDPROCESS,
-    PROCESSSLEEP
+    PROCESSSLEEP,
+    PROCESSEXIT
 };
 
 /**

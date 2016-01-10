@@ -5,10 +5,11 @@
  * - Return function: This is the function any process returns to after run. From here on out it will yield all its timeslices (to be implemented)
  *
  */
+#include <uartstdio.h>
+#include <stdlib.h>
 
 #include "coreUtils.h"
 #include "process.h"
-#include "uartstdio.h"
 #include "sysCalls.h"
 struct ProcessContext* currentContext;
 
@@ -19,9 +20,6 @@ void __sleepProcessFunc(void){
 }
 
 void __processReturn(void){
-    UARTprintf("Process with pid %d has just returned.\r\n", getPid());
-    while(1){
-        waitForInterrupt();
-    }
+    exit(0);
 }
 

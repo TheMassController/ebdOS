@@ -27,3 +27,9 @@ int sysCallSleep(struct SleepRequest* sleepReq){
     CALLSUPERVISOR(SVC_serviceRequired);
     return currentContext->retVal;
 }
+
+void exit(int status){
+    setContextParams(PROCESSEXIT, NULL, status);
+    CALLSUPERVISOR(SVC_serviceRequired);
+    while(1);
+}

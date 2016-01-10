@@ -49,6 +49,7 @@ struct Process idleProcessStruct = {
     .containsProcess = 1,
     .state = STATE_READY,
     .hwFlags = PROCESS_DEFAULT,
+    .name = "IdleProcess",
 };
 
 // TODO depricate in favor of the syscall exit function, or a derative
@@ -59,7 +60,6 @@ static void releaseFromMemPool(struct Process* process){
     process->containsProcess = 0;
 }
 
-//This function is not threadsafe: only the kernel can run it!
 static struct Process* getProcessFromPool(void){
     //Starts at one because process zero is always the kernel. If that process does not exist then something real is going on.
     for (int i = 0; i < MAXTOTALPROCESSES; ++i){

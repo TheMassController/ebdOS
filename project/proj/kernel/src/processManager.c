@@ -103,13 +103,13 @@ static void setupDynamicMem(struct Process* proc, void* stack, size_t stacklen, 
     //The second set is the registers that we have to move manually between RAM and regs when switching contexts
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
     //FP: S16, S17, S18, S19, S20, S21, S22, S23, S24, s25, S26, S27, S28, S29, S30, S31
-    //Normal regs first
+    //FP regs at the top
     uint32_t it = 0;
     for ( uint32_t u = 16; u <= 31; u++){
         proc->savedRegSpace[it] = u;
         ++it;
     }
-    //Then the FP regs
+    //Normal regs at the bottom
     for ( uint32_t u = 4; u <= 11; u++ ){
         proc->savedRegSpace[it] = u;
         ++it;

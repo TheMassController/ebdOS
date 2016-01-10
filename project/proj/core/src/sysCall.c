@@ -6,24 +6,24 @@
 #include "supervisorCall.h"
 
 unsigned getPid(void){
-    setContextParams(GETPID, NULL);
+    setContextParams(GETPID, NULL, 0);
     CALLSUPERVISOR(SVC_serviceRequired);
     return currentContext->retVal;
 }
 
-int createChildProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param){
+int createChildProcess(size_t stacklen, char* name, void (*procFunc)(), void* param){
     struct ProcessCreateParams params;
     params.stacklen = stacklen;
     strcpy(params.name, name);
     params.procFunc = procFunc;
     params.param = param;
-    setContextParams(SPAWNCHILDPROCESS, &params);
+    setContextParams(SPAWNCHILDPROCESS, &params, 0);
     CALLSUPERVISOR(SVC_serviceRequired);
     return currentContext->retVal;
 }
 
 int sysCallSleep(struct SleepRequest* sleepReq){
-    setContextParams(PROCESSSLEEP, sleepReq);
+    setContextParams(PROCESSSLEEP, sleepReq, 0);
     CALLSUPERVISOR(SVC_serviceRequired);
     return currentContext->retVal;
 }

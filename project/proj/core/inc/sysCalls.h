@@ -23,7 +23,7 @@ unsigned getPid(void);
  * @param param Optional parameter to pass to the process. Usually NULL.
  * @return -1 if there was an error, errno will be set. PID of the child if everything went ok, errno will be untuched.
  */
-int createChildProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param);
+int createChildProcess(size_t stacklen, char* name, void (*procFunc)(), void* param);
 /**
  * @brief Puts a process into sleep.
  *

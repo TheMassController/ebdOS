@@ -1,7 +1,9 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
+#include <stdint.h>     // uint32_t type
+#include <errno.h>      // error_t type
 
-#include "sysCalls.h"
+#include "sysCalls.h"   // SyscallCodes type
 
 /**
  * @brief Contains the process context, this is a set of variables that is unique per process and accesseble for the process itself.
@@ -11,10 +13,10 @@
 
 struct ProcessContext {
     /* Syscall layer variables */
-    unsigned retVal;
+    uint32_t retVal;
     void* genericPtr;
     /* General variables */
-    int context_errno;
+    error_t context_errno;
     enum SyscallCodes comVal;
 };
 

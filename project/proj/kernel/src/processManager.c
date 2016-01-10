@@ -19,10 +19,11 @@
 #endif //DEBUG
 
 //And the other defines
-#define IDLEFUNCSTACKLEN 128
+// For now we want it to be 128 bytes
+#define IDLEFUNCSTACKLEN (128/sizeof(uint8_t))
 
 static struct Process processPool[MAXTOTALPROCESSES];
-static char idleProcStack[IDLEFUNCSTACKLEN + sizeof(struct ProcessContext)];
+static uint8_t idleProcStack[IDLEFUNCSTACKLEN + sizeof(struct ProcessContext)];
 static struct ProcessContext kernelContext;
 
 struct Process kernelStruct = {
@@ -69,15 +70,15 @@ static struct Process* getProcessFromPool(void){
     return NULL;
 }
 
-static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen, void (*procFunc)(), void* param){
+static void setupDynamicMem(struct Process* proc, void* stack, size_t stacklen, void (*procFunc)(), void* param){
     proc->stack = stack;
     proc->stacklen = stacklen;
     // Set the context pointer
-    proc->context = (struct ProcessContext*)((long)proc->stack + stacklen);
+    proc->context = (struct ProcessContext*)((uintptr_t)proc->stack + stacklen);
     //Because a stack moves down (from high to low) move the pointer to the last address and then move it down to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
     //This new address is always lower then or equal to the highest address that is assigned this process.
     //stacklen -sizeof(void*) is because ptr + stacklen is one too much, the pointer itself is also assigned to the process
-    int* stackPointer = (int*)(((long)proc->stack + stacklen - 1) & ~((long)0x3));
+    uintptr_t* stackPointer = (uintptr_t*)(((uintptr_t)proc->stack + stacklen - 1) & ~((uintptr_t)0x3));
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from down to up: R0, R1, R2, R3, R12, LR, PC, XSPR
@@ -92,7 +93,7 @@ static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen
 #else
     stackPointer -= 4;      //If not debugging, just decrease the stackptr
 #endif //DEBUG
-    *stackPointer = (int)param; // reg 0, first param
+    *stackPointer = (uintptr_t)param; // reg 0, first param
     //Save the stackpointer to the struct
     proc->stackPointer = (void*)stackPointer;
 
@@ -103,13 +104,13 @@ static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen
     //Order: R4, R5, R6, R7, R8, R9, R10, R11
     //FP: S16, S17, S18, S19, S20, S21, S22, S23, S24, s25, S26, S27, S28, S29, S30, S31
     //Normal regs first
-    unsigned it = 0;
-    for ( int u = 16; u <= 31; u++){
+    uint32_t it = 0;
+    for ( uint32_t u = 16; u <= 31; u++){
         proc->savedRegSpace[it] = u;
         ++it;
     }
     //Then the FP regs
-    for ( int u = 4; u <= 11; u++ ){
+    for ( uint32_t u = 4; u <= 11; u++ ){
         proc->savedRegSpace[it] = u;
         ++it;
     }
@@ -117,7 +118,7 @@ static void setupDynamicMem(struct Process* proc, void* stack, unsigned stacklen
 }
 
 void initializeProcesses(void){
-    for (int i = 0; i < MAXTOTALPROCESSES; ++i){
+    for (uint32_t i = 0; i < MAXTOTALPROCESSES; ++i){
         processPool[i].pid = i + 2;
     }
     setupDynamicMem(&idleProcessStruct, (void*)&idleProcStack, IDLEFUNCSTACKLEN, __sleepProcessFunc, NULL);

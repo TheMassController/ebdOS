@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "process.h"
+#include "processModule.h"
 #include "uartstdio.h"
 #include "sysCalls.h"
 #include "context.h"

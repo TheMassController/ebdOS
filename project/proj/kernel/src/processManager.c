@@ -167,21 +167,3 @@ struct Process* createNewProcess(const struct ProcessCreateParams* params, struc
     }
     return newProc;
 }
-
-struct Process* __createNewProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged, struct Process* parentProc){
-    struct ProcessCreateParams params;
-    params.stacklen = stacklen;
-    if (strlen(name) > 31){
-        //Name too long, only copy first 31 characters
-        memcpy(params.name, name, 31);
-        params.name[31] = 0;
-    } else {
-        strcpy(params.name, name);
-    }
-    params.procFunc = procFunc;
-    params.param = param;
-    params.priority = priority;
-    params.isPrivileged = isPrivileged;
-    //Set some vars
-    return createNewProcess(&params, parentProc);
-}

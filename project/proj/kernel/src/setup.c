@@ -17,7 +17,7 @@
 #include <interrupt.h>              // Function prototypes for hardware interrupt setup
 // System headers provided by kernel or core
 #include "coreUtils.h"              // Core functions that need to be written in assembly
-#include "process.h"                // Everything related to the processes
+#include "processModule.h"          // Everything related to the processes
 #include "mutex.h"                  // Everything related to mutexes
 #include "reentrantMutex.h"         // Everything related to mutexes
 #include "mpucontrol.h"             // Functions related to controlling the MPU
@@ -148,8 +148,15 @@ void kernelStart(void){
     initReentrantMutex(&(mallocMutex));
     initScheduler(&kernelStruct);
     initializeProcesses();
-
-    kernRetQueuePush(__createNewProcess(256, "main", main, NULL, 80, 0, &kernelStruct));
+    struct ProcessCreateParams params = {
+        .stacklen = 256,
+        .name = "main",
+        .procFunc = main,
+        .param = NULL,
+        .priority = 80,
+        .isPrivileged = 0,
+    };
+    kernRetQueuePush(createNewProcess(&params, &kernelStruct));
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer
     CALLSUPERVISOR(SVC_serviced)
     kernelMain();

@@ -19,6 +19,7 @@
 #define STATE_WAIT 0x6 //A flag to surround them all
 #define STATE_INC_WAIT 0x2
 #define STATE_DEC_WAIT 0x4
+#define STATE_TERM 0x8
 //CS means context switcher
 #define CS_SAVEDREGSPACE 8
 #define CS_FPSAVEDREGSPACE 16
@@ -69,10 +70,4 @@ struct ProcessCreateParams {
 
 extern struct Process kernelStruct;
 extern struct Process idleProcessStruct;
-
-/*
-   Uses errno.
-*/
-struct Process* __createNewProcess(unsigned long stacklen, char* name, void (*procFunc)(), void* param, char priority, char isPrivileged, struct Process* parentProc);
-struct Process* createNewProcess(const struct ProcessCreateParams* params, struct Process* parentProc);
 #endif

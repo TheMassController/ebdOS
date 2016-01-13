@@ -70,6 +70,17 @@ static struct Process* getProcessFromPool(void){
     return NULL;
 }
 
+// The child is added to the parent as a child process.
+static void assignChildToProcess(struct Process* parent, struct Process* child){
+    if (parent->childPtr == NULL){
+        parent->childPtr = child;
+    } else {
+        struct Process* it = parent->childPtr;
+        for (; it->nextChildPtr != NULL; it = it->nextChildPtr);
+        it->nextChildPtr = child;
+    }
+}
+
 static void setupDynamicMem(struct Process* proc, void* stack, size_t stacklen, void (*procFunc)(), void* param){
     proc->stack = stack;
     proc->stacklen = stacklen;
@@ -156,14 +167,20 @@ struct Process* createNewProcess(const struct ProcessCreateParams* params, struc
     if (params->isPrivileged) newProc->hwFlags |= PROCESS_IS_PRIVILEGED;
     newProc->blockAddress = NULL;
     setupDynamicMem(newProc, stack, params->stacklen, params->procFunc, params->param);
-    /* Administrative side, add it as a child to its parent and vice versa */
-    // First: add it as a child to its parent
-    if (parentProc->childPtr == NULL){
-        parentProc->childPtr = newProc;
-    } else {
-        struct Process* it = parentProc->childPtr;
-        for (; it->nextChildPtr != NULL; it = it->nextChildPtr);
-        it->nextChildPtr = newProc;
-    }
+    // Add it as a child to its parent
+    assignChildToProcess(parentProc, newProc);
     return newProc;
+}
+
+int terminateProcess(struct Process* proc, int32_t exitStatus){
+    // Set the state to terminated
+    proc->state = STATE_TERM;
+    // Put all the childeren as children of the kernel
+    if (proc->childPtr != NULL){
+        assignChildToProcess(&kernelStruct, proc->childPtr);
+    }
+    // Free the stack
+    free(proc->stack);
+    proc->retval = exitStatus;
+    return 0;
 }

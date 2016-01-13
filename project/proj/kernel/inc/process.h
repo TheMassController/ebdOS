@@ -57,6 +57,8 @@ struct Process {
     struct Process* nextProcess;                                    // Makes the thing a linkedlist
     struct Process* childPtr;                                       // Refers to its first child
     struct Process* nextChildPtr;                                   // Refers to its little brother
+
+    int32_t retval;                                                 // The returnvalue of the process, set on termination
 };
 
 struct ProcessCreateParams {

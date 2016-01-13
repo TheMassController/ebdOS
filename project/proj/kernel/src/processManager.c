@@ -52,7 +52,7 @@ struct Process idleProcessStruct = {
     .name = "IdleProcess",
 };
 
-// TODO depricate in favor of the syscall exit function, or a derative
+// Defined in core, because they are not actually part of the kernel.
 void __processReturn(void);
 void __sleepProcessFunc(void);
 
@@ -94,8 +94,8 @@ static void setupDynamicMem(struct Process* proc, void* stack, size_t stacklen, 
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from down to up: R0, R1, R2, R3, R12, LR, PC, XSPR
     *stackPointer-- = 0x01000000; //XPSR, standard stuff
-    *stackPointer-- = (int)procFunc; //PC, initally points to start of function
-    *stackPointer-- = (int)&__processReturn; //LR, return func
+    *stackPointer-- = (uintptr_t)procFunc; //PC, initally points to start of function
+    *stackPointer-- = (uintptr_t)__processReturn; //LR, return func
 #ifdef DEBUG
     *stackPointer-- = 12; // reg12, 12 for debug
     *stackPointer-- = 3; // reg3, 3 for debug

@@ -13,13 +13,15 @@
  * This way, a process can both be sleeping and waiting for a mutex.
  */
 
-#define STATE_READY 0x0
-#define STATE_SLEEP 0x1
-//Three wait states, to imply which type of object blockAddress is and which queue needs to be tuched when waking up from sleep
-#define STATE_WAIT 0x6 //A flag to surround them all
-#define STATE_INC_WAIT 0x2
-#define STATE_DEC_WAIT 0x4
-#define STATE_TERM 0x8
+enum ProcessStates {
+    STATE_READY,
+    STATE_SLEEP,
+    STATE_WAIT,
+    STATE_INC_WAIT, //TODO depricate
+    STATE_DEC_WAIT, //TODO depricate
+    STATE_TERM
+};
+
 //CS means context switcher
 #define CS_SAVEDREGSPACE 8
 #define CS_FPSAVEDREGSPACE 16

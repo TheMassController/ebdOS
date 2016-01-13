@@ -39,6 +39,9 @@ void kernelMain(void){
                     struct Process* it = addSleeper(kernMaintenanceProc, context->genericPtr);
                     kernRetQueueAddList(it);
                     break;
+                case PROCESSEXIT:
+                    terminateProcess(kernMaintenanceProc, context->passVal);
+                    break;
                 default:
                     UARTprintf("Unknown code for kernel service: %d, process name: %s, pid: %d\n", context->comVal, kernMaintenanceProc->name, kernMaintenanceProc->pid);
                     break;

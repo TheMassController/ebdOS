@@ -232,7 +232,6 @@ void findPrimeNumbers(void* amount){
         }
         UARTprintf(".\r\nDone!\r\n");
     }
-    while(1) sleepS(1000);
 }
 
 void findNthPrimeNumber(void* num){
@@ -245,7 +244,6 @@ void findNthPrimeNumber(void* num){
         }
         UARTprintf("The %uth prime number is: %u. My pid is: %u\n", maxCount, prevPrimeNum, getPid());
     }
-    while(1) sleepS(1000);
 
 }
 

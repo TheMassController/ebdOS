@@ -31,6 +31,5 @@ int main(void){
     }
 
     pid = getPid();
-    UARTprintf("I am the main, and I did my thingy. Going to sleep now. %d\n", pid);
-    while(1) sleepS(100);
+    UARTprintf("I am the main, and I did my thingy. Going to exit now. Pid: %d\n", pid);
 }

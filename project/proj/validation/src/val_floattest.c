@@ -246,13 +246,3 @@ void findNthPrimeNumber(void* num){
     }
 
 }
-
-void testFloatMain(void){
-    //if (createProcess(512, "testFloatSmall", testFloatOutputSmall, NULL, 20) != 0){
-    //    UARTprintf("My child did not spawn :(\r\n");
-    //}
-    //if (createProcess(512, "testFloatBig", findPrimeNumbers, (void*)203280221, 1) != 0){
-    while(1){
-        sleepS(10);
-    }
-}

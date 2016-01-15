@@ -48,7 +48,7 @@ static int addMessageToBuffer(const enum KernBufferMessageCodes code){
 int passMessageToKernel(const enum KernBufferMessageCodes code){
 #ifdef DEBUG
     if (isInSVCInterrupt()){
-        UARTprintf("Illegal function call in __FILE__, __LINE__\n");
+        UARTprintf("Illegal function call in file %s, line %d (function: %s).\n", __FILE__, __LINE__, __func__);
         generateCrash();
     }
 #endif //DEBUG
@@ -66,7 +66,7 @@ int passMessageToKernel(const enum KernBufferMessageCodes code){
 enum KernBufferMessageCodes kernelBufferGetCode(void){
 #ifdef DEBUG
     if (isInInterrupt()){
-        UARTprintf("Illegal function call in __FILE__, __LINE__\n");
+        UARTprintf("Illegal function call in file %s, line %d (function: %s).\n", __FILE__, __LINE__, __func__);
         generateCrash();
     }
 #endif //DEBUG

@@ -32,4 +32,5 @@ int main(void){
 
     pid = getPid();
     UARTprintf("I am the main, and I did my thingy. Going to exit now. Pid: %d\n", pid);
+    UARTprintf("I am in file %s, line %d (function: %s).\n", __FILE__, __LINE__, __func__);
 }

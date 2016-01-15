@@ -26,8 +26,13 @@
 #include "clockSetup.h"             // Defines clock speed and related settings
 #include "kernUtils.h"              // Contains the generateCrash function
 #include "kernMaintenanceQueue.h"   // Contains kernRetQueuePush
+#include "systemClockManagement.h"  // Contains EBD_SYSCLOCKMAXVAL
 
 #define SLEEPTIMERPRIORITY 0xc0 //11000000, lowest possible priority of major group, highest possible of subgroup
+
+#if EBD_SYSCLOCKMAXVAL > 0xffffffff
+    #error The sysclockmaxval is larger then the register size, cannot compile.
+#endif
 
 extern struct ReentrantMutex mallocMutex;
 extern int initialized;
@@ -119,7 +124,7 @@ void kernelStart(void){
     ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_ONE_SHOT); // Part A shoots once. Used for futex
     // Configure timer 0A, the system timer
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
-    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, 4294967294); // Load it with initial value unsigned32_max - 1. This -1 is because it costs one cycle to reload and restart
+    ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, EBD_SYSCLOCKMAXVAL-1); // Load it with initial value - 1. This -1 is because it costs one cycle to reload and restart
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); // Let it run until it reaches 0
     // Configure timer 0B, the sleep timer
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, ticksPerUs); // Setup the pre-scaler

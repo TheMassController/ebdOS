@@ -39,6 +39,6 @@ void sleepTimerInterrupt(void){
 #endif //DEBUG
 }
 
-unsigned getSystemClockValue(void){
+uint32_t getSystemClockValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }

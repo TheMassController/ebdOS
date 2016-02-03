@@ -9,6 +9,7 @@
 #include "supervisorCall.h"
 #include "kernMaintenanceQueue.h"
 #include "kernEventNotifier.h"
+#include "sysSleep.h"
 
 void kernelMain(void){
     while(1){

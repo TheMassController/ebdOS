@@ -2,7 +2,7 @@
 #define SYSMANAGEDLOCK_h
 /**
  * @author Jacko Dirks
- * @file sysFutSem.h
+ * @file sysManagedLock.h
  * This is the system side of the inter-thread or inter-process non-busy lock handling: the sempahore and the mutex.
  * On the kernelside this is called a managed lock. This file is purely management of the managed lock objects, it cannot behave like an actual mutex/semaphore handler.
  * A process can wait for a mutex for a limited time or infinitely.

@@ -1,10 +1,10 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include <stdint.h>         // Types like uint32_t are defined here
-#include <stddef.h>         // size_t
+#include <stdint.h>             // Types like uint32_t are defined here
+#include <stddef.h>             // size_t
 
-#include "sysSleep.h"       // SleepingProcessStruct
+#include "abstrSysSleep.h"      // SleepingProcessStruct
 
 /* States are handled as different bit flags:
  * pos 0 = sleep

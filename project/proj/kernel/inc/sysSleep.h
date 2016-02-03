@@ -9,14 +9,8 @@
  * This module is tightly coupled with the SVC.
  */
 
-#include "sleep.h" // Contains sleepRequest
-
-struct SleepingProcessStruct {
-    unsigned overflows;
-    unsigned sleepUntil;
-};
-
-#include "process.h" // Contains process struct
+#include "sleep.h"          // Contains sleepRequest struct
+#include "process.h"        // Contains process struct
 
 /**
  * @brief Adds a process to the sleep module

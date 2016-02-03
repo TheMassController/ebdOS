@@ -45,7 +45,7 @@ struct Process {
     struct ProcessContext* context;                                 // The userspace context of the process
 
     uint32_t savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  // Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
-    uint32_t mPid;                                                  // Mother pid
+    uintptr_t  mPid;                                                // Mother pid
     uint32_t stacklen;                                              // The length of the stack. Used to detect stack underflows
     void* stack;                                                    // refers to the address returned by Malloc
     char name[32];                                                  // The name can be 31 chars max, the last char always needs to be a zero.

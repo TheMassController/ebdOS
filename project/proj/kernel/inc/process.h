@@ -27,9 +27,6 @@ enum ProcessStates {
 #define CS_FPSAVEDREGSPACE 16
 #define CS_USING_FP 0x4
 
-//The next var is only about user processes, the kernel-based processes (kernel itself and idle) are counted seperately
-#define MAXTOTALPROCESSES 10
-
 //The HWFlags
 #define PROCESS_DEFAULT 0x0
 #define PROCESS_IS_PRIVILEGED 0x1

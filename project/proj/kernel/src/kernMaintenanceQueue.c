@@ -1,4 +1,5 @@
 #include "kernMaintenanceQueue.h"   // Contains the function defenitions, contains #include process.h
+#include "kernelPredefined.h"       // Contains the def of MAXTOTALPROCESSES
 // System headers
 #include <stdlib.h>
 

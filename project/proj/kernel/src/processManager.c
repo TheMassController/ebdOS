@@ -13,6 +13,7 @@
 #include "getSetRegisters.h"
 #include "kernUtils.h"
 #include "context.h"
+#include "kernelPredefined.h"
 
 #ifdef DEBUG
 #include <uartstdio.h>

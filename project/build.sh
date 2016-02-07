@@ -49,7 +49,6 @@ function runFlash {
             $FLASH $DEBUGEXEC
             ;;
     esac
-
     if [ $? -ne 0 ]; then
         echo "Flashing failed! Exiting.."
         exit
@@ -70,7 +69,7 @@ function launchGDB {
 }
 
 function printUsage {
-    echo "Buildscript for EBD OS, uses Make, LM4Flash and OpenOCD."
+    echo "Buildscript for EBD OS, uses Make, LM4Flash, Screen and OpenOCD."
     echo "The script serves as an abstraction layer around these three programs"
     echo "Usage: $0 params"
     echo "Example: $0 clean all debug"

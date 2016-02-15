@@ -10,8 +10,13 @@ struct ManagedLock {
     struct Process* waitinglist;
 };
 
-static struct ManagedLock lockPool[MANAGEDLOCKCOUNT];
+struct SleepQueueElement {
+    struct SleepQueueElement* nextElement;
+    struct Process* proc;
+};
 
+static struct ManagedLock lockPool[MANAGEDLOCKCOUNT];
+//static struct SleepQueueElement sleepQueuePool[MAXTOTALPROCESSES];
 
 int allocateManagedLock(size_t* lockId, uintptr_t owner){
     size_t iterator;

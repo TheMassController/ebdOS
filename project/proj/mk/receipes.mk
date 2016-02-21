@@ -2,4 +2,4 @@ LINKRECEIPE = $(LD) $(LDFLAGS) -o $@ $^ $(LIB)
 OBJCOPYRECEIPE = $(OBJCOPY) $(OBJCPYFLAGS) $< $@
 CCRECEIPE = $(CC) $(CFLAGS) -c $< -o $@
 ASMRECEIPE = $(AS) $(ASMFLAGS) -c $< -o $@
-ARRECEIPE = $(AR) $(ARFLAGS) $@ $^
+ARRECEIPE = $(AR) $(ARFLAGS) $@ $?

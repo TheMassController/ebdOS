@@ -38,19 +38,20 @@ pendSVHandler:
     @ Actual context switch: switch out. Does not test for MSP usage: this should not change ever after init phase
     ldr r12, [r1, #8]           @ r12 = savedRegsPointer of currentProcess
     stmdb r12!, {r4-r11}        @ Move R4 to R11 to the mem r12 points to, while decreasing 12. Decrement before, so first decrement, then write, decrement, write etc
-    ands lr, lr, #0x10          @ Test if the 5th bit is 0. If it is, then the FPU was activated
-    itttt eq                    @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
-    ldreq r2, [r1, #12]         @ Load the current HW flags
-    orreq lr, r2, #0x10         @ Add the "using FP" flag to hwflags
-    vstmdbeq.f32 r12!, {s16-s31}@ Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
-    streq lr, [r1, #12]         @ write the new hw flags
+    ands lr, lr, #0x10         @ Test if the 5th bit is 0. If it is, then the FPU was activated
+    bne .L1                     @ If the fpu was activated, we need to switch out the fpu regs. So test the Z HW flag again
+    ldr r2, [r1, #12]           @ Load the current HW flags
+    orr lr, r2, #0x10           @ Add the "using FP" flag to hwflags
+    vstmdb.f32 r12!, {s16-s31}  @ Move FP regs to mem. Decrement before. Conditional execution. Triggers lazy stacking.
+    str lr, [r1, #12]           @ write the new hw flags
+.L1:
     str r12, [r1, #8]           @ Store the moved savedRegsPointer of the currentprocess to the mem of the currentprocess
     mrs r3, psp                 @ Move the PSP to R3
 	str	r3, [r1]                @ Save the stackpointer of currentProcess (currentProcess->stackPointer = r0)
 
     @ And switch in
     ldr r12, [r0, #12]          @ Load the hw flags
-    ands r3, r12, #0x1          @ Isolate the first bit, the privileged bit
+    and r3, r12, #0x1           @ Isolate the first bit, the privileged bit
     eor r3, r3, #1              @ Flip the lsb of r3: the CONTROL needs a 0 if privileged and a 1 if privileged. This is the inverse of the hw_flags lsb
     msr CONTROL, r3             @ Write the r3 to CONTROL to set the privilege
     ands r1, r12, #0x10         @ Isolate the FPU flag
@@ -63,10 +64,10 @@ pendSVHandler:
     msr psp, r2                 @ push r2 (= new stackpointer) to psp
 
     @ Decide the returnvar and return. R12 is assumed to contain the entire HW flag param of nextProcess.
+    @ Two decisions: MSP or PSP, privileged or unprivileged.
     and r12, r12, #0x14         @ Test only the MSP, FP flags
     eor r12, r12, #0x14         @ Invert the loaded flags
-    mvn lr, #0x16               @ lr = 0xFFFFFFE9 (Continue from MSP, enable hw FP)
-    orr lr, lr, r12             @ Push the MSP, FP flags into the LR
+    orn lr, r12, #0x16          @ Make lr = 0xFFFFFFE9 | r12, where r12 is 0x0, 0x10, 0x4 or 0x14.
 .L3:
     cpsie i                     @ Reenable the configurable interrupts
     bx lr                       @ Branch to LR-addr, without linking

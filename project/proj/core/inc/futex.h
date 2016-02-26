@@ -12,8 +12,11 @@
  *
  * Available is defined as the atomic val of the Futex being > 0. If it is lower then zero, any post call will block or be rejected, dependend on the called function.
  */
-#ifndef //FUTEX_H
-#define // FUTEX_H
+#ifndef FUTEX_H
+#define FUTEX_H
+
+#include <stddef.h>
+
 struct Futex {
     int atomicVal;
     size_t lockId;

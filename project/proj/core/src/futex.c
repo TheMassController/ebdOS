@@ -1,3 +1,4 @@
+#include "futex.h"
 /**
  * @brief The implementation of the userspace side of the futex.
  */

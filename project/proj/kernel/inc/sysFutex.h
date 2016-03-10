@@ -28,6 +28,7 @@ int sysInitFutex(struct Futex* fut, struct Process* proc);
  * EINVAL if the fut param was incorrect
  *
  * The only reason why a bounce is defined as an error is so that the kernel will put the callee process back into the readyqueue. EAGAIN should not be forwarded to the callee process.
+ * If the retval is nonzero, reactivate the process. If not the managedLockModule has taken care of it
  */
 int sysFutexWait(struct Futex* fut, struct Process* proc);
 

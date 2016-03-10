@@ -32,6 +32,7 @@ void kernelMain(void){
         while(kernMaintenanceProc != NULL){
             struct ProcessContext* context = kernMaintenanceProc->context;
             struct Process* tProc = NULL;
+            int retval;
             switch(context->comVal){
                 case GETPID:
                     context->retVal = kernMaintenanceProc->pid;
@@ -56,6 +57,21 @@ void kernelMain(void){
                 case FUTEXPOST:
                     context->retVal = sysFutexPost(context->genericPtr, tProc);
                     if (tProc != NULL) kernRetQueuePush(tProc);
+                    kernRetQueuePush(kernMaintenanceProc);
+                    break;
+                case FUTEXWAIT:
+                    retval = sysFutexWait(context->genericPtr, kernMaintenanceProc);
+                    if (retval != 0){
+                        if (retval != EAGAIN) {
+                            context->retVal = retval;
+                        } else {
+                            context->retVal = 0;
+                        }
+                        kernRetQueuePush(kernMaintenanceProc);
+                    }
+                    break;
+                case FUTEXDESTROY:
+                    context->retVal = sysDestroyFutex(context->genericPtr);
                     kernRetQueuePush(kernMaintenanceProc);
                     break;
                 default:

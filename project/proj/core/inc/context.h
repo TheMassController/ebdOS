@@ -13,12 +13,12 @@
 
 struct ProcessContext {
     /* Syscall layer variables */
-    uint32_t retVal;
+    int retVal;
     void* genericPtr;
     uint32_t passVal;
+    enum SyscallCodes comVal;
     /* General variables */
     error_t context_errno;
-    enum SyscallCodes comVal;
 };
 
 extern struct ProcessContext* currentContext;
@@ -26,6 +26,7 @@ extern struct ProcessContext* currentContext;
  * @brief Helper function to make sure all context variables are set when communicating to the kernel.
  * @param comVal The new ComVal value
  * @param genericPtr The new genericPtr value
+ * @param passVal The new passval value
  */
 void setContextParams(enum SyscallCodes comVal, void* genericPtr, int32_t passVal);
 #endif //CONTEXT_H

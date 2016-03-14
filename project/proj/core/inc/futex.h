@@ -26,25 +26,32 @@ struct Futex {
  * @brief Initializes a futex to the given value
  * @param fut A pointer to the futex struct that will be initialized
  * @param value The initial value of the futex
- * @return 0 if everything went OK, -1 if not. Errno will be set
+ * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int initFutex(struct Futex* fut, int value);
 /**
  * @brief Destroys a futex, releasing the managed lock that was allocated
  * @param fut A pointer to the futex struct that will be de-initialized
- * @return 0 if everything went OK, -1 if not. Errno will be set
+ * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int destroyFutex(struct Futex* fut);
 /**
  * @brief increases the amount of resources with one.
  * @param fut The futex struct.
- * @return 0 if everything went OK, -1 if not. Errno will be set.
+ * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int futexPost(struct Futex* fut);
 /**
  * @brief requests one more resource from the futex, blocks if none available.
  * @param fut The futex struct from whom a resource is requested
- * @return 0 if everything went OK, -1 if not. Errno will be set.
+ * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int futexWait(struct Futex* fut);
+
+/**
+ * @brief Requests one resource from the futex, returns immediately
+ * @param fut The futex struct
+ * @return 0 if everything went OK and a resource was available, EBUSY if there were no resources available.
+ */
+int futexTryWait(struct Futex* fut);
 #endif //FUTEX_H

@@ -23,7 +23,7 @@ int destroyFutex(struct Futex* fut){
 
 int futexPost(struct Futex* fut){
     // Post: increment. If the newvalue is <= 0 inform the kernel that one process should be awoken.
-    int newVal = atomicIncreaseInt(&fut->atomicVal); 
+    int newVal = atomicIncreaseInt(&fut->atomicVal);
     if (newVal <= 0){
         setContextParams(FUTEXPOST, fut, 0);
         CALLSUPERVISOR(SVC_serviceRequired);
@@ -43,3 +43,12 @@ int futexWait(struct Futex* fut){
     return 0;
 }
 
+int futexTryWait(struct Futex* fut){
+    int newVal = atomicDecreaseInt(&fut->atomicVal);
+    if (newVal < 0){
+        atomicIncreaseInt(&fut->atomicVal);
+        return EBUSY;
+    } else {
+        return 0;
+    }
+}

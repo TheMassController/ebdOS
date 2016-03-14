@@ -50,10 +50,10 @@ void mainProcessLocker(void){
 
 void mutPasser(void){
     while(1){
-        lockMutexBlocking(&mut);
+        lockMutex(&mut);
         UARTprintf("My name is %s and I have a mutex!\n", currentProcess->name);
         sleepS(2);
-        releaseMutex(&mut);
+        unlockMutex(&mut);
         sleepS(2);
     }
 }

@@ -7,36 +7,26 @@ void initReentrantMutex(struct ReentrantMutex* mutex){
 }
 
 void cleanupReentrantMutex(struct ReentrantMutex* mutex){
-    cleanupMutex(&(mutex->mutex));
+    destroyMutex(&mutex->mutex);
 }
 
 void lockReentrantMutexBlocking(struct ReentrantMutex* mutex){
-    lockMutexBlocking(&(mutex->mutex));
+    lockMutex(&mutex->mutex);
     mutex->value++;
 }
 
 int lockReentrantMutexNoBlock(struct ReentrantMutex* mutex){
-    if (!lockMutexNoBlock(&(mutex->mutex))){
+    if (!tryLockMutex(&mutex->mutex)){
         return 0;
     }
     mutex->value++;
     return 1;
 }
-
-int lockReentrantMutexBlockWait(struct ReentrantMutex* mutex, unsigned msWaitTime){
-    if (!lockMutexBlockWait(&(mutex->mutex), msWaitTime)){
-        return 0;
-    }
-    mutex->value++;
-    return 1;
-}
-
+//FIXME
 void releaseReentrantMutex(struct ReentrantMutex* mutex){
-    if(ownsMutex(&(mutex->mutex))){
-        mutex->value--;
-        if (mutex->value == 0){
-            releaseMutex(&(mutex->mutex));
-        }
+    if(mutex->value > 0) mutex->value--;
+    if (mutex->value == 0){
+        unlockMutex(&mutex->mutex);
     }
 }
 

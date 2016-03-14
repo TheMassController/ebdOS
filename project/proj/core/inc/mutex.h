@@ -1,32 +1,50 @@
 #ifndef MUTEX_H
 #define MUTEX_H
-//Mutex functions
-//A mutex is locked to its owner: only the owner can release it
-#include "lockObject.h"
+/**
+ * @author Jacko Dirks
+ * @file mutex.h
+ * Userside implementation of mutex: these functions are supposed to be used by the enduser
+ */
+#include "futex.h"
 
 struct Mutex{
-    struct LockObject lockObject;
-    unsigned ownerPid;
+    struct Futex fut;
+    struct ProcessContext* ownerContext;
 };
 
-void lockMutexBlocking(struct Mutex* mutex);
+/**
+ * @brief Initializes the mutex to an unlocked state
+ * @param mutex A pointer to the mutex you want to initialize
+ * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
+ */
+int initMutex(struct Mutex* mutex);
 
-//Returns 1 if successfull, 0 if not
-int lockMutexBlockWait(struct Mutex* mutex, unsigned msWaitTime);
+/**
+ * @brief Destroys the mutex. If the retval is non zero, the mutex is still intact.
+ * @param mutex A pointer to the mutex.
+ * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
+ */
+int destroyMutex(struct Mutex* mutex);
 
-//Returns 1 if successfull, 0 if not
-int lockMutexNoBlock(struct Mutex* mutex);
+/**
+ * @brief Locks the mutex, blocks until the mutex is locked.
+ * @param mutex
+ * @return 0 if everything went OK, else an ERRNO. EDEADLK if the mutex was already locked by callee. See kernel/inc/sysFutex for more details
+*/
+int lockMutex(struct Mutex* mutex);
 
-void releaseMutex(struct Mutex* mutex);
+/**
+ * @brief tries to lock the mutex, returns immediately
+ * @param mutex
+ * @return 0 if it was locked, EBUSY if it was already locked, EDEADLK if the mutex was already locked by callee.
+ */
+int tryLockMutex(struct Mutex* mutex);
 
-int takeMutex(struct Mutex* mutex, unsigned msTimeOut);
-
-void initMutex(struct Mutex* mutex);
-
-void cleanupMutex(struct Mutex* mutex);
-
-int ownsMutex(struct Mutex* mutex);
-
-//Binary mutex functions
+/**
+ * @brief unlocks the mutex, but only if it was locked by the callee
+ * @param mutex
+ * @return 0 if everything went ok, EPERM if callee was not owner. See kernel/inc/sysFutex for additional errors.
+ */
+int unlockMutex(struct Mutex* mutex);
 
 #endif //MUTEX_H

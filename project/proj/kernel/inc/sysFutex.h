@@ -39,7 +39,7 @@ int sysFutexWait(struct Futex* fut, struct Process* proc);
  * @return if there was no error 0, else:
  * EINVAL if there was a problem with fut
  */
-int sysFutexPost(struct Futex* fut, struct Process* procPtr);
+int sysFutexPost(struct Futex* fut, struct Process** procPtr);
 
 /**
  * @brief Releases the resources allocated to this futex

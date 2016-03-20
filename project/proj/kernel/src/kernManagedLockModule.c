@@ -29,23 +29,34 @@ static void addToLockList(struct ManagedLock* lock, struct Process* proc){
         it->nextProcess = proc;
     }
 }
-
-static void removeFromLockList(struct ManagedLock* lock, struct Process* proc){
+// Returns -1 if not found, 0 if found
+static int removeFromLockList(struct ManagedLock* lock, struct Process* proc){
     struct Process* it = lock->waitinglist;
     for (;it->nextProcess != NULL && it != proc;it = it->nextProcess);
     if (it == proc){
         lock->waitinglist = it->nextProcess;
         it->nextProcess = NULL;
+        return 0;
     }
+    return -1;
+}
+
+static struct Process* popFromLockList(struct ManagedLock* lock){
+    struct Process* proc = lock->waitinglist;
+    if (proc != NULL){
+        lock->waitinglist = proc->nextProcess;
+        proc->nextProcess = NULL;
+    }
+    return proc;
 }
 
 int allocateManagedLock(size_t* lockId, uintptr_t owner){
-    size_t iterator;
-    for (iterator = 0; iterator < MANAGEDLOCKCOUNT && lockPool[iterator].taken; ++iterator);
-    if (iterator < MANAGEDLOCKCOUNT){
-        *lockId = iterator;
-        lockPool[iterator].taken = 1;
-        lockPool[iterator].ownerPid = owner;
+    size_t i = 0;
+    for ( ; i < MANAGEDLOCKCOUNT && lockPool[i].taken; ++i);
+    if (i < MANAGEDLOCKCOUNT){
+        *lockId = i;
+        lockPool[i].taken = 1;
+        lockPool[i].ownerPid = owner;
         return 0;
     }
     return ENOLCK;
@@ -64,8 +75,14 @@ int waitForManagedLock(size_t lockId, struct Process* proc){
     return 0;
 }
 
-int releaseManagedLock(size_t lockId, struct Process* procReady){
+int releaseManagedLock(size_t lockId, struct Process** procReady){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
-    removeFromLockList(&lockPool[lockId], procReady);
+    *procReady = popFromLockList(&lockPool[lockId]);
+    return 0;
+}
+
+int removeProcessFromManagedLock(size_t lockId, struct Process* proc){
+    if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
+    if (removeFromLockList(&lockPool[lockId], proc) == -1) return EAGAIN;
     return 0;
 }

@@ -55,7 +55,7 @@ void kernelMain(void){
                     kernRetQueuePush(kernMaintenanceProc);
                     break;
                 case FUTEXPOST:
-                    context->retVal = sysFutexPost(context->genericPtr, tProc);
+                    context->retVal = sysFutexPost(context->genericPtr, &tProc);
                     if (tProc != NULL) kernRetQueuePush(tProc);
                     kernRetQueuePush(kernMaintenanceProc);
                     break;

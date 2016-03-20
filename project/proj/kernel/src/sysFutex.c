@@ -16,6 +16,6 @@ int sysFutexWait(struct Futex* fut, struct Process* proc){
     return waitForManagedLock(fut->lockId, proc);
 }
 
-int sysFutexPost(struct Futex* fut, struct Process* procPtr){
+int sysFutexPost(struct Futex* fut, struct Process** procPtr){
     return releaseManagedLock(fut->lockId, procPtr);
 }

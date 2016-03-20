@@ -31,9 +31,6 @@ void busFaultHandler(void);         // Declared in fault.c
 void faultISRHandler(void);         // Declared in fault.c
 void NMIHandler(void);              // Declared in fault.c
 
-/* Temporary handlers, not here to stay */
-void gpioBInterrup(void);
-
 // The vector table, the linker script makes sure this one is placed at 0x0 (FLASH)
 __attribute__ ((section(".isr_vector")))
 void (* const gpFnVectors[])(void) =
@@ -55,7 +52,7 @@ void (* const gpFnVectors[])(void) =
     pendSVHandler,                                  // The PendSV handler
     sysTickHandler,                                 // The SysTick handler
     IntDefaultHandler,                              // GPIO Port A
-    gpioBInterrup,                                  // GPIO Port B
+    IntDefaultHandler,                              // GPIO Port B
     IntDefaultHandler,                              // GPIO Port C
     IntDefaultHandler,                              // GPIO Port D
     IntDefaultHandler,                              // GPIO Port E

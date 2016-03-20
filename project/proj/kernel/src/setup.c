@@ -28,7 +28,7 @@
 #include "kernMaintenanceQueue.h"   // Contains kernRetQueuePush
 #include "systemClockManagement.h"  // Contains EBD_SYSCLOCKMAXVAL
 
-#define SLEEPTIMERPRIORITY 0xc0 //11000000, lowest possible priority of major group, highest possible of subgroup
+#define SLEEPTIMERPRIORITY 0xc0     //11000000, lowest possible priority of major group, highest possible of subgroup
 
 #if EBD_SYSCLOCKMAXVAL > 0xffffffff
     #error The sysclockmaxval is larger then the register size, cannot compile.
@@ -159,7 +159,7 @@ void kernelStart(void){
         .procFunc = main,
         .param = NULL,
         .priority = 80,
-        .isPrivileged = 0,
+        .isPrivileged = 0
     };
     kernRetQueuePush(createNewProcess(&params, &kernelStruct));
     ROM_TimerEnable(WTIMER0_BASE, TIMER_A); // Start the sleep timer

@@ -17,8 +17,7 @@ void val_ledsFlicker(void);
 void testMPUPriv(void);
 void testMPUUpriv(void);
 
-void mainProcessLocker(void);
-void mutPasser(void);
+int mainProcessLocker(void);
 
 void tryLockPasser(void);
 void lockPasser(void);

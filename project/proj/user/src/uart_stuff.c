@@ -24,9 +24,11 @@ void numberPusher(void* things){
     ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, GPIO_PIN_6);
     sleepS(1);
     ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0);
-    for (unsigned char c = 0; c < 200; ++c){
-        ROM_UARTCharPut(UART1_BASE, 0x80);
-        sleepS(1);
+    while(1) {
+        for (int i = 0; i < 256; ++i){
+            ROM_UARTCharPut(UART1_BASE, (char)i);
+            sleepS(1);
+        }
     }
     while(1) sleepS(200);
 }
@@ -43,7 +45,7 @@ int initNumberPusher(void){
     ROM_GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_4|GPIO_PIN_5);
     // Setup the UART
     ROM_UARTClockSourceSet(UART1_BASE, UART_CLOCK_PIOSC);
-    ROM_UARTConfigSetExpClk(UART1_BASE, 16000000, 9600, UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
+    ROM_UARTConfigSetExpClk(UART1_BASE, 16000000, 115200, UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
     unsigned long pulBaud, pulConfig;
     ROM_UARTConfigGetExpClk(UART1_BASE, 16000000, &pulBaud, &pulConfig);
     UARTprintf("Config: %d\n", pulBaud);

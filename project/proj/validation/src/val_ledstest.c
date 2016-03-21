@@ -14,7 +14,7 @@
 #define SLEEPTIMEMS 250
 
 static void prepareHardware(void){
-    //F gate: button 2
+    //F gate: for the LEDS
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     //Onboard LED, F gate
     ROM_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);

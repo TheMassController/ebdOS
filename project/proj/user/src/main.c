@@ -10,6 +10,7 @@
 #include "sleep.h"
 
 void ledsDanceMain(void);
+int initNumberPusher(void);
 
 int main(void){
     int pid = createChildProcess(256, "I seek to flicker", val_ledsFlicker, NULL);
@@ -31,7 +32,10 @@ int main(void){
         UARTprintf("prime_25000 has been created! Pid: %d\n", pid);
     }
     if (mainProcessLocker() == -1){
-        UARTprintf("Errors in creating the tests for the locks: %d (%s)", errno, strerror(errno));
+        UARTprintf("Errors while creating the tests for the locks: %d (%s)", errno, strerror(errno));
+    }
+    if (initNumberPusher() == -1){
+        UARTprintf("Errors from initNumberPusher: %d (%s)", errno, strerror(errno));
     }
 
     UARTprintf("I am the main, and I did my thingy. Going to exit now. Pid: %d\n", getPid());

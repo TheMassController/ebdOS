@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -89,8 +89,8 @@ extern "C"
 #define UART_CONFIG_STOP_TWO    0x00000008  // Two stop bits
 #define UART_CONFIG_PAR_MASK    0x00000086  // Mask for extracting parity
 #define UART_CONFIG_PAR_NONE    0x00000000  // No parity
-#define UART_CONFIG_PAR_EVEN    0x00000006  // Even parity
-#define UART_CONFIG_PAR_ODD     0x00000002  // Odd parity
+#define UART_CONFIG_PAR_ODD     0x00000006  // Odd parity
+#define UART_CONFIG_PAR_EVEN    0x00000002  // Even parity
 #define UART_CONFIG_PAR_ONE     0x00000082  // Parity bit is one
 #define UART_CONFIG_PAR_ZERO    0x00000086  // Parity bit is zero
 

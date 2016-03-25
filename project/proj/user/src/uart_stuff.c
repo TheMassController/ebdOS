@@ -45,7 +45,7 @@ int initNumberPusher(void){
     ROM_GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_4|GPIO_PIN_5);
     // Setup the UART
     ROM_UARTClockSourceSet(UART1_BASE, UART_CLOCK_PIOSC);
-    ROM_UARTConfigSetExpClk(UART1_BASE, 16000000, 115200, UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
+    ROM_UARTConfigSetExpClk(UART1_BASE, 16000000, 115200, UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_EVEN);
     unsigned long pulBaud, pulConfig;
     ROM_UARTConfigGetExpClk(UART1_BASE, 16000000, &pulBaud, &pulConfig);
     UARTprintf("Config: %d\n", pulBaud);

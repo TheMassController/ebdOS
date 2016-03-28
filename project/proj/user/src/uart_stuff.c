@@ -18,6 +18,15 @@
  * A reset signal has to be send to the FPGA from time to time. This will be done trough PC6/GPIO
  */
 
+static void printReceive(void){
+    if (ROM_UARTCharsAvail(UART1_BASE)){
+        long c;
+        while((c = ROM_UARTCharGetNonBlocking(UART1_BASE)) != -1){
+            UARTprintf("Received from UART1: %d (masked: %d)\n", (int)c, ((int)c) & 255);
+        }
+    }
+}
+
 void numberPusher(void* things){
     (void)(things);
     // Toggle the reset for 1 s
@@ -26,11 +35,11 @@ void numberPusher(void* things){
     ROM_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0);
     while(1) {
         for (int i = 0; i < 256; ++i){
+            printReceive();
             ROM_UARTCharPut(UART1_BASE, (char)i);
             sleepS(1);
         }
     }
-    while(1) sleepS(200);
 }
 
 int initNumberPusher(void){

@@ -1,6 +1,6 @@
 #!/bin/bash
-
-source arm-gcc-locations
+CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $CURDIR/arm-gcc-locations
 
 DEFAULT="all"
 
@@ -22,12 +22,12 @@ fi
 
 MAKEFLAGS="-j15"
 OPENOCDSCRIPT=$OPENOCDSCRIPTLOCATION/ek-lm4f120xl.cfg
-LOGDIR=log/
-PROJDIR=proj/
+LOGDIR=$CURDIR/log/
+PROJDIR=$CURDIR/proj/
 RELEASEEXEC=$PROJDIR/release/jackoOS_stripped
 DEBUGEXEC=$PROJDIR/debug/jackoOS_stripped
 DEBUGEXEC_GDB=$PROJDIR/debug/jackoOS
-GDBDIR=gdb/
+GDBDIR=$CURDIR/gdb/
 
 function runMake {
     $MAKE -C $PROJDIR $1 $MAKEFLAGS

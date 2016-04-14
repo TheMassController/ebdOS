@@ -26,4 +26,13 @@ void translateSleepRequest(struct Process* proc, const struct SleepRequest* slee
         }
         sleepStruct->sleepUntil = EBD_SYSCLOCKMAXVAL- sleepDelta;
     }
+    // compensate for a possibly missed interrupt
+    unsigned curValWTA = getSystemClockValue();
+    if (curValWTA > sleepRequest->refTime){
+        if (sleepStruct->overflows > 0){
+            sleepStruct->overflows--;
+        } else {
+            sleepStruct->sleepUntil = curValWTA;
+        }
+    }
 }

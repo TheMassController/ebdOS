@@ -1,8 +1,13 @@
-#include "sysManagedLock.h"     // Declarations of functions defined here
-#include "kernelPredefined.h"   // Contains the amount of managed locks that need to be allocated
-#include "process.h"            // Contains the defenition of a proces
+#include <errno.h>                  // Contains the macro's for the E* variables
+#include <hw_types.h>               // Common types and macros for the TI libs
+#include <timer.h>                  // Function prototypes for the timer module
+#include <hw_memmap.h>              // Address of GPIO etc
 
-#include <errno.h>              // Contains the macro's for the E* variables
+#include "sysManagedLock.h"         // Declarations of functions defined here
+#include "kernelPredefined.h"       // Contains the amount of managed locks that need to be allocated
+#include "process.h"                // Contains the defenition of a proces
+#include "systemClockManagement.h"  // Declares setHalfWTimerInterrupt
+#include "abstrSysSleepFuncs.h"     // Declares translateSleepRequest
 
 struct ManagedLock {
     uintptr_t ownerPid;
@@ -17,7 +22,58 @@ struct SleepQueueElement {
 };
 
 static struct ManagedLock lockPool[MANAGEDLOCKCOUNT];
-//static struct SleepQueueElement sleepQueuePool[MAXTOTALPROCESSES];
+static struct SleepQueueElement sleepQueuePool[MAXTOTALPROCESSES];
+static struct SleepQueueElement* sleepQueueHead = NULL;
+
+static void updateWaitTimer(unsigned curValWTA){
+    if (sleepQueueHead == NULL || sleepQueueHead->proc->sleepObj.overflows > 0){
+        setHalfWTimerInterrupt(0, WTIMER1_BASE, TIMER_A, 0, 0);
+    } else if (sleepQueueHead->proc->sleepObj.overflows == 0 && sleepQueueHead->proc->sleepObj.sleepUntil >= curValWTA){
+        return; // Let the timer interrupt handle this case, it will just shoot an event into the kernel that will fix the rest
+    } else {
+        setHalfWTimerInterrupt(1, WTIMER1_BASE, TIMER_A, curValWTA, sleepQueueHead->proc->sleepObj.sleepUntil);
+    }
+}
+
+static int addLockWaiter(struct Process* proc, size_t managedLockId){
+    unsigned curValWTA = getSystemClockValue();
+    if (proc->sleepObj.overflows == 0 && proc->sleepObj.sleepUntil >= curValWTA) return 0;
+    struct SleepQueueElement* el = &sleepQueuePool[proc->pid];
+    el->proc = proc;
+    el->managedLockID = managedLockId;
+    if (sleepQueueHead == NULL) {
+        sleepQueueHead = el;
+        el->nextElement = NULL;
+        updateWaitTimer(curValWTA);
+    } else {
+        unsigned curOverflow = proc->sleepObj.overflows;
+        unsigned curWaitUntil = proc->sleepObj.sleepUntil;
+        struct SleepQueueElement* it = sleepQueueHead;
+        unsigned itOverflow = it->proc->sleepObj.overflows;
+        unsigned itWaitUntil = it->proc->sleepObj.sleepUntil;
+        if (itOverflow > curOverflow || (itOverflow == curOverflow && curWaitUntil > itWaitUntil)){
+            // Replaces the head
+            el->nextElement = it;
+            sleepQueueHead = el;
+            updateWaitTimer(curValWTA);
+        } else {
+            // Head will not be replaced, find the place
+            while (itOverflow < curOverflow && it->nextElement != NULL){
+                it = it->nextElement;
+                itOverflow = it->proc->sleepObj.overflows;
+                itWaitUntil = it->proc->sleepObj.sleepUntil;
+            }
+            while (itWaitUntil > curWaitUntil && it->nextElement != NULL){
+                it = it->nextElement;
+                itOverflow = it->proc->sleepObj.overflows;
+                itWaitUntil = it->proc->sleepObj.sleepUntil;
+            }
+            el->nextElement = it->nextElement;
+            it->nextElement = el;
+        }
+    }
+    return 1;
+}
 
 static void addToLockList(struct ManagedLock* lock, struct Process* proc){
     proc->nextProcess = NULL;
@@ -37,6 +93,7 @@ static int removeFromLockList(struct ManagedLock* lock, struct Process* proc){
     if (it == proc){
         lock->waitinglist = it->nextProcess;
         it->nextProcess = NULL;
+        it->state = STATE_READY;
         return 0;
     }
     return -1;
@@ -47,6 +104,7 @@ static struct Process* popFromLockList(struct ManagedLock* lock){
     if (proc != NULL){
         lock->waitinglist = proc->nextProcess;
         proc->nextProcess = NULL;
+        proc->state = STATE_READY;
     }
     return proc;
 }
@@ -87,3 +145,51 @@ int removeProcessFromManagedLock(size_t lockId, struct Process* proc){
     if (removeFromLockList(&lockPool[lockId], proc) == -1) return EAGAIN;
     return 0;
 }
+
+int retrieveProcess(struct Process* proc){
+    if (!(proc->state == STATE_WAIT || proc->state == STATE_WAIT_TIMEOUT)) return EAGAIN;
+    // TODO once the timeout feature works: complete
+    return 0;
+}
+
+int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpReq){
+    if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
+    translateSleepRequest(proc, slpReq);
+    addToLockList(&lockPool[lockId], proc);
+    if (!addLockWaiter(proc, lockId)) return ETIMEDOUT;
+    return 0;
+}
+
+struct Process* timedManagedLockTimeout(void){
+    if (sleepQueueHead == NULL) {
+        updateWaitTimer(getSystemClockValue());
+        return NULL;
+    }
+    struct Process* ret = NULL;
+    struct Process* in = NULL;
+    unsigned curValWTA = getSystemClockValue();
+    struct SleepQueueElement* it = sleepQueueHead;
+    if (it->proc->sleepObj.overflows == 0 && it->proc->sleepObj.sleepUntil >= curValWTA){
+        ret = it->proc;
+        in = ret;
+        it = it->nextElement;
+        while (it != NULL && it->proc->sleepObj.overflows == 0 && it->proc->sleepObj.sleepUntil >= curValWTA){
+            in->nextProcess = it->proc;
+            in = in->nextProcess;
+            it = it->nextElement;
+        }
+    }
+    sleepQueueHead = it;
+    return ret;
+}
+
+//struct Process* timedManagedLockSysTimerOverflow(void){
+//    if (sleepQueueHead == NULL) {
+//        updateWaitTimer(getSystemClockValue());
+//        return NULL;
+//    }
+//    struct Process* ret = NULL;
+//    struct Process* in = NULL;
+//
+//}
+

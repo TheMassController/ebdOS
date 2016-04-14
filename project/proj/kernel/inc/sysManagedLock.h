@@ -16,6 +16,7 @@
  * There is also a timer related to this kernel module, it works about the same as the sleep module timer.
  */
 #include "sysSleep.h"
+#include "abstrSysSleepStructs.h"
 
 /**
  * @brief Allocates a manged lock
@@ -81,15 +82,21 @@ int retrieveProcess(struct Process* proc);
  * @brief Sets up a process to wait for a specified lock for at most the specified amount of time
  * @param lockId the ID of the lock the process is going to wait for
  * @param proc The process that is going to wait with a timeout
- * @param slStr A sleeping struct to indicate how long the timeout is
+ * @param slpReq A sleeping struct to indicate how long the timeout is
  * @return 0 if everything was ok
  *      EINVAL if lockId is invalid
  *      ETIMEDOUT The timer had already ran out, the process is not added to the module
  */
-int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepingProcessStruct* slpStr);
+int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpStr);
 
-int timedManagedLockTimeout(struct Process* procsReady);
+/**
+ * @brief Should be called whenever the Managed Lock timer finishes
+ */
+struct Process* timedManagedLockTimeout(void);
 
-int timedManagedLockSysTimerOverflow(struct Process* procsReady);
+/**
+ *@brief Should be called whenever the system timer overflows
+ */
+struct Process* timedManagedLockSysTimerOverflow(void);
 
 #endif //SYSMANAGEDLOCK_h

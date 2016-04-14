@@ -11,5 +11,8 @@
 #define MANAGEDLOCKCOUNT 30
 // The next var is only about user processes, the kernel-based processes (kernel itself and idle) are counted seperately
 #define MAXTOTALPROCESSES 10
+// The size of the kernel message buffer, usually used by interrupts to notify the kernel
+#define KERNMESSAGEBUFFERSIZE 14
+
 
 #endif //KERNELPREDEFINED_H

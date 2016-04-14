@@ -30,9 +30,10 @@ uint32_t getSystemClockValue(void);
 void setHalfWTimerInterrupt(int enable, unsigned long ulBase, unsigned long ulTimer, unsigned long lValue, unsigned long mValue);
 
 /*
- * These are two interrupthandlers
+ * These are interrupthandlers
  */
 void systemTimerInterrupt(void);
 void sleepTimerInterrupt(void);
+void managedLockTimerInterrupt();
 
 #endif //SYSTEMCLOCKMANAGEMENT_H

@@ -1,5 +1,8 @@
 #ifndef SLEEP_H
 #define SLEEP_H
+
+#include <stdint.h>         // Contains the uint32_t type
+
 /**
  * @author Jacko Dirks
  * @file sleep.h
@@ -10,10 +13,10 @@
  * @brief The SleepRequest struct is passed on to the kernel. All fields can be used in combination with eachother
  */
 struct SleepRequest {
-    unsigned refTime;   /**< The reference time: the 0 point of sleeping */
-    unsigned uSec;      /**< The amount of microseconds the process sleeps */
-    unsigned mSec;      /**< The amount of milliseconds the process sleeps */
-    unsigned sec;       /**< The amount of seconds the process sleeps */
+    uint32_t refTime;   /**< The reference time: the 0 point of sleeping */
+    uint32_t uSec;      /**< The amount of microseconds the process sleeps */
+    uint32_t mSec;      /**< The amount of milliseconds the process sleeps */
+    uint32_t sec;       /**< The amount of seconds the process sleeps */
 };
 
 /**

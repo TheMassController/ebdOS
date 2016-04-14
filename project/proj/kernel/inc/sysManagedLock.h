@@ -70,7 +70,16 @@ int removeProcessFromManagedLock(size_t lockId, struct Process* proc);
  * The following functions are related to the sleep/wait combination
  */
 
-int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct Process* procsReady, struct SleepingProcessStruct* slpStr);
+/**
+ * @brief Sets up a process to wait for a specified lock for at most the specified amount of time
+ * @param lockId the ID of the lock the process is going to wait for
+ * @param proc The process that is going to wait with a timeout
+ * @param slStr A sleeping struct to indicate how long the timeout is
+ * @return 0 if everything was ok
+ *      EINVAL if lockId is invalid
+ *      ETIMEDOUT The timer had already ran out, the process is not added to the module
+ */
+int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepingProcessStruct* slpStr);
 
 int timedManagedLockTimeout(struct Process* procsReady);
 

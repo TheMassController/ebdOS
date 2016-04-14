@@ -13,6 +13,7 @@ struct ManagedLock {
 struct SleepQueueElement {
     struct SleepQueueElement* nextElement;
     struct Process* proc;
+    size_t managedLockID;
 };
 
 static struct ManagedLock lockPool[MANAGEDLOCKCOUNT];

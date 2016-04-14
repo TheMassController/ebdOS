@@ -17,6 +17,7 @@ enum ProcessStates {
     STATE_READY,
     STATE_SLEEP,
     STATE_WAIT,
+    STATE_WAIT_TIMEOUT,
     STATE_INC_WAIT, //TODO depricate
     STATE_DEC_WAIT, //TODO depricate
     STATE_TERM

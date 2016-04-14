@@ -1,18 +1,10 @@
-#include <stdint.h>                     // uint64_t
 #include <stdlib.h>                     // NULL
-
-#include <hw_nvic.h>                    // Macros related to the NVIC hardware
 #include <hw_types.h>                   // Common types and macros for the TI libs
-#include <uartstdio.h>                  // UART stdio declarations
 #include <timer.h>                      // Function prototypes for the timer module
 #include <hw_memmap.h>                  // Address of GPIO etc
-#include <lm4f120h5qr.h>                // Hardware regs
-#include <hw_types.h>                   // Contains the special types
-#include <rom_map.h>                    // Call functions directly from the ROM if available
-#include <rom.h>                        // Declare ROM addresses for rom funcs
 
 #include "process.h"                    // Contains information about the struct Process
-#include "sleep.h"                      // Contains information about the struct SleepRequest
+#include "abstrSysSleepFuncs.h"         // Contains information about the struct SleepRequest and related functions
 #include "systemClockManagement.h"      // Contains the function getCurrentSytemTimerValue
 
 static struct Process* sleepList = NULL;
@@ -36,13 +28,8 @@ static struct Process* updateListAndInterrupt(void){
         }
     }
     // Configure the interrupt.
-    if (sleepList == NULL || sleepList->sleepObj.overflows > 0){
-        ROM_TimerDisable(WTIMER0_BASE, TIMER_B);
-    } else {
-        ROM_TimerLoadSet(WTIMER0_BASE, TIMER_B, curValWTA);
-        ROM_TimerMatchSet(WTIMER0_BASE, TIMER_B, sleepList->sleepObj.sleepUntil);
-        ROM_TimerEnable(WTIMER0_BASE, TIMER_B);
-    }
+    int disable = sleepList == NULL || sleepList->sleepObj.overflows > 0;
+    setHalfWTimerInterrupt(!disable, WTIMER0_BASE, TIMER_B, curValWTA, sleepList->sleepObj.sleepUntil);
     return retList;
 }
 
@@ -81,27 +68,7 @@ static struct Process* internalAddSleeper(struct Process* proc){
 }
 
 struct Process* addSleeper(struct Process* proc, const struct SleepRequest* sleepRequest){
-    //Usually called from kernel
-    struct SleepingProcessStruct* sleepStruct = &(proc->sleepObj);
-    /* The systemClock runs from max to min. So if we want to sleep for x time, we want to wait until reftime - x
-     * First of all: we need the total amount of us we are going to sleep. This is the delta.
-     * */
-    uint64_t sleepDelta = sleepRequest->uSec + sleepRequest->mSec * 1000 + sleepRequest->sec * 1000000;
-    /* So now we need to find the overflow count.
-     * We basically remove the max count of the sysclock from the wakeupMoment and add 1 to the overflow until wakeupMoment <= sleepRequest->reftime
-     */
-    sleepStruct->overflows = 0;
-    if (sleepDelta <= sleepRequest->refTime){
-        sleepStruct->sleepUntil = sleepRequest->refTime - sleepDelta;
-    } else {
-        sleepDelta -= sleepRequest->refTime;
-        sleepStruct->overflows = 1;
-        while ( sleepDelta >= EBD_SYSCLOCKMAXVAL ){
-            sleepDelta -= EBD_SYSCLOCKMAXVAL;
-            sleepStruct->overflows++;
-        }
-        sleepStruct->sleepUntil = EBD_SYSCLOCKMAXVAL- sleepDelta;
-    }
+    translateSleepRequest(proc, sleepRequest);
     return internalAddSleeper(proc);
 }
 

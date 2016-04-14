@@ -4,7 +4,7 @@
 #include <stdint.h>             // Types like uint32_t are defined here
 #include <stddef.h>             // size_t
 
-#include "abstrSysSleep.h"      // SleepingProcessStruct
+#include "abstrSysSleepStructs.h"      // SleepingProcessStruct
 
 /* States are handled as different bit flags:
  * pos 0 = sleep

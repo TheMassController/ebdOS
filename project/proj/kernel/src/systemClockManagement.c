@@ -42,3 +42,13 @@ void sleepTimerInterrupt(void){
 uint32_t getSystemClockValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }
+
+void setHalfWTimerInterrupt(int enable, unsigned long ulBase, unsigned long ulTimer, unsigned long lValue, unsigned long mValue){
+    if (enable == 0) {
+        ROM_TimerDisable(ulBase, ulTimer);
+    } else {
+        ROM_TimerLoadSet(ulBase, ulTimer, lValue);
+        ROM_TimerMatchSet(ulBase, ulTimer, mValue);
+        ROM_TimerEnable(ulBase, ulTimer);
+    }
+}

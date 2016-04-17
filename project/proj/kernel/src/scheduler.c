@@ -16,15 +16,13 @@
 #include "kernUtils.h"      // Kernel's util funcs. Used for generateCrash
 #endif //DEBUG
 
-// Circular, singly linked
-static struct Process* processesReadyHead   = NULL;
-static struct Process* processesReadyTail   = NULL;
-struct Process* currentProcess              = NULL;
-static struct Process* idleProcess          = &idleProcessStruct;
+static struct Process* processesReady   = NULL;
+struct Process* currentProcess          = NULL;
+static struct Process* idleProcess      = &idleProcessStruct;
 // Default values and consts related to systick and timeslicing
-static const unsigned ticksPerMS            = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150
-static const unsigned maxSystickVal         = 16777216; // 2^24, see datasheet pp 118
-static unsigned timeSliceMS                 = 20;       // Arbitrary default value, leads to a nice 20 ms.
+static const unsigned ticksPerMS        = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150
+static const unsigned maxSystickVal     = 16777216; // 2^24, see datasheet pp 118
+static unsigned timeSliceMS             = 20;       // Arbitrary default value, leads to a nice 20 ms.
 
 static void setSystick(unsigned timeSlices) {
     // The tickCount needs to be the requested ticks -1. see datasheet pp 135
@@ -57,69 +55,56 @@ static void rescheduleImmediately(void){
     }
 }
 
-static void appendProcess(struct Process* item){
+static struct Process* appendProcessToList(struct Process* listHead, struct Process* item){
     // Run trough the singly linked list until you find an empty spot
-    if (processesReadyHead == NULL){
+    if (listHead == NULL){
         item->nextProcess = NULL;
-        processesReadyHead = item;
-        processesReadyTail = item;
-    } else {
-        item->nextProcess = processesReadyHead;
-        processesReadyTail->nextProcess = item;
-        processesReadyTail = item;
+        return item;
     }
+    struct Process* current = listHead;
+    for (; current->nextProcess != NULL; current = current->nextProcess);
+    current->nextProcess = item;
+    item->nextProcess = NULL;
+    return listHead;
 }
 
-static struct Process* removeProcess(struct Process* item){
-    if ((processesReadyHead == processesReadyTail) && (processesReadyHead == item)){
-        processesReadyHead = NULL;
-        processesReadyTail = NULL;
-        item->nextProcess = NULL;
-        return item;
-    }else if (processesReadyHead == item){
-        processesReadyHead = processesReadyHead->nextProcess;
-        processesReadyTail = processesReadyHead;
-        item->nextProcess = NULL;
-        return item;
-    } else {
-        struct Process* cur = processesReadyHead->nextProcess;
-        struct Process* prev = processesReadyHead;
-        while (cur != processesReadyHead){
-            if (cur == item){
-                prev->nextProcess = cur->nextProcess;
-                if (cur == processesReadyTail) processesReadyTail = prev;
-                item->nextProcess = NULL;
-                return item;
-            } else {
-                prev = cur;
-                cur = cur->nextProcess;
-            }
+static struct Process* removeProcessFromList(struct Process* listHead, struct Process* item){
+    struct Process* current = listHead;
+    struct Process* previous = NULL;
+    while (current != NULL && current != item){
+        previous = current;
+        current = current->nextProcess;
+    }
+    // If current is NULL, then it was not in the list
+    // If previous is NULL, then it is the head of the list
+    if (current != NULL){
+        if (previous == NULL){
+            listHead = current->nextProcess;
+        } else {
+            previous->nextProcess = current->nextProcess;
         }
-        // Not found
-        return NULL;
     }
+    return listHead;
 }
 
-int processInScheduler(struct Process* proc){
-    if (processesReadyTail == proc) return 1;
-    struct Process* it = processesReadyHead;
-    while (it != processesReadyTail){
-        if (it == proc) return 1;
-        it = it->nextProcess;
+static int processInList(struct Process* listHead, struct Process* proc){
+    while (listHead != NULL){
+        if (listHead == proc) return 1;
+        listHead = listHead->nextProcess;
     }
     return 0;
 }
 
 void addProcessToScheduler(struct Process* proc){
-    if (proc != NULL && !processInScheduler(proc)){
-        appendProcess(proc);
-        rescheduleImmediately();
+    if (proc != NULL && !processInList(processesReady, proc)){
+        processesReady = appendProcessToList(processesReady, proc);
+        if (currentProcess == idleProcess) rescheduleImmediately();
     }
 }
 
 void removeProcessFromScheduler(struct Process* proc){
-    if (processInScheduler(proc)){
-        removeProcessFromScheduler(proc);
+    if (processInList(processesReady, proc)){
+        processesReady = removeProcessFromList(processesReady, proc);
         if (currentProcess == proc) rescheduleImmediately();
     }
 }
@@ -129,22 +114,25 @@ struct Process* getCurrentProcess(void){
 }
 
 struct Process* popCurrentProcess(void){
-    removeProcess(currentProcess);
+    removeProcessFromScheduler(currentProcess);
     return currentProcess;
 }
 
+int processInScheduler(struct Process* proc){
+    return processInList(processesReady, proc);
+}
+
 void preemptCurrentProcess(void){
-    if (processesReadyHead != NULL && currentProcess->nextProcess != NULL){
-        processesReadyTail = processesReadyHead;
-        processesReadyHead = processesReadyHead->nextProcess;
-        rescheduleImmediately();
+    if (processesReady != NULL && currentProcess->nextProcess != NULL){
+        removeProcessFromScheduler(currentProcess);
+        addProcessToScheduler(currentProcess);
     }
 }
 
 struct Process* getNextActiveProcess(void){
-    if (processesReadyHead == NULL)
+    if (processesReady == NULL)
         return idleProcess;
-    return processesReadyHead;
+    return processesReady;
 }
 
 void changeGlobalContext(struct Process* newProcPtr){
@@ -166,8 +154,7 @@ void initScheduler(struct Process* currentProc) {
 #endif //DEBUG
         generateCrash();
     }
-    processesReadyHead = currentProc;
-    processesReadyTail = currentProc;
+    processesReady = currentProc;
     changeGlobalContext(currentProc);
 }
 

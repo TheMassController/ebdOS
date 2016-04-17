@@ -17,6 +17,8 @@
 
 #include <stddef.h>
 
+#include "sleep.h"
+
 struct Futex {
     int atomicVal;
     size_t lockId;
@@ -29,18 +31,21 @@ struct Futex {
  * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int initFutex(struct Futex* fut, int value);
+
 /**
  * @brief Destroys a futex, releasing the managed lock that was allocated
  * @param fut A pointer to the futex struct that will be de-initialized
  * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int destroyFutex(struct Futex* fut);
+
 /**
  * @brief increases the amount of resources with one.
  * @param fut The futex struct.
  * @return 0 if everything went OK, else an ERRNO. See kernel/inc/sysFutex for more details
  */
 int futexPost(struct Futex* fut);
+
 /**
  * @brief requests one more resource from the futex, blocks if none available.
  * @param fut The futex struct from whom a resource is requested
@@ -54,4 +59,12 @@ int futexWait(struct Futex* fut);
  * @return 0 if everything went OK and a resource was available, EBUSY if there were no resources available.
  */
 int futexTryWait(struct Futex* fut);
+
+/**
+ * @brief Requests one resource from the mutex, blocks for at most the given amount of time if no resources are available right now.
+ * @param fut The futex struct
+ * @param sleepReq A struct indicating the max wait time.
+ * @return 0 if everything went OK, ETIMEDOUT if the mutex was not available in the specified amount of time, other ERRNOs are also possible. See kernel/inc/sysFutex.h for more details
+ */
+int futexWaitTimeout(struct Futex* restrict fut, struct SleepRequest* restrict sleepReq);
 #endif //FUTEX_H

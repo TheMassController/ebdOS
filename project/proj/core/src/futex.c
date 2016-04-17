@@ -43,6 +43,27 @@ int futexWait(struct Futex* fut){
     return 0;
 }
 
+int futexWaitTimeout(struct Futex* restrict fut, struct SleepRequest* restrict sleepReq){
+    struct DoublePtr{
+        struct Futex* fut;
+        struct SleepRequest* sleepReq;
+    };
+    // Wait: decrement. If the newvalue is < 0, wait until a resource falls free
+    int newVal = atomicDecreaseInt(&fut->atomicVal);
+    if (newVal < 0){
+        struct DoublePtr ptr = {
+            .fut = fut,
+            .sleepReq = sleepReq
+        };
+        setContextParams(FUTEXWAITTIMEOUT, &ptr, 0);
+        CALLSUPERVISOR(SVC_serviceRequired);
+        if (currentContext->retVal == ETIMEDOUT) atomicIncreaseInt(&fut->atomicVal);
+        return currentContext->retVal;
+    }
+    return 0;
+
+}
+
 int futexTryWait(struct Futex* fut){
     int newVal = atomicDecreaseInt(&fut->atomicVal);
     if (newVal < 0){

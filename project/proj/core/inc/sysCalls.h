@@ -14,6 +14,7 @@ enum SyscallCodes {
     FUTEXINIT,
     FUTEXPOST,
     FUTEXWAIT,
+    FUTEXWAITTIMEOUT,
     FUTEXDESTROY
 };
 

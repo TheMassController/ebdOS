@@ -22,7 +22,7 @@ int sysInitFutex(struct Futex* fut, struct Process* proc);
 
 /**
  * @brief Puts the process in a wait state, but only if atomicVal of the futex struct <= 0
- * @param fut The futex, as presented by userspace, that is being initialized
+ * @param fut The futex, as presented by userspace, that is being waited upon
  * @return 0 if everything was ok, this is the case where there were no bounces: a bounce is an error.
  * EAGAIN if the value of the lock was > 0, do not forward this error to the callee
  * EINVAL if the fut param was incorrect
@@ -49,3 +49,14 @@ int sysFutexPost(struct Futex* fut, struct Process** procPtr);
  * EDEADLK if the lock could not be released because processes were waiting for it. The lock will not be released in this case
  */
 int sysDestroyFutex(struct Futex* fut);
+
+/**
+ * @brief Puts the process in a wait state, but only if atomicVal of the struct <= 0 and only for at most the specified amount of time.
+ * @param fut The futex, as presented by userspace, that is being waited upon
+ * @param sleepReq Specifies the sleep time
+ * @return 0 if everything was ok
+ *      EINVAL if fut was invalid
+ *      ETIMEDOUT The timer had already ran out, the process is not added to the module
+ *      EAGAIN if the value of the lock was > 0, do not forward this error to the callee
+ */
+int sysFutexWaitTimeout(struct Futex* restrict fut, struct Process* restrict proc, struct SleepRequest* restrict sleepReq);

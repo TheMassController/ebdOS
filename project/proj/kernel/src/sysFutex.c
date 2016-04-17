@@ -19,3 +19,8 @@ int sysFutexWait(struct Futex* fut, struct Process* proc){
 int sysFutexPost(struct Futex* fut, struct Process** procPtr){
     return releaseManagedLock(fut->lockId, procPtr);
 }
+
+int sysFutexWaitTimeout(struct Futex* restrict fut, struct Process* restrict proc, struct SleepRequest* restrict sleepReq){
+    if (fut->atomicVal > 0) return EAGAIN;
+    return timedWaitForManagedLock(fut->lockId, proc, sleepReq);
+}

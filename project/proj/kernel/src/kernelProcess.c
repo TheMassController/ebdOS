@@ -71,6 +71,17 @@ void kernelMain(void){
                         kernRetQueuePush(kernMaintenanceProc);
                     }
                     break;
+                case FUTEXWAITTIMEOUT:
+                    retval = sysFutexWaitTimeout(context->genericPtr, kernMaintenanceProc, context->genericPtr+1);
+                    if (retval != 0){
+                        if (retval != EAGAIN) {
+                            context->retVal = retval;
+                        } else {
+                            context->retVal = 0;
+                        }
+                        kernRetQueuePush(kernMaintenanceProc);
+                    }
+                    break;
                 case FUTEXDESTROY:
                     context->retVal = sysDestroyFutex(context->genericPtr);
                     kernRetQueuePush(kernMaintenanceProc);

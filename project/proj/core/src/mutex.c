@@ -17,18 +17,22 @@ int destroyMutex(struct Mutex* mutex){
 int lockMutex(struct Mutex* mutex){
     if (mutex->ownerContext == currentContext) return EDEADLK;
     int retVal = futexWait(&mutex->fut);
-    if (retVal == 0) {
-        mutex->ownerContext = currentContext;
-    }
+    if (currentContext->retVal == 0) mutex->ownerContext = currentContext;
     return retVal;
+}
+
+int lockMutexTimeout(struct Mutex* mutex, struct SleepRequest* sleepReq){
+    if (mutex->ownerContext == currentContext) return EDEADLK;
+    int retVal = futexWaitTimeout(&mutex->fut, sleepReq);
+    if (currentContext->retVal == 0) mutex->ownerContext = currentContext;
+    return retVal;
+
 }
 
 int tryLockMutex(struct Mutex* mutex){
     if (mutex->ownerContext == currentContext) return EDEADLK;
     int retVal = futexTryWait(&mutex->fut);
-    if (retVal == 0) {
-        mutex->ownerContext = currentContext;
-    }
+    if (currentContext->retVal == 0) mutex->ownerContext = currentContext;
     return retVal;
 }
 

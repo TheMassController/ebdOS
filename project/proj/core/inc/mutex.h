@@ -6,6 +6,7 @@
  * Userside implementation of mutex: these functions are supposed to be used by the enduser
  */
 #include "futex.h"
+#include "sleep.h"
 
 struct Mutex{
     struct Futex fut;
@@ -39,6 +40,14 @@ int lockMutex(struct Mutex* mutex);
  * @return 0 if it was locked, EBUSY if it was already locked, EDEADLK if the mutex was already locked by callee.
  */
 int tryLockMutex(struct Mutex* mutex);
+
+/**
+ * @brief tries to lock the mutex, blocks for at most the time specified in sleepReq
+ * @param mutex The mutex to lock
+ * @param sleepReq A specification of the waiting time. The refTime field will be set by this function
+ * @return 0 if everything went OK, else an ERRNO. EDEADLK if the mutex was already locked by callee, ETIMEDOUT if the specified time passed. See kernel/inc/sysFutex for more details
+ */
+int lockMutexTimeout(struct Mutex* mutex, struct SleepRequest* sleepReq);
 
 /**
  * @brief unlocks the mutex, but only if it was locked by the callee

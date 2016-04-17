@@ -98,10 +98,29 @@ struct Process* refreshSleeplist(void){
 }
 
 struct Process* sleepHandleSysTimerOverflow(void){
-    for (struct Process* it = sleepList; it != NULL; it = it->nextProcess){
+    struct Process* ret = NULL;
+    struct Process* in = NULL;
+    struct Process* it = sleepList;
+    if (it->sleepObj.overflows == 0){
+        ret = it;
+        in = it;
+        it = it->nextProcess;
+        while (it != NULL && it->sleepObj.overflows == 0){
+            it = it->nextProcess;
+            in = it;
+        }
+    }
+    sleepList = it;
+    while (it != NULL){
         if (it->sleepObj.overflows > 0){
             it->sleepObj.overflows--;
         }
+        it = it->nextProcess;
     }
-    return updateListAndInterrupt();
+    if (ret != NULL) {
+        in->nextProcess = updateListAndInterrupt();
+    } else {
+        ret = updateListAndInterrupt();
+    }
+    return ret;
 }

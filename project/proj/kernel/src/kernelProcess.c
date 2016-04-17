@@ -11,6 +11,7 @@
 #include "kernEventNotifier.h"
 #include "sysSleep.h"
 #include "sysFutex.h"
+#include "sysManagedLock.h"
 
 static void createProcessHelper(struct ProcessContext* context, struct Process* kernMaintenanceProc){
     struct ProcessCreateParams* params = (struct ProcessCreateParams*)context->genericPtr;
@@ -87,9 +88,15 @@ void kernelMain(void){
                 case sysTimerOverflow:
                 it = sleepHandleSysTimerOverflow();
                 kernRetQueueAddList(it);
+                it = timedManagedLockSysTimerOverflow();
+                kernRetQueueAddList(it);
                 break;
                 case sleepTimerExpired:
                 it = refreshSleeplist();
+                kernRetQueueAddList(it);
+                break;
+                case managedLockTimerExpired:
+                it = timedManagedLockTimeout();
                 kernRetQueueAddList(it);
                 break;
                 default:

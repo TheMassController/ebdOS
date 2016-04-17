@@ -68,13 +68,6 @@ int releaseManagedLock(size_t lockId, struct Process** procReady);
 int removeProcessFromManagedLock(size_t lockId, struct Process* proc);
 
 /**
- * @brief Retrieves a process from this module. If it is waiting for a lock (either with or without a timeout), it stops waiting for that lock.
- * @param proc The process that is searched for
- * @return 0 if found an removed, EAGAIN if not found
- */
-int retrieveProcess(struct Process* proc);
-
-/**
  * The following functions are related to the sleep/wait combination
  */
 

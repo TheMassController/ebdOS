@@ -146,12 +146,6 @@ int removeProcessFromManagedLock(size_t lockId, struct Process* proc){
     return 0;
 }
 
-int retrieveProcess(struct Process* proc){
-    if (!(proc->state == STATE_WAIT || proc->state == STATE_WAIT_TIMEOUT)) return EAGAIN;
-    // TODO once the timeout feature works: complete
-    return 0;
-}
-
 int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpReq){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
     translateSleepRequest(proc, slpReq);
@@ -180,16 +174,37 @@ struct Process* timedManagedLockTimeout(void){
         }
     }
     sleepQueueHead = it;
+    updateWaitTimer(curValWTA);
     return ret;
 }
 
-//struct Process* timedManagedLockSysTimerOverflow(void){
-//    if (sleepQueueHead == NULL) {
-//        updateWaitTimer(getSystemClockValue());
-//        return NULL;
-//    }
-//    struct Process* ret = NULL;
-//    struct Process* in = NULL;
-//
-//}
+struct Process* timedManagedLockSysTimerOverflow(void){
+    if (sleepQueueHead == NULL) {
+        updateWaitTimer(getSystemClockValue());
+        return NULL;
+    }
+    struct Process* ret = NULL;
+    struct Process* in = NULL;
+    struct SleepQueueElement* it = sleepQueueHead;
+    if (it->proc->sleepObj.overflows == 0){
+        ret = it->proc;
+        in = ret;
+        it = it->nextElement;
+        while (it != NULL && it->proc->sleepObj.overflows == 0){
+            in->nextProcess = it->proc;
+            in = in->nextProcess;
+            it = it->nextElement;
+        }
+    }
+    while (it != NULL){
+        it->proc->sleepObj.overflows -= 1;
+        it = it->nextElement;
+    }
+    if (ret != NULL){
+        in->nextProcess = timedManagedLockTimeout();
+    } else {
+        ret = timedManagedLockTimeout();
+    }
+    return ret;
+}
 

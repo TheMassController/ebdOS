@@ -100,6 +100,9 @@ void kernelMain(void){
                 it = sleepHandleSysTimerOverflow();
                 kernRetQueueAddList(it);
                 it = timedManagedLockSysTimerOverflow();
+                for (struct Process* i = it; i != NULL; i = i->nextProcess){
+                    i->context->retVal = ETIMEDOUT;
+                }
                 kernRetQueueAddList(it);
                 break;
                 case sleepTimerExpired:
@@ -108,6 +111,9 @@ void kernelMain(void){
                 break;
                 case managedLockTimerExpired:
                 it = timedManagedLockTimeout();
+                for (struct Process* i = it; i != NULL; i = i->nextProcess){
+                    i->context->retVal = ETIMEDOUT;
+                }
                 kernRetQueueAddList(it);
                 break;
                 default:

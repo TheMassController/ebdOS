@@ -166,10 +166,12 @@ struct Process* timedManagedLockTimeout(void){
     if (it->proc->sleepObj.overflows == 0 && it->proc->sleepObj.sleepUntil >= curValWTA){
         ret = it->proc;
         in = ret;
+        removeFromLockList(&lockPool[it->managedLockID], in);
         it = it->nextElement;
         while (it != NULL && it->proc->sleepObj.overflows == 0 && it->proc->sleepObj.sleepUntil >= curValWTA){
             in->nextProcess = it->proc;
             in = in->nextProcess;
+            removeFromLockList(&lockPool[it->managedLockID], in);
             it = it->nextElement;
         }
     }
@@ -189,10 +191,12 @@ struct Process* timedManagedLockSysTimerOverflow(void){
     if (it->proc->sleepObj.overflows == 0){
         ret = it->proc;
         in = ret;
+        removeFromLockList(&lockPool[it->managedLockID], in);
         it = it->nextElement;
         while (it != NULL && it->proc->sleepObj.overflows == 0){
             in->nextProcess = it->proc;
             in = in->nextProcess;
+            removeFromLockList(&lockPool[it->managedLockID], in);
             it = it->nextElement;
         }
     }

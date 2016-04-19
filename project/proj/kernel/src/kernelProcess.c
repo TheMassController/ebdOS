@@ -27,6 +27,15 @@ static void createProcessHelper(struct ProcessContext* context, struct Process* 
     }
 }
 
+struct DoublePtr{
+    struct Futex* fut;
+    struct SleepRequest* sleepReq;
+};
+
+static int futexWaitTimeoutHelper(struct DoublePtr* ptr, struct Process* kernMaintenanceProc){
+    return sysFutexWaitTimeout(ptr->fut, kernMaintenanceProc, ptr->sleepReq);
+}
+
 void kernelMain(void){
     while(1){
         struct Process* kernMaintenanceProc = kernelBufferGetProcess();
@@ -72,7 +81,7 @@ void kernelMain(void){
                     }
                     break;
                 case FUTEXWAITTIMEOUT:
-                    retval = sysFutexWaitTimeout(context->genericPtr, kernMaintenanceProc, context->genericPtr+1);
+                    retval = futexWaitTimeoutHelper(context->genericPtr, kernMaintenanceProc);
                     if (retval != 0){
                         if (retval != EAGAIN) {
                             context->retVal = retval;
@@ -94,31 +103,31 @@ void kernelMain(void){
         }
         enum KernBufferMessageCodes code = kernelBufferGetCode();
         while(code != noMessageAvailable){
+            struct Process* it;
             switch(code) {
-                struct Process* it;
                 case sysTimerOverflow:
-                it = sleepHandleSysTimerOverflow();
-                kernRetQueueAddList(it);
-                it = timedManagedLockSysTimerOverflow();
-                for (struct Process* i = it; i != NULL; i = i->nextProcess){
-                    i->context->retVal = ETIMEDOUT;
-                }
-                kernRetQueueAddList(it);
-                break;
+                    it = sleepHandleSysTimerOverflow();
+                    kernRetQueueAddList(it);
+                    it = timedManagedLockSysTimerOverflow();
+                    for (struct Process* i = it; i != NULL; i = i->nextProcess){
+                        i->context->retVal = ETIMEDOUT;
+                    }
+                    kernRetQueueAddList(it);
+                    break;
                 case sleepTimerExpired:
-                it = refreshSleeplist();
-                kernRetQueueAddList(it);
-                break;
+                    it = refreshSleeplist();
+                    kernRetQueueAddList(it);
+                    break;
                 case managedLockTimerExpired:
-                it = timedManagedLockTimeout();
-                for (struct Process* i = it; i != NULL; i = i->nextProcess){
-                    i->context->retVal = ETIMEDOUT;
-                }
-                kernRetQueueAddList(it);
-                break;
+                    it = timedManagedLockTimeout();
+                    for (struct Process* i = it; i != NULL; i = i->nextProcess){
+                        i->context->retVal = ETIMEDOUT;
+                    }
+                    kernRetQueueAddList(it);
+                    break;
                 default:
-                UARTprintf("Unknown event code: %d\n", code);
-                break;
+                    UARTprintf("Unknown event code: %d\n", code);
+                    break;
             }
             code = kernelBufferGetCode();
         }

@@ -61,7 +61,6 @@ int futexWaitTimeout(struct Futex* restrict fut, struct SleepRequest* restrict s
         return currentContext->retVal;
     }
     return 0;
-
 }
 
 int futexTryWait(struct Futex* fut){

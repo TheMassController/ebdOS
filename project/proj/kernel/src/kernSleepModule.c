@@ -51,7 +51,7 @@ static struct Process* internalAddSleeper(struct Process* proc){
          }
          // Then sort into the correct wakeup moment. Higher goes first
          for (; curNode != NULL; curNode = curNode->nextProcess){
-             if ((curNode->sleepObj).sleepUntil < (proc->sleepObj).sleepUntil){
+             if ((curNode->sleepObj).sleepUntil < (proc->sleepObj).sleepUntil || (curNode->sleepObj).overflows > (proc->sleepObj).overflows){
                  break;
              }
              prevNode = curNode;

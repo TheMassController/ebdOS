@@ -137,6 +137,12 @@ struct Process* getNextActiveProcess(void){
 
 void changeGlobalContext(struct Process* newProcPtr){
     if (newProcPtr == NULL) generateCrash();
+#ifdef DEBUG
+    if ((uintptr_t)(newProcPtr->stackPointer) <= (uintptr_t)(newProcPtr->context)){
+        UARTprintf("STACKOVERFLOW: %s's stackptr is smaller then its context pointer. CRASHING\n", newProcPtr->name);
+        generateCrash();
+    }
+#endif //DEBUG
     unsigned nextSliceLength = 1;
     if (newProcPtr == idleProcess){
         nextSliceLength = 0;

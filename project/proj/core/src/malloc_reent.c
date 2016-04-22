@@ -8,11 +8,11 @@ struct ReentrantMutex mallocMutex;
 
 void __malloc_lock (struct _reent *reent ){
     UNUSED(reent);
-    lockReentrantMutexBlocking(&(mallocMutex));
+    lockReentrantMutex(&(mallocMutex));
 }
 
 void __malloc_unlock (struct _reent *reent ){
     UNUSED(reent);
-    releaseReentrantMutex(&(mallocMutex));
+    unlockReentrantMutex(&(mallocMutex));
 }
 

@@ -1,33 +1,66 @@
 #include "reentrantMutex.h"
 #include "stdlib.h"
+#include "context.h"
 
-void initReentrantMutex(struct ReentrantMutex* mutex){
-    initMutex(&(mutex->mutex));
+int initReentrantMutex(struct ReentrantMutex* mutex){
+    mutex->ownerContext = NULL;
     mutex->value = 0;
+    return initFutex(&mutex->fut, 1);
 }
 
-void cleanupReentrantMutex(struct ReentrantMutex* mutex){
-    destroyMutex(&mutex->mutex);
+int destroyReentrantMutex(struct ReentrantMutex* mutex){
+    return destroyFutex(&mutex->fut);
 }
 
-void lockReentrantMutexBlocking(struct ReentrantMutex* mutex){
-    lockMutex(&mutex->mutex);
-    mutex->value++;
+int lockReentrantMutex(struct ReentrantMutex* mutex){
+    if (mutex->ownerContext == currentContext){
+        mutex->value++;
+    } else {
+        int retVal = futexWait(&mutex->fut);
+        if (retVal == 0) {
+            mutex->value = 1;
+            mutex->ownerContext = currentContext;
+        } else {
+            return retVal;
+        }
+    }
+    return 0;
 }
 
 int lockReentrantMutexNoBlock(struct ReentrantMutex* mutex){
-    if (!tryLockMutex(&mutex->mutex)){
-        return 0;
+    if (mutex->ownerContext == currentContext){
+        mutex->value++;
+    } else {
+        int retVal = futexTryWait(&mutex->fut);
+        if (retVal == 0) {
+            mutex->value = 1;
+            mutex->ownerContext = currentContext;
+        } else {
+            return retVal;
+        }
     }
-    mutex->value++;
-    return 1;
-}
-//FIXME
-void releaseReentrantMutex(struct ReentrantMutex* mutex){
-    if(mutex->value > 0) mutex->value--;
-    if (mutex->value == 0){
-        unlockMutex(&mutex->mutex);
-    }
+    return 0;
 }
 
+int lockReentrantMutexTimeout(struct ReentrantMutex* restrict mutex, struct SleepRequest* restrict sleepReq){
+    if (mutex->ownerContext == currentContext){
+        mutex->value++;
+    } else {
+        int retVal = futexWaitTimeout(&mutex->fut, sleepReq);
+        if (retVal == 0) {
+            mutex->value = 1;
+            mutex->ownerContext = currentContext;
+        } else {
+            return retVal;
+        }
+    }
+    return 0;
+}
 
+int unlockReentrantMutex(struct ReentrantMutex* mutex){
+    if (mutex->ownerContext != currentContext) return EPERM;
+    if (--mutex->value == 0) {
+        mutex->ownerContext = NULL;
+        return futexPost(&mutex->fut);
+    } else return 0;
+}

@@ -38,5 +38,6 @@ int tryLockMutex(struct Mutex* mutex){
 
 int unlockMutex(struct Mutex* mutex){
     if (mutex->ownerContext != currentContext) return EPERM;
+    mutex->ownerContext = NULL;
     return futexPost(&mutex->fut);
 }

@@ -30,11 +30,10 @@ static void mutPasserWait(void* maxWait){
         if (retVal != 0){
             UARTprintf("Oops, the retval was not 0. ERRNO: %d (%s)\n", retVal, strerror(retVal));
         } else{
-            UARTprintf("My pid is %d and I have a mutex!\n", pid);
+            UARTprintf("My pid is %d and I have a mutex! (Im the waiter)\n", pid);
             sleepS(1);
             unlockMutex(&mut);
         }
-        sleepMS(1000);
     }
 }
 
@@ -42,16 +41,15 @@ int mainProcessLocker(void){
     (void)(mutPasserWait);
     (void)(mutPasser);
     int retVal = initMutex(&mut);
-    lockMutex(&mut);
+    //lockMutex(&mut);
     if (retVal !=0){
         errno = retVal;
         return -1;
     }
-    if (createChildProcess(128, "MutPasser1", mutPasser, (void*)1500) == -1) return -1;
-    if (createChildProcess(128, "MutPasser2", mutPasser, (void*)2000) == -1) return -1;
-    if (createChildProcess(128, "MutPasser3", mutPasser, (void*)3000) == -1) return -1;
-    if (createChildProcess(256, "MutPasserW", mutPasserWait, (void*)500) == -1) return -1;
+    if (createChildProcess(256, "MutPasser1", mutPasser, (void*)1500) == -1) return -1;
+    if (createChildProcess(256, "MutPasser2", mutPasser, (void*)2000) == -1) return -1;
+    if (createChildProcess(256, "MutPasser3", mutPasser, (void*)3000) == -1) return -1;
+    if (createChildProcess(256, "MutPasserW", mutPasserWait, (void*)1000) == -1) return -1;
     return 0;
 
 }
-

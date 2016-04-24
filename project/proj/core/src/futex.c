@@ -2,6 +2,7 @@
 #include "context.h"
 #include "supervisorCall.h"
 #include "atomicIntegerOperations.h"
+#include "systemClockManagement.h"
 /**
  * @brief The implementation of the userspace side of the futex.
  */
@@ -51,6 +52,7 @@ int futexWaitTimeout(struct Futex* restrict fut, struct SleepRequest* restrict s
     // Wait: decrement. If the newvalue is < 0, wait until a resource falls free
     int newVal = atomicDecreaseInt(&fut->atomicVal);
     if (newVal < 0){
+        sleepReq->refTime = getSystemClockValue();
         struct DoublePtr ptr = {
             .fut = fut,
             .sleepReq = sleepReq

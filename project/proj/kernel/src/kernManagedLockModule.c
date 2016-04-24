@@ -123,16 +123,40 @@ static void addToLockList(struct ManagedLock* lock, struct Process* proc){
     }
 }
 // Returns -1 if not found, 0 if found
-static int removeFromLockList(struct ManagedLock* lock, struct Process* proc){
+static void removeFromLockList(struct ManagedLock* lock, struct Process* proc){
+#ifdef DEBUG
+    int found = 0;
+#endif //DEBUG
     struct Process* it = lock->waitinglist;
-    for (;it->nextProcess != NULL && it != proc;it = it->nextProcess);
-    if (it == proc){
+    if (it == proc) {
         lock->waitinglist = it->nextProcess;
         it->nextProcess = NULL;
-        it->state = STATE_READY;
-        return 0;
+#ifdef DEBUG
+        found = 1;
+#endif //DEBUG
+    } else {
+        struct Process* prev = it;
+        it = it->nextProcess;
+        while(it != NULL && it != proc){
+            prev = it;
+            it = it->nextProcess;
+        }
+        if (it != NULL){
+#ifdef DEBUG
+            found = 1;
+#endif //DEBUG
+            prev->nextProcess = it->nextProcess;
+            it->nextProcess = NULL;
+        }
     }
-    return -1;
+    if (proc->state == STATE_WAIT_TIMEOUT) removeLockWaiter(proc);
+    proc->state = STATE_READY;
+#ifdef DEBUG
+    if (!found){
+        UARTprintf("Race condition, file %s, file %s, line %d (function: %s).\n", __FILE__, __LINE__, __func__);
+        generateCrash();
+    }
+#endif //DEBUG
 }
 
 static struct Process* popFromLockList(struct ManagedLock* lock){

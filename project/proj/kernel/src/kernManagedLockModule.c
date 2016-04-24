@@ -140,12 +140,6 @@ int releaseManagedLock(size_t lockId, struct Process** procReady){
     return 0;
 }
 
-int removeProcessFromManagedLock(size_t lockId, struct Process* proc){
-    if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
-    if (removeFromLockList(&lockPool[lockId], proc) == -1) return EAGAIN;
-    return 0;
-}
-
 int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpReq){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
     translateSleepRequest(proc, slpReq);

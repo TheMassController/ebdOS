@@ -60,14 +60,6 @@ int waitForManagedLock(size_t lockId, struct Process* proc);
 int releaseManagedLock(size_t lockId, struct Process** procReady);
 
 /**
- * @brief Removes the specified process from the specified lock
- * @param lockId The id of the lock whos waiting list refered to
- * @param proc The proc that will be removed from the waitinglist of the refered lock
- * @return 0 if everything was ok, EINVAL if lockId is invalid, EAGAIN if proc was not waiting for given lock.
- */
-int removeProcessFromManagedLock(size_t lockId, struct Process* proc);
-
-/**
  * The following functions are related to the sleep/wait combination
  */
 

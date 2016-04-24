@@ -24,7 +24,7 @@ int lockMutex(struct Mutex* mutex){
 int lockMutexTimeout(struct Mutex* mutex, struct SleepRequest* sleepReq){
     if (mutex->ownerContext == currentContext) return EDEADLK;
     int retVal = futexWaitTimeout(&mutex->fut, sleepReq);
-    if (currentContext->retVal == 0) mutex->ownerContext = currentContext;
+    if (retVal == 0) mutex->ownerContext = currentContext;
     return retVal;
 
 }

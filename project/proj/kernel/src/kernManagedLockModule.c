@@ -9,6 +9,11 @@
 #include "systemClockManagement.h"  // Declares setHalfWTimerInterrupt
 #include "abstrSysSleepFuncs.h"     // Declares translateSleepRequest
 
+#ifdef DEBUG
+#include "uartstdio.h"
+#include "kernUtils.h"
+#endif //DEBUG
+
 struct ManagedLock {
     uintptr_t ownerPid;
     char taken;
@@ -75,6 +80,37 @@ static int addLockWaiter(struct Process* proc, size_t managedLockId){
     return 1;
 }
 
+static void removeLockWaiter(struct Process* proc){
+#ifdef DEBUG
+    if (sleepQueueHead == NULL){
+        UARTprintf("Race condition, file %s, file %s, line %d (function: %s).\n", __FILE__, __LINE__, __func__);
+        generateCrash();
+    }
+#endif //DEBUG
+    if (sleepQueueHead == NULL) return;
+    struct SleepQueueElement* el = &sleepQueuePool[proc->pid];
+    if (sleepQueueHead == el){
+        sleepQueueHead = el->nextElement;
+        el->nextElement = NULL;
+    } else {
+        struct SleepQueueElement* prev = sleepQueueHead;
+        struct SleepQueueElement* cur = sleepQueueHead->nextElement;
+        while(cur != NULL && cur != el) {
+            prev = cur;
+            cur = cur->nextElement;
+        }
+#ifdef DEBUG
+        if (cur == NULL){
+            UARTprintf("Race condition, file %s, file %s, line %d (function: %s).\n", __FILE__, __LINE__, __func__);
+            generateCrash();
+        }
+#endif //DEBUG
+        if (cur == NULL) return;
+        prev->nextElement = cur->nextElement;
+        cur->nextElement = NULL;
+    }
+}
+
 static void addToLockList(struct ManagedLock* lock, struct Process* proc){
     proc->nextProcess = NULL;
     proc->state = STATE_WAIT;
@@ -104,6 +140,7 @@ static struct Process* popFromLockList(struct ManagedLock* lock){
     if (proc != NULL){
         lock->waitinglist = proc->nextProcess;
         proc->nextProcess = NULL;
+        if (proc->state == STATE_WAIT_TIMEOUT) removeLockWaiter(proc);
         proc->state = STATE_READY;
     }
     return proc;
@@ -143,8 +180,12 @@ int releaseManagedLock(size_t lockId, struct Process** procReady){
 int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpReq){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
     translateSleepRequest(proc, slpReq);
+    if (!addLockWaiter(proc, lockId)){
+        proc->state = STATE_READY;
+        return ETIMEDOUT;
+    }
     addToLockList(&lockPool[lockId], proc);
-    if (!addLockWaiter(proc, lockId)) return ETIMEDOUT;
+    proc->state = STATE_WAIT_TIMEOUT;
     return 0;
 }
 
@@ -160,11 +201,13 @@ struct Process* timedManagedLockTimeout(void){
     if (it->proc->sleepObj.overflows == 0 && it->proc->sleepObj.sleepUntil >= curValWTA){
         ret = it->proc;
         in = ret;
+        in->state = STATE_READY;
         removeFromLockList(&lockPool[it->managedLockID], in);
         it = it->nextElement;
         while (it != NULL && it->proc->sleepObj.overflows == 0 && it->proc->sleepObj.sleepUntil >= curValWTA){
             in->nextProcess = it->proc;
             in = in->nextProcess;
+            in->state = STATE_READY;
             removeFromLockList(&lockPool[it->managedLockID], in);
             it = it->nextElement;
         }
@@ -184,12 +227,14 @@ struct Process* timedManagedLockSysTimerOverflow(void){
     struct SleepQueueElement* it = sleepQueueHead;
     if (it->proc->sleepObj.overflows == 0){
         ret = it->proc;
+        ret->state = STATE_READY;
         in = ret;
         removeFromLockList(&lockPool[it->managedLockID], in);
         it = it->nextElement;
         while (it != NULL && it->proc->sleepObj.overflows == 0){
             in->nextProcess = it->proc;
             in = in->nextProcess;
+            in->state = STATE_READY;
             removeFromLockList(&lockPool[it->managedLockID], in);
             it = it->nextElement;
         }

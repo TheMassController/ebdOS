@@ -7,19 +7,13 @@
 
 // The codes
 #define SVC_yield                               0
-#define SVC_multiObjectIncrease                 1
-#define SVC_multiObjectDecrease                 2
-#define SVC_multiObjectWaitForIncrease          3
-#define SVC_multiObjectWaitForDecrease          4
-#define SVC_multiObjectWaitForIncreaseAndSleep  5
-#define SVC_multiObjectWaitForDecreaseAndSleep  6
-#define SVC_sleep                               7
-#define SVC_wakeup                              8
-#define SVC_wakeupCurrent                       9
-#define SVC_wakeupKernel                        10
-#define SVC_serviceRequired                     11
-#define SVC_serviced                            12
-#define SVC_mainClockInterrupt                  13
+#define SVC_sleep                               1
+#define SVC_wakeup                              2
+#define SVC_wakeupCurrent                       3
+#define SVC_wakeupKernel                        4
+#define SVC_serviceRequired                     5
+#define SVC_serviced                            6
+#define SVC_mainClockInterrupt                  7
 #ifdef DEBUG
 #define SVC_test                                255
 #endif // DEBUG

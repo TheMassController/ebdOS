@@ -67,4 +67,11 @@ int futexTryWait(struct Futex* fut);
  * @return 0 if everything went OK, ETIMEDOUT if the mutex was not available in the specified amount of time, other ERRNOs are also possible. See kernel/inc/sysFutex.h for more details
  */
 int futexWaitTimeout(struct Futex* restrict fut, struct SleepRequest* restrict sleepReq);
+
+/**
+ * @brief gets the current value of the futex. This function cannot fail unless pointed to a wrong location. It will return rubbish if used on an uninitialized function.
+ * @param fut The futex you want to know the value of
+ * @return The current value of the futex
+ */
+int futexGetValue(struct Futex* fut);
 #endif //FUTEX_H

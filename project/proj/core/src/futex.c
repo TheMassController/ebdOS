@@ -74,3 +74,7 @@ int futexTryWait(struct Futex* fut){
         return 0;
     }
 }
+
+int futexGetValue(struct Futex* fut){
+    return fut->atomicVal;
+}

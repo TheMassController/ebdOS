@@ -20,7 +20,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-MAKEFLAGS="-j15"
+MAKEFLAGS="-j15 -k"
 OPENOCDSCRIPT=$OPENOCDSCRIPTLOCATION/ek-lm4f120xl.cfg
 LOGDIR=$CURDIR/log/
 PROJDIR=$CURDIR/proj/

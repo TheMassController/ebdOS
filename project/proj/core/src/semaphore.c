@@ -1,73 +1,29 @@
 #include "semaphore.h"
-#include "stdlib.h"
 
-void initSemaphore(struct Semaphore* semaphore, int maxval){
-    if (maxval <= 0) maxval = 1;
-    __initLockObject(&(semaphore->lockObject), maxval);
+int initSemaphore(struct Semaphore* semaphore, int value){
+    return initFutex(&semaphore->fut, value);
 }
 
-void cleanupSemaphore(struct Semaphore* semaphore){
-    __cleanupLockObject(&(semaphore->lockObject));
+int destroySemaphore(struct Semaphore* semaphore){
+    return destroyFutex(&semaphore->fut);
 }
 
-void increaseSemaphoreBlocking(struct Semaphore* semaphore){
-    __increaseLockObjectBlock(&(semaphore->lockObject));
-}
-int increaseSemaphoreNonBlocking(struct Semaphore* semaphore){
-    if (__increaseLockObjectNoBlock(&(semaphore->lockObject)) == -1){
-        return 0;
-    }
-    return 1;
-}
-int increaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout){
-   if(__increaseLockObjectBlockTimeout(&(semaphore->lockObject), timeout) == -1){
-        return 0;
-    }
-    return 1;
+int semaphorePost(struct Semaphore* semaphore){
+   return futexPost(&semaphore->fut);
 }
 
-void decreaseSemaphoreBlocking(struct Semaphore* semaphore){
-    __decreaseLockObjectBlock(&(semaphore->lockObject));
-}
-int decreaseSemaphoreNonBlocking(struct Semaphore* semaphore){
-    if (__decreaseLockObjectNoBlock(&(semaphore->lockObject)) == -1){
-        return 0;
-    }
-    return 1;
+int semaphoreWait(struct Semaphore* semaphore){
+    return futexWait(&semaphore->fut);
 }
 
-int decreaseSemaphoreBlockingTimeout(struct Semaphore* semaphore, unsigned timeout){
-    if(__decreaseLockObjectBlockTimeout(&(semaphore->lockObject), timeout) == -1){
-        return 0;
-    }
-    return 1;
+int semaphoreTryWait(struct Semaphore* semaphore){
+    return futexTryWait(&semaphore->fut);
 }
 
-int getSemaphoreMaxval(struct Semaphore* semaphore){
-    return __getLockMaxVal(&(semaphore->lockObject));
-}
-int getSemaphoreCurrentVal(struct Semaphore* semaphore){
-    return __getLockVal(&(semaphore->lockObject));
+int semaphoreWaitTimeout(struct Semaphore* restrict semaphore, struct SleepRequest* restrict sleepReq){
+    return futexWaitTimeout(&semaphore->fut, sleepReq);
 }
 
-int takeSemaphore(struct Semaphore* semaphore, unsigned waitTime){
-    if (waitTime == MAXWAITTIME){
-        increaseSemaphoreBlocking(semaphore);
-        return 1;
-    } else if (waitTime == 0){
-        return increaseSemaphoreNonBlocking(semaphore);
-    } else {
-        return increaseSemaphoreBlockingTimeout(semaphore, waitTime);
-    }
-}
-
-int releaseSemaphore(struct Semaphore* semaphore, unsigned waitTime){
-    if (waitTime == MAXWAITTIME){
-        decreaseSemaphoreBlocking(semaphore);
-        return 1;
-    } else if (waitTime == 0){
-        return decreaseSemaphoreNonBlocking(semaphore);
-    } else {
-        return decreaseSemaphoreBlockingTimeout(semaphore, waitTime);
-    }
+int semaphoreGetValue(struct Semaphore* semaphore){
+   return futexGetValue(&semaphore->fut);
 }

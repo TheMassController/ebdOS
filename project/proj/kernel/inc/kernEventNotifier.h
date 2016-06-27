@@ -6,7 +6,7 @@
  * The functions defined here make sure that everything happens threadsafely.
  *
  * The communication is based on messages, that usually indicate an interrupt happend and the kernel should do something about it.
- * The process service part is mainly handled in sysCalls.h (core). The messages are defined as an enum here.
+ * The process service part is mainly handled in core/inc/sysCalls.h (core). The messages are defined as an enum here.
  * The second one is processes. The SVC is always in this chain, allthough the root cause can be an interrupt.
  * An example is the segfault: this happens because of an interrupt, which tells the SVC, which removes the current process from running and passes it on to the kernel.
  * A more common example is a resource request: the SVC is notified by the process and passes the process to the kernel, which handles the actual process.

@@ -8,12 +8,12 @@
 #include <uartstdio.h> //UART printf n stuff
 #include <hw_ints.h> //Memory addresses of hw interrupts
 #include <interrupt.h>
+#include <stdlib.h>
 
-#include "sleep.h"
-#include "process.h"
-#include "stdlib.h"
-#include "semaphore.h"
-#include "sysCalls.h"
+#include "core/inc/sleep.h"
+#include "kernel/inc/process.h" //TODO Do not include kernel incs from user!
+#include "core/inc/semaphore.h"
+#include "core/inc/sysCalls.h"
 
 extern struct Process* currentProcess;
 

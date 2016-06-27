@@ -1,7 +1,7 @@
-#include "mutex.h"
+#include "core/inc/mutex.h"
 #include "string.h"
-#include "sleep.h"
-#include "sysCalls.h"
+#include "core/inc/sleep.h"
+#include "core/inc/sysCalls.h"
 #include "uartstdio.h"
 #include "errno.h"
 

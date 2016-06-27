@@ -16,10 +16,10 @@
 #include <hw_ints.h>                // Memory addresses of hw interrupts
 #include <interrupt.h>              // Function prototypes for hardware interrupt setup
 // System headers provided by kernel or core
-#include "coreUtils.h"              // Core functions that need to be written in assembly
+#include "core/inc/coreUtils.h"              // Core functions that need to be written in assembly
 #include "processModule.h"          // Everything related to the processes
-#include "mutex.h"                  // Everything related to mutexes
-#include "reentrantMutex.h"         // Everything related to mutexes
+#include "core/inc/mutex.h"                  // Everything related to mutexes
+#include "core/inc/reentrantMutex.h"         // Everything related to mutexes
 #include "mpucontrol.h"             // Functions related to controlling the MPU
 #include "getSetRegisters.h"        // Functions to interact with the registers directly
 #include "supervisorCall.h"         // Defines what a supervisor call is

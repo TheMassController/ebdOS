@@ -6,10 +6,10 @@
 // Internal headers
 #include "scheduler.h"      // Contain the declarations for all functions defined here.
 #include "process.h"        // The struct Process, a lot of defines related to processes.
-#include "coreUtils.h"      // Contains some supporting functions
+#include "core/inc/coreUtils.h"      // Contains some supporting functions
 #include "supervisorCall.h" // So that the sysTickHandler can call SVC_reschedule
 #include "kernUtils.h"      // To make the OS crash on error
-#include "context.h"       // Define the processContext struct, declares extern currentContext
+#include "core/inc/context.h"       // Define the processContext struct, declares extern currentContext
 // Debug headers
 #ifdef DEBUG
 #include <uartstdio.h>      // Used for STDIO for this specific UART, written by TI

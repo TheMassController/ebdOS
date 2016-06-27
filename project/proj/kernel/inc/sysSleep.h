@@ -9,7 +9,7 @@
  * This module is tightly coupled with the SVC.
  */
 
-#include "sleep.h"          // Contains sleepRequest struct
+#include "core/inc/sleep.h"          // Contains sleepRequest struct
 #include "process.h"        // Contains process struct
 
 /**

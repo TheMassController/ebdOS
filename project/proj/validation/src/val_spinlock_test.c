@@ -1,6 +1,6 @@
-#include "spinlock.h"
-#include "sleep.h"
-#include "sysCalls.h"
+#include "core/inc/spinlock.h"
+#include "core/inc/sleep.h"
+#include "core/inc/sysCalls.h"
 #include <uartstdio.h>
 #include <string.h>
 

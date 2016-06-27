@@ -8,7 +8,7 @@
  * The kernel should call the functions defined here and usually place the returnvals of the functions in the retval variable of the callee process.
  */
 
-#include "futex.h"
+#include "core/inc/futex.h"
 #include "process.h"
 
 /**

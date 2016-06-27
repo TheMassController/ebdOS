@@ -1,13 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <uartstdio.h>
 
-#include "validation.h"
-#include "uartstdio.h"
-#include "coreUtils.h"
-#include "process.h"
-#include "sysCalls.h"
-#include "sleep.h"
+#include "validation/inc/validation.h"
+#include "core/inc/coreUtils.h"
+#include "core/inc/sysCalls.h"
+#include "core/inc/sleep.h"
 
 void ledsDanceMain(void);
 

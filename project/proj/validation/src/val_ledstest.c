@@ -9,7 +9,7 @@
 #include "hw_ints.h" //Memory addresses of hw interrupts
 #include "interrupt.h"
 
-#include "sleep.h"
+#include "core/inc/sleep.h"
 
 #define SLEEPTIMEMS 250
 

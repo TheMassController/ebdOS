@@ -1,8 +1,8 @@
 //Contains all sleep related code
 #include "sleep.h"                  // Header of the same name
-#include "sysSleep.h"               // Kernel facing sleep funcs
+#include "kernel/inc/sysSleep.h"               // Kernel facing sleep funcs
 #include "sysCalls.h"               // Syscall defs
-#include "systemClockManagement.h"  // Contains getSystemClockValue
+#include "kernel/inc/systemClockManagement.h"  // Contains getSystemClockValue
 
 int sleep(struct SleepRequest* sleepReq){
     sleepReq->refTime = getSystemClockValue();

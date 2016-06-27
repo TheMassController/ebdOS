@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 #include "coreUtils.h"
-#include "process.h"
+#include "kernel/inc/process.h"
 #include "sysCalls.h"
 struct ProcessContext* currentContext;
 

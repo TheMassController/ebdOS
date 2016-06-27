@@ -2,9 +2,9 @@
 #include <hw_types.h>
 #include <uartstdio.h>
 
-#include "sysCalls.h"
-#include "sleep.h"
-#include "process.h"
+#include "core/inc/sysCalls.h"
+#include "core/inc/sleep.h"
+#include "kernel/inc/process.h" //TODO
 
 extern struct Process* currentProcess;
 

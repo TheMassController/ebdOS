@@ -1,7 +1,7 @@
 #ifndef SPINLOCK_H
 #define SPINLOCK_H
 
-#include "process.h"
+#include "kernel/inc/process.h"
 #include "sysCalls.h"
 
 /**

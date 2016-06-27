@@ -1,6 +1,6 @@
 // User headers
 #include "anonymousSpinlock.h"                   // Implies include process.h. Used to define the AnonymousSpinlock struct
-#include "supervisorCall.h"             // Needed for supervisor calls
+#include "kernel/inc/supervisorCall.h"             // Needed for supervisor calls
 #include "atomicIntegerOperations.h"    // Needed for threadsafe integer operations
 // System headers
 #include <errno.h>              // Contains the error values

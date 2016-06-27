@@ -1,8 +1,8 @@
 #include "futex.h"
 #include "context.h"
-#include "supervisorCall.h"
+#include "kernel/inc/supervisorCall.h"
 #include "atomicIntegerOperations.h"
-#include "systemClockManagement.h"
+#include "kernel/inc/systemClockManagement.h"
 /**
  * @brief The implementation of the userspace side of the futex.
  */

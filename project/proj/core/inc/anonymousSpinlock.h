@@ -1,7 +1,7 @@
 #ifndef ANONYMOUSSPINLOCK_H
 #define ANONYMOUSSPINLOCK_H
 
-#include "process.h"
+#include "kernel/inc/process.h"
 #include "sysCalls.h"
 
 /**

@@ -1,9 +1,9 @@
 #include <string.h>
 
-#include "process.h"
+#include "kernel/inc/process.h"
 #include "sysCalls.h"
 #include "context.h"
-#include "supervisorCall.h"
+#include "kernel/inc/supervisorCall.h"
 
 unsigned getPid(void){
     setContextParams(GETPID, NULL, 0);

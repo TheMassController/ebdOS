@@ -7,7 +7,7 @@
 #include <lm4f120h5qr.h>
 
 #include "scheduler.h"
-#include "coreUtils.h"
+#include "core/inc/coreUtils.h"
 #include "process.h"
 #endif //DEBUG
 

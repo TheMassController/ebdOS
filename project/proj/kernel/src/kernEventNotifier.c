@@ -1,10 +1,10 @@
 #include <errno.h>
 
 #include "kernEventNotifier.h"
-#include "spinlock.h"
-#include "atomicIntegerOperations.h"
+#include "core/inc/spinlock.h"
+#include "core/inc/atomicIntegerOperations.h"
 #include "supervisorCall.h"
-#include "coreUtils.h"
+#include "core/inc/coreUtils.h"
 
 #ifdef DEBUG
     #include <uartstdio.h>

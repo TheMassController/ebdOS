@@ -2,7 +2,7 @@
 #include <hw_types.h>
 
 #include "uartstdio.h"
-#include "coreUtils.h"
+#include "core/inc/coreUtils.h"
 #include "systemClockManagement.h"  // Contains all the timer interrupts
 
 void ResetISR(void);

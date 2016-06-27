@@ -1,10 +1,11 @@
 #include <string.h>
-#include "uartstdio.h"
-#include "sleep.h"
+#include <uartstdio.h>
 #include <stdlib.h>
-#include "sysCalls.h"
 #include <limits.h>
 #include <math.h>
+
+#include "core/inc/sleep.h"
+#include "core/inc/sysCalls.h"
 
 //void itoa(int n, char s[])
 //{

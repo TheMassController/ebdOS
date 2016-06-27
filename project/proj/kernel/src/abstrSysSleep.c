@@ -1,7 +1,7 @@
 #include <stdint.h>                     // uint64_t
 
 #include "process.h"                    // Contains information about the struct Process
-#include "sleep.h"                      // Contains information about the struct SleepRequest
+#include "core/inc/sleep.h"                      // Contains information about the struct SleepRequest
 #include "abstrSysSleepFuncs.h"         // Contains the signatures for the functions defined here
 #include "systemClockManagement.h"      // Contains the function getCurrentSytemTimerValue and the constant EBD_SYSCLOCKMAXVAL
 

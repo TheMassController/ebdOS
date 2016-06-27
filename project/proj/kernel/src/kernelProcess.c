@@ -4,8 +4,8 @@
 
 #include "processModule.h"
 #include "uartstdio.h"
-#include "sysCalls.h"
-#include "context.h"
+#include "core/inc/sysCalls.h"
+#include "core/inc/context.h"
 #include "supervisorCall.h"
 #include "kernMaintenanceQueue.h"
 #include "kernEventNotifier.h"

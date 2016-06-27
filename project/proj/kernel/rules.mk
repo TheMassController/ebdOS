@@ -1,5 +1,5 @@
 KERNELDIR := $(TOP)$(notdir $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))/
-INCDIRS += $(shell find $(KERNELDIR)$(INCDIR) -type d)
+KERNELINC := $(shell find $(KERNELDIR)$(INCDIR) -type d)
 KERNELSRC := $(KERNELDIR)$(SRCDIR)
 KERNELASM := $(KERNELDIR)$(ASMDIR)
 KERNELCFILES := $(wildcard $(KERNELSRC)*.c)
@@ -24,7 +24,7 @@ OBJECTDIRS += $(KERNELDEBUGDIR) $(KERNELRELEASEDIR)
 
 #Rules for compiling the ASM and C files to output files
 $(KERNELDEBUGDIR)%.c.o $(KERNELRELEASEDIR)%.c.o: $(KERNELSRC)%.c
-	$(CCRECEIPE)
+	$(CC) $(CFLAGS) -I$(KERNELINC) -c $< -o $@
 
 $(KERNELDEBUGDIR)%.S.o $(KERNELRELEASEDIR)%.S.o: $(KERNELASM)%.S
 	$(ASMRECEIPE)

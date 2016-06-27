@@ -1,5 +1,5 @@
 COREDIR := $(TOP)$(notdir $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))/
-INCDIRS += $(shell find $(COREDIR)$(INCDIR) -type d)
+COREINC := $(shell find $(COREDIR)$(INCDIR) -type d)
 CORESRC := $(COREDIR)$(SRCDIR)
 COREASM := $(COREDIR)$(ASMDIR)
 CORECFILES := $(wildcard $(CORESRC)*.c)
@@ -23,7 +23,7 @@ ALLOFILES += $(COREROFILES)
 OBJECTDIRS += $(COREDEBUGDIR) $(CORERELEASEDIR)
 
 $(COREDEBUGDIR)%.c.o $(CORERELEASEDIR)%.c.o: $(CORESRC)%.c
-	$(CCRECEIPE)
+	$(CC) $(CFLAGS) -I$(COREINC) -c $< -o $@
 
 $(COREDEBUGDIR)%.S.o $(CORERELEASEDIR)%.S.o: $(COREASM)%.S
 	$(ASMRECEIPE)

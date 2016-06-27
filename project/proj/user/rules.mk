@@ -1,5 +1,5 @@
 USERDIR := $(TOP)$(notdir $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))/
-INCDIRS += $(shell find $(USERDIR)$(INCDIR) -type d)
+USERINC := $(shell find $(USERDIR)$(INCDIR) -type d)
 USERSRC := $(USERDIR)$(SRCDIR)
 USERASM := $(USERDIR)$(ASMDIR)
 USERCFILES := $(wildcard $(USERSRC)*.c)
@@ -25,7 +25,7 @@ ALLOFILES += $(USERROFILES)
 OBJECTDIRS += $(USERDEBUGDIR) $(USERRELEASEDIR)
 
 $(USERDEBUGDIR)%.c.o $(USERRELEASEDIR)%.c.o: $(USERSRC)%.c
-	$(CCRECEIPE)
+	$(CC) $(CFLAGS) -I$(USERINC) -c $< -o $@
 
 $(USERDEBUGDIR)%.S.o $(USERRELEASEDIR)%.S.o: $(USERASM)%.S
 	$(ASMRECEIPE)

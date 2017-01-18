@@ -24,9 +24,9 @@ MAKEFLAGS="-j15 -k"
 OPENOCDSCRIPT=$OPENOCDSCRIPTLOCATION/ek-lm4f120xl.cfg
 LOGDIR=$CURDIR/log/
 PROJDIR=$CURDIR/proj/
-RELEASEEXEC=$PROJDIR/release/jackoOS_stripped
-DEBUGEXEC=$PROJDIR/debug/jackoOS_stripped
-DEBUGEXEC_GDB=$PROJDIR/debug/jackoOS
+RELEASEEXEC=$PROJDIR/release/ebdOS_stripped
+DEBUGEXEC=$PROJDIR/debug/ebdOS_stripped
+DEBUGEXEC_GDB=$PROJDIR/debug/ebdOS
 GDBDIR=$CURDIR/gdb/
 
 function runMake {

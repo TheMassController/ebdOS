@@ -5,8 +5,8 @@ include mk/predefined.mk
 include mk/flags.mk
 include mk/receipes.mk
 
-TARGET := jackoOS
-TARGETBIN := jackoOS_stripped
+TARGET := ebdOS
+TARGETBIN := ebdOS_stripped
 
 KERNELAR := kernel.a
 COREAR := core.a

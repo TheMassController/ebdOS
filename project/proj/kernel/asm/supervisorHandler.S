@@ -1,6 +1,5 @@
 	.syntax unified
 	.thumb
-	.file	"supervisorInterrupt.c"
 	.section	.text.svcHandler,"ax",%progbits
 	.align	2
 	.global	svcHandler
@@ -8,20 +7,35 @@
 	.thumb_func
 	.type	svcHandler, %function
 svcHandler:
-	@ args = 0, pretend = 0, frame = 8
-	@ frame_needed = 0, uses_anonymous_args = 0
+    @ Called when SVC interrupt happens. Bridges towards svcHandler_main. When done, r0 should not equal zero if the call came from handler mode and equal zero if it did.
+    @ r1 should be equal to the value passed with the svc instruction
+
+    @ The way to implement a SVC handler is pretty poorly explained, it seems. So far I was unable to find information about it in the datasheet.
+    @ There is some information available, but it seems superseeded and the superseeding document is hard to find.
+
     @ This piece of code loads the two arguments the supervisor needs: wether or not it is called from handler mode and what the given code was.
+    @ The first part checks if the call came from a PSP process or an MSP process.
+    @ If the call came from an MSP process its either an interrupt or the kernel process, at this time.
+    @ I decided not to use this information, because the entire kernel process is on the list for deprication and I have no clue what happens after that
+    @ Its just convient that the SVC has no complicated context based checks.
+    @ According to datasheet p106 the last byte of the lr reg contains all information we need
+    @ If the MSP is active the last byte is E1 (1110 0001), E9 (1110 0101), F1 (1111 0001), F9 (1111 0101)
+    @ If the PSP is active, the last byte is ED (1110 1101), FD (1111 1101)
+    @ So we need to test the fourth bit. If it is 1, the PSP is active, else the MSP is active.
     TST lr, #4          @ Test which stack pointer was in use
     ITE eq              @ If bit 4 is high
-    MRSEQ r0, MSP       @ MSP was in use
-    MRSNE r0, PSP       @ Else PSP
-    AND r1, lr, #0xF    @ Get the last halfbyte from the LR (test for handler mode coming up)
-    cmp r1, #0x1        @ test if it is equal to 1. If it is, we just came from Handler mode. We are not testing the last bit, because the last halfword might also be 9, which implies thread mode
-    it ne               @ If it is not equal
-    movne r1, #0x0      @ Set r1 to zero
+    MRSEQ r0, MSP       @ MSP was in use, load its stackpointer to R0
+    MRSNE r0, PSP       @ Else PSP was in use, load its stackpointer to R0
+    @ This second part is about checking if the call came from handler mode or from thread mode.
+    @ The call came from handler mode if the last byte of LR is E1 (1110 0001) or F1 (1110 0001)
+    @ So we check if the very last bit is 1
+    and r1, lr, #0xF    @ Isolate the last four bits
+    sub r1, r1, #0x1    @ If r1 is zero now we are in handler mode. If not, we are in threadmode
+    clz r1, r1          @ becomes 32 if r1 is zero, which is 2**5 (1 in sixth position)
+    lsr r1, r1, #0x5    @ Shift 5 to the right, exactly 1 left if the value was 32, else the value is zero
+    @ Third part, this part gets the value passed with the SVC. It depends on the right stack pointer being in r0
     ldr r0, [r0, #24]   @ TODO figure out why this works
     ldrb r0, [r0, #-2]  @ TODO see above
     nop                 @ TODO see above
     b svcHandler_main   @ Jump to svcHandlerMain
 	.size	svcHandler, .-svcHandler
-	.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.4 20140526 (release) [ARM/embedded-4_8-branch revision 211358]"

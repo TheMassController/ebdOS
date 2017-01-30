@@ -10,8 +10,13 @@ svcHandler:
     @ Called when SVC interrupt happens. Bridges towards svcHandler_main. When done, r0 should not equal zero if the call came from handler mode and equal zero if it did.
     @ r1 should be equal to the value passed with the svc instruction
 
-    @ The way to implement a SVC handler is pretty poorly explained, it seems. So far I was unable to find information about it in the datasheet.
-    @ There is some information available, but it seems superseeded and the superseeding document is hard to find.
+    @ One of the goals of this code is to get the code part of the svc instruction.
+    @ This part of the instruction is igorned by the CPU, so in order to get this code we are going to have to load it from the actual instruction.
+    @ Game plan: get the correct stackpointer, load its stacked PC and read the second halve of the last instruction executed.
+    @ See datasheet page 105
+    @ The processor is always in Thumb mode, which means 16 bit instructions. For SVC, the last 8 bit are for the immidiate.
+    @ The PC always points to the next instruction that will be executed, in this case its the one after the SVC.
+    @ So we want the byte PC-2
 
     @ This piece of code loads the two arguments the supervisor needs: wether or not it is called from handler mode and what the given code was.
     @ The first part checks if the call came from a PSP process or an MSP process.
@@ -26,16 +31,15 @@ svcHandler:
     ITE eq              @ If bit 4 is high
     MRSEQ r0, MSP       @ MSP was in use, load its stackpointer to R0
     MRSNE r0, PSP       @ Else PSP was in use, load its stackpointer to R0
-    @ This second part is about checking if the call came from handler mode or from thread mode.
+    @ second part, this part gets the value passed with the SVC. It depends on the right stack pointer being in r0
+    ldr r0, [r0, #24]   @ Load PC (of earlier selected SP) to R0
+    ldrb r0, [r0, #-2]  @ Load the second part of the SVC instruction
+    @ This last part is about checking if the call came from handler mode or from thread mode.
     @ The call came from handler mode if the last byte of LR is E1 (1110 0001) or F1 (1110 0001)
     @ So we check if the very last bit is 1
     and r1, lr, #0xF    @ Isolate the last four bits
     sub r1, r1, #0x1    @ If r1 is zero now we are in handler mode. If not, we are in threadmode
     clz r1, r1          @ becomes 32 if r1 is zero, which is 2**5 (1 in sixth position)
     lsr r1, r1, #0x5    @ Shift 5 to the right, exactly 1 left if the value was 32, else the value is zero
-    @ Third part, this part gets the value passed with the SVC. It depends on the right stack pointer being in r0
-    ldr r0, [r0, #24]   @ TODO figure out why this works
-    ldrb r0, [r0, #-2]  @ TODO see above
-    nop                 @ TODO see above
     b svcHandler_main   @ Jump to svcHandlerMain
 	.size	svcHandler, .-svcHandler

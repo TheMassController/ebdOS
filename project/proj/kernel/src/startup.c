@@ -1,5 +1,6 @@
 #include <hw_nvic.h>
 #include <hw_types.h>
+#include <string.h> // memset
 
 #include "uartstdio.h"
 #include "core/inc/coreUtils.h"
@@ -238,9 +239,9 @@ void ResetISR(void)
     }
 
     // Zero fill the bss segments.
-    zeroFillSection(&_kernel_bss, &_kernel_ebss);
-    zeroFillSection(&_core_bss, &_core_ebss);
-    zeroFillSection(&_bss, &_ebss);
+    memset(&_kernel_bss, 0, (size_t)((uintptr_t)(&_kernel_ebss) - (uintptr_t)(&_kernel_bss)));
+    memset(&_core_bss, 0, (size_t)((uintptr_t)(&_core_ebss) - (uintptr_t)(&_core_bss)));
+    memset(&_bss, 0, (size_t)((uintptr_t)(&_ebss) - (uintptr_t)(&_bss)));
 
     //Jump to the software init
 	kernelStart();

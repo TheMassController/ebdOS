@@ -24,12 +24,4 @@ int isInInterrupt(void);
  * @return 0 if we are not, nonzero if we are in the Supervisor Call interrupt.
  */
 int isInSVCInterrupt(void);
-
-/* @brief Fills the section in between startPtr and endPtr with zeros. Inclusive start, exclusive end.
- *
- * There are no alignment requirements, other that byte-alignment offcourse (minimum addressable).
- * @param startPtr The pointer that points to the first address, the data behind this address is also set to zero
- * @param endPtr The pointer that points to the last address, the data behind this address is not set to zero
- */
-void zeroFillSection(void* startPtr, void* endPtr);
 #endif //COREUTILS_H

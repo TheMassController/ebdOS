@@ -17,7 +17,7 @@
 #endif //DEBUG
 
 static struct Process* processesReady   = NULL;
-struct Process* currentProcess          = NULL;
+static struct Process* currentProcess   = NULL;
 static struct Process* idleProcess      = &idleProcessStruct;
 // Default values and consts related to systick and timeslicing
 static const unsigned ticksPerMS        = 4000;     // The systick timer is connected to the PIOSC divided by four. The PIOSC runs on 16 MHz, so it is connected to a 4 Mhz timer. This means 4000 ticks per ms. See datasheet pp 118, 1150
@@ -138,6 +138,7 @@ struct Process* getNextActiveProcess(void){
 void changeGlobalContext(struct Process* newProcPtr){
     if (newProcPtr == NULL) generateCrash();
 #ifdef DEBUG
+    // Tests for a stackoverflow. If the answer is yes, the stackoverflow has happend and the OS is in an unknown state.
     if ((uintptr_t)(newProcPtr->stack) > (uintptr_t)(newProcPtr->stackPointer)){
         UARTprintf("STACKOVERFLOW: %s, %d CRASHING\n", newProcPtr->name, newProcPtr->pid);
         generateCrash();

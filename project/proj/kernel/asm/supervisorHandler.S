@@ -24,13 +24,13 @@ svcHandler:
     @ I decided not to use this information, because the entire kernel process is on the list for deprication and I have no clue what happens after that
     @ Its just convient that the SVC has no complicated context based checks.
     @ According to datasheet p106 the last byte of the lr reg contains all information we need
-    @ If the MSP is active the last byte is E1 (1110 0001), E9 (1110 0101), F1 (1111 0001), F9 (1111 0101)
+    @ If the MSP is active the last byte is E1 (1110 0001), E9 (1110 1001), F1 (1111 0001), F9 (1111 1001)
     @ If the PSP is active, the last byte is ED (1110 1101), FD (1111 1101)
-    @ So we need to test the fourth bit. If it is 1, the PSP is active, else the MSP is active.
-    TST lr, #4          @ Test which stack pointer was in use
-    ITE eq              @ If bit 4 is high
-    MRSEQ r0, MSP       @ MSP was in use, load its stackpointer to R0
-    MRSNE r0, PSP       @ Else PSP was in use, load its stackpointer to R0
+    @ So we need to test the third bit. If it is 1, the PSP is active, else the MSP is active.
+    tst lr, #0x4        @ Test which stack pointer was in use
+    ite eq              @ If bit 4 is high
+    mrseq r0, MSP       @ MSP was in use, load its stackpointer to R0
+    mrsne r0, PSP       @ Else PSP was in use, load its stackpointer to R0
     @ second part, this part gets the value passed with the SVC. It depends on the right stack pointer being in r0
     ldr r0, [r0, #24]   @ Load PC (of earlier selected SP) to R0
     ldrb r0, [r0, #-2]  @ Load the second part of the SVC instruction

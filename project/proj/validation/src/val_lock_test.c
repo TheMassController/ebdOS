@@ -5,51 +5,42 @@
 #include "uartstdio.h"
 #include "errno.h"
 
+#include <assert.h>
+
 struct Mutex mut;
 
 static void mutPasser(void* initialDelay){
     int pid = getPid();
-    sleepMS((int)initialDelay);
+    assert(sleepMS((int)initialDelay) == 0);
     while(1){
-        lockMutex(&mut);
+        assert(lockMutex(&mut) == 0);
         UARTprintf("My pid is %d and I have a mutex!\n", pid);
-        sleepS(1);
-        unlockMutex(&mut);
-        sleepS(1);
+        assert(sleepS(1) == 0);
+        assert(unlockMutex(&mut) == 0);
+        assert(sleepS(1) == 0);
     }
 }
 
 static void mutPasserWait(void* maxWait){
-    sleepMS(500);
+    assert(sleepMS(500) == 0);
     int pid = getPid();
     struct SleepRequest req = {
         .mSec = (uint32_t)maxWait
     };
     while(1){
-        int retVal = lockMutexTimeout(&mut, &req);
-        if (retVal != 0){
-            UARTprintf("Oops, the retval was not 0. ERRNO: %d (%s)\n", retVal, strerror(retVal));
-        } else{
-            UARTprintf("My pid is %d and I have a mutex! (Im the waiter)\n", pid);
-            sleepS(1);
-            unlockMutex(&mut);
-        }
+        assert(lockMutexTimeout(&mut, &req) == 0);
+        UARTprintf("My pid is %d and I have a mutex! (Im the waiter)\n", pid);
+        assert(sleepS(1) == 0);
+        assert(unlockMutex(&mut));
     }
 }
 
 int mainProcessLocker(void){
-    (void)(mutPasserWait);
-    (void)(mutPasser);
-    int retVal = initMutex(&mut);
-    //lockMutex(&mut);
-    if (retVal !=0){
-        errno = retVal;
-        return -1;
-    }
-    if (createChildProcess(256, "MutPasser1", mutPasser, (void*)1500) == -1) return -1;
-    if (createChildProcess(256, "MutPasser2", mutPasser, (void*)2000) == -1) return -1;
-    if (createChildProcess(256, "MutPasser3", mutPasser, (void*)3000) == -1) return -1;
-    if (createChildProcess(256, "MutPasserW", mutPasserWait, (void*)1000) == -1) return -1;
+    assert(initMutex(&mut) == 0);
+    assert(createChildProcess(256, "MutPasser1", mutPasser, (void*)1500) == -1);
+    assert(createChildProcess(256, "MutPasser2", mutPasser, (void*)2000) == -1);
+    assert(createChildProcess(256, "MutPasser3", mutPasser, (void*)3000) == -1);
+    assert(createChildProcess(256, "MutPasserW", mutPasserWait, (void*)1000) == -1);
     return 0;
 
 }

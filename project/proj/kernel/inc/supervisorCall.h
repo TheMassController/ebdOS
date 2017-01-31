@@ -13,6 +13,7 @@
 #define SVC_serviceRequired                     5
 #define SVC_serviced                            6
 #define SVC_mainClockInterrupt                  7
+#define SVC_abort                               8
 #ifdef DEBUG
 #define SVC_test                                255
 #endif // DEBUG

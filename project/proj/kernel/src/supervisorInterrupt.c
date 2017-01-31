@@ -78,6 +78,9 @@ void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
         case SVC_serviced:
             if (!fromHandlerMode) kernelIsDoneServing();
             break;
+        case SVC_abort:
+            generateCrash();
+            break;
 #ifdef DEBUG
         case SVC_test:
             sayHi();

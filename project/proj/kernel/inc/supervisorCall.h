@@ -3,7 +3,6 @@
 
 // Helper macros
 #define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
 
 // The codes
 #define SVC_yield                               0
@@ -19,6 +18,6 @@
 #endif // DEBUG
 
 // Contains the macro to create the supervisor call
-#define CALLSUPERVISOR(code) __asm__("svc "STR(code));
+#define CALLSUPERVISOR(code) __asm__("svc "STR_HELPER(code));
 
 #endif // SUPERVISORCALL_H

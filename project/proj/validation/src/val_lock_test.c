@@ -28,19 +28,24 @@ static void mutPasserWait(void* maxWait){
         .mSec = (uint32_t)maxWait
     };
     while(1){
-        assert(lockMutexTimeout(&mut, &req) == 0);
-        UARTprintf("My pid is %d and I have a mutex! (Im the waiter)\n", pid);
-        assert(sleepS(1) == 0);
-        assert(unlockMutex(&mut));
+        int retval = lockMutexTimeout(&mut, &req);
+        assert(retval == 0 || retval == ETIMEDOUT);
+        if (retval == ETIMEDOUT){
+            UARTprintf("Pid %d did not get the mutex (mutexwaiter)\n", pid);
+        } else {
+            UARTprintf("My pid is %d and I have a mutex! (Im the waiter)\n", pid);
+            assert(sleepS(1) == 0);
+            assert(unlockMutex(&mut) == 0);
+        }
     }
 }
 
 int mainProcessLocker(void){
     assert(initMutex(&mut) == 0);
-    assert(createChildProcess(256, "MutPasser1", mutPasser, (void*)1500) == -1);
-    assert(createChildProcess(256, "MutPasser2", mutPasser, (void*)2000) == -1);
-    assert(createChildProcess(256, "MutPasser3", mutPasser, (void*)3000) == -1);
-    assert(createChildProcess(256, "MutPasserW", mutPasserWait, (void*)1000) == -1);
+    assert(createChildProcess(256, "MutPasser1", mutPasser, (void*)1500) != -1);
+    assert(createChildProcess(256, "MutPasser2", mutPasser, (void*)2000) != -1);
+    assert(createChildProcess(256, "MutPasser3", mutPasser, (void*)3000) != -1);
+    assert(createChildProcess(256, "MutPasserW", mutPasserWait, (void*)1000) != -1);
     return 0;
 
 }

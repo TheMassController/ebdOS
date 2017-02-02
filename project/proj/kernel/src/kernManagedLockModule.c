@@ -42,7 +42,7 @@ static void updateWaitTimer(unsigned curValWTA){
 
 static int addLockWaiter(struct Process* proc, size_t managedLockId){
     unsigned curValWTA = getSystemClockValue();
-    if (proc->sleepObj.overflows == 0 && proc->sleepObj.sleepUntil >= curValWTA) return 0;
+    if (proc->sleepObj.overflows == 0 && proc->sleepObj.sleepUntil >= curValWTA) return ETIMEDOUT;
     struct SleepQueueElement* el = &sleepQueuePool[proc->pid];
     el->proc = proc;
     el->managedLockID = managedLockId;
@@ -77,7 +77,7 @@ static int addLockWaiter(struct Process* proc, size_t managedLockId){
             it->nextElement = el;
         }
     }
-    return 1;
+    return 0;
 }
 
 static void removeLockWaiter(struct Process* proc){
@@ -204,7 +204,7 @@ int releaseManagedLock(size_t lockId, struct Process** procReady){
 int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpReq){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
     translateSleepRequest(proc, slpReq);
-    if (!addLockWaiter(proc, lockId)){
+    if (addLockWaiter(proc, lockId) == ETIMEDOUT){
         proc->state = STATE_READY;
         return ETIMEDOUT;
     }

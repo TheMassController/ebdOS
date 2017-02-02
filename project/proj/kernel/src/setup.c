@@ -117,11 +117,12 @@ void kernelStart(void){
      * WTIMER0_A is called the system timer. It acts as a reference to everything.
      * The second one is WTIMER0_B. This one interrupts when the next normal sleeping process needs to wake up.
      * WTIMER1_A has the same role as WTIMER0_B, only for futex objects: acts as a help in sleep and wait for mutex.
+     * WTIMER1_B has a generalized waiting clock role.
      */
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable the timer
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1); // Enable the timer
     ROM_TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PERIODIC|TIMER_CFG_B_ONE_SHOT); // Part A wraps around and starts again, part B shoots once. Used for sleeping
-    ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_ONE_SHOT); // Part A shoots once. Used for futex
+    ROM_TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_ONE_SHOT|TIMER_CFG_B_ONE_SHOT); // Part A shoots once. Used for futex
     // Configure timer 0A, the system timer
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, EBD_SYSCLOCKMAXVAL-1); // Load it with initial value - 1. This -1 is because it costs one cycle to reload and restart
@@ -130,19 +131,25 @@ void kernelStart(void){
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, ticksPerUs); // Setup the pre-scaler
     // Configure timer 1A, the futex timer
     ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
+    // Configure timer 1B, the wait timer
+    ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_B, ticksPerUs); // Setup the pre-scaler
     // Clear and enable the timer related interrupts
     ROM_IntPrioritySet(INT_WTIMER0A,    SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER0B,    SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER1A,    SLEEPTIMERPRIORITY);
+    ROM_IntPrioritySet(INT_WTIMER1B,    SLEEPTIMERPRIORITY);
     ROM_TimerIntEnable(WTIMER0_BASE,    TIMER_TIMA_TIMEOUT);    // Enable the timeout interrupt
     ROM_TimerIntClear(WTIMER0_BASE,     TIMER_TIMA_TIMEOUT);    // Clear the correct interrupt
     ROM_TimerIntEnable(WTIMER0_BASE,    TIMER_TIMB_MATCH);      // Enable the correct interrupt
     ROM_TimerIntClear(WTIMER0_BASE,     TIMER_TIMB_MATCH);      // Let it interrupt on match
     ROM_TimerIntEnable(WTIMER1_BASE,    TIMER_TIMA_MATCH);      // Enable the correct interrupt
     ROM_TimerIntClear(WTIMER1_BASE,     TIMER_TIMA_MATCH);      // Let it interrupt on match
+    ROM_TimerIntEnable(WTIMER1_BASE,    TIMER_TIMB_MATCH);      // Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER1_BASE,     TIMER_TIMB_MATCH);      // Let it interrupt on match
     ROM_IntEnable(INT_WTIMER0A);                                // Enable the interupt on NVIC
     ROM_IntEnable(INT_WTIMER0B);                                // Enable the interupt on NVIC
     ROM_IntEnable(INT_WTIMER1A);                                // Enable the interupt on NVIC
+    ROM_IntEnable(INT_WTIMER1B);                                // Enable the interupt on NVIC
 #ifdef DEBUG
     // The following setting stalls all the sleep timers when the CPU is stopped for debugging.
     ROM_TimerControlStall(WTIMER0_BASE, TIMER_BOTH, 1);

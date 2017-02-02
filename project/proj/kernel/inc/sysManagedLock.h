@@ -7,8 +7,8 @@
  * On the kernelside this is called a managed lock. This file is purely management of the managed lock objects, it cannot behave like an actual mutex/semaphore handler.
  * A process can wait for a mutex for a limited time or infinitely.
  * The process of handing the mutex to the next process is FIFO and therefore fair:
- * under the presumption that every process will eventually let go of a mutex, every process will eventually get the mutex.
- * All functions defined here should only be called by the kernel:
+ * under the assumption that every process will eventually let go of a mutex, every process will eventually get the mutex.
+ * All functions defined here should only be called by a supervising process,
  * calling by interrupt might lead to undefined behaviour, calls by non-kenernel should lead to sergfault.
  *
  * Before a managed lock can be used it needs to be requested from this module.

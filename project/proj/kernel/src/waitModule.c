@@ -6,8 +6,33 @@
 #include "waitModule.h"             // Function prototypes
 #include "kernelPredefined.h"       // Centralizes resource counts
 
-//static struct SleepQueueElement sleepQueuePool[MAXTOTALPROCESSES];
-//static struct SleepQueueElement* sleepQueueHead = NULL;
+//struct WaitQueueElement{
+//    struct WaitQueueElement* nextElement;
+//    struct Process* proc;
+//    struct Process*(*remove)(struct Process*);
+//};
+//
+//// This is in the BSS section, so required to be NULL on OS launch
+//static struct WaitQueueElement waitQueuePool[MAXTOTALPROCESSES];
+//static struct WaitQueueElement* waitQueueHead = NULL;
+//
+//// There should always be a free space, since no process can be waiting twice
+//static struct WaitQueueElement* getElementFromPool(void){
+//    static int cursor = 0;
+//    while(waitQueuePool[cursor++].proc != NULL){
+//        cursor %= MAXTOTALPROCESSES;
+//    }
+//    return &waitQueuePool[cursor-1];
+//}
+//
+////static void releaseElementToPool(struct WaitQueueElement* we){
+////    we->proc = NULL;
+////}
+//
+//int addWaiter(struct Process*(*remove)(struct Process*), struct Process* proc, struct SleepRequest* sleepReq){
+//    struct WaitQueueElement* we = getElementFromPool();
+//    return 0;
+//}
 
 //static void updateWaitTimer(unsigned curValWTA){
 //    if (sleepQueueHead == NULL || sleepQueueHead->proc->sleepObj.overflows > 0){
@@ -21,7 +46,6 @@
 
 struct Process* waitTimerTimeout(void){
     return NULL;
-
 }
 
 struct Process* waitTimerSysTimerOverflow(void){

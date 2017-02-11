@@ -8,7 +8,8 @@
  * There is also a way to remove a process from this subsystem.
  *
  * A thing to take into consideration is that a process exists in two places if this module is used, which might lead to the process being added to the scheduler twice and other forms of nastiness.
- * This module is very prone to race conditions, is the point. Therefore this module will only communicate back to the callee, never to the scheduler.
+ * This module is very prone to race conditions, is the point. Therefore the remove function called is required to either remove the process from the module and return it or return NULL.
+ * The remove function shall not return anything else.
  * This module also never touches the state of the process.
  *
  * This module manages its own timer, the waitTimer. Its inner workings are very alike to the sleep timer.
@@ -25,7 +26,7 @@
  * @return 0 if everything went ok
  *  ETIMEDOUT if the timer had already ran out
  */
-int addWaiter(int (remove)(struct Process*), struct Process* proc, struct SleepRequest* sleepReq);
+int addWaiter(struct Process*(*remove)(struct Process*), struct Process* proc, struct SleepRequest* sleepReq);
 
 /**
  * @brief Removes a waiter from this module

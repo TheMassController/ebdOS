@@ -4,15 +4,14 @@
  *
  * There are many situations in which you want to wait for x time or event y and stop waiting if one of both happens.
  * This module handles the waiting part of this equation. It manages a system timer which works in the same way as the sleep timer.
- * If a process is added, it is added in combination with a remove function, this function should remove the process from the queue of the actual thing it is waiting for.
+ * If a process is added, it is added in combination with a remove function, this function is guaranteed to be called by this function if the timer runs out.
+ * This is the only action taken on timer run out, the callee is responsible for re-adding the process to the scheduler if that is what it wants.
  * There is also a way to remove a process from this subsystem.
  *
- * A thing to take into consideration is that a process exists in two places if this module is used, which might lead to the process being added to the scheduler twice and other forms of nastiness.
- * This module is very prone to race conditions, is the point. Therefore the remove function called is required to either remove the process from the module and return it or return NULL.
- * The remove function shall not return anything else.
- * This module also never touches the state of the process.
+ * This module never touches the state of the process.
  *
  * This module manages its own timer, the waitTimer. Its inner workings are very alike to the sleep timer.
+ * In fact, this module might partially replace the sleep timer in the future.
  */
 
 #include "process.h"
@@ -26,10 +25,13 @@
  * @return 0 if everything went ok
  *  ETIMEDOUT if the timer had already ran out
  */
-int addWaiter(struct Process*(*remove)(struct Process*), struct Process* proc, struct SleepRequest* sleepReq);
+int addWaiter(void(*remove)(struct Process*), struct Process* proc, const struct SleepRequest* sleepReq);
 
 /**
  * @brief Removes a waiter from this module
+ *
+ * The earlier passed `remove` function is NOT called when this function is called.
+ *
  * @param proc The process you want to remove
  * @return 0 if everything was ok
  *  EINVAL if the requested process was not found

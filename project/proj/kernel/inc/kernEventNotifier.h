@@ -26,7 +26,8 @@ enum KernBufferMessageCodes{
                             // Note that this is not necessary: the C standard specifies that the first value of an enum gets 0 per default.
     sysTimerOverflow,
     sleepTimerExpired,
-    managedLockTimerExpired
+    managedLockTimerExpired,
+    waitModuleTimerExpired
 };
 
 /**

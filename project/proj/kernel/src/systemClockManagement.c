@@ -52,6 +52,19 @@ void managedLockTimerInterrupt(void){
 #endif //DEBUG
 }
 
+void waitModuleTimerInterrupt(void){
+    ROM_TimerIntClear(WTIMER1_BASE,  TIMER_TIMB_MATCH);
+#ifdef DEBUG
+    int code = passMessageToKernel(waitModuleTimerExpired);
+    if (code != 0){
+        UARTprintf("Failed to pass waitModuleTimerExpired to kernel. Code: %d (%s)\n", code, strerror(code));
+        generateCrash();
+    }
+#else
+    passMessageToKernel(waitModuleTimerExpired);
+#endif //DEBUG
+}
+
 uint32_t getSystemClockValue(void){
     return ROM_TimerValueGet(WTIMER0_BASE, TIMER_A);
 }

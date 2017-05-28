@@ -34,6 +34,7 @@ void setHalfWTimerInterrupt(int enable, unsigned long ulBase, unsigned long ulTi
  */
 void systemTimerInterrupt(void);
 void sleepTimerInterrupt(void);
-void managedLockTimerInterrupt();
+void managedLockTimerInterrupt(void);
+void waitModuleTimerInterrupt(void);
 
 #endif //SYSTEMCLOCKMANAGEMENT_H

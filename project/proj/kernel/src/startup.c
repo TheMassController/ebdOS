@@ -152,7 +152,7 @@ void (* const gpFnVectors[])(void) =
     systemTimerInterrupt,                           // Wide Timer 0 subtimer A
     sleepTimerInterrupt,                            // Wide Timer 0 subtimer B
     managedLockTimerInterrupt,                      // Wide Timer 1 subtimer A
-    IntDefaultHandler,                              // Wide Timer 1 subtimer B
+    waitModuleTimerInterrupt,                       // Wide Timer 1 subtimer B
     IntDefaultHandler,                              // Wide Timer 2 subtimer A
     IntDefaultHandler,                              // Wide Timer 2 subtimer B
     IntDefaultHandler,                              // Wide Timer 3 subtimer A

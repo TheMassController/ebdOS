@@ -12,6 +12,7 @@
 #include "sysSleep.h"
 #include "sysFutex.h"
 #include "sysManagedLock.h"
+#include "waitModule.h"
 
 static void createProcessHelper(struct ProcessContext* context, struct Process* kernMaintenanceProc){
     struct ProcessCreateParams* params = (struct ProcessCreateParams*)context->genericPtr;
@@ -113,6 +114,7 @@ void kernelMain(void){
                         i->context->retVal = ETIMEDOUT;
                     }
                     kernRetQueueAddList(it);
+                    waitTimerSysTimerOverflow();
                     break;
                 case sleepTimerExpired:
                     it = refreshSleeplist();
@@ -124,6 +126,9 @@ void kernelMain(void){
                         i->context->retVal = ETIMEDOUT;
                     }
                     kernRetQueueAddList(it);
+                    break;
+                case waitModuleTimerExpired:
+                    waitTimerTimeout();
                     break;
                 default:
                     UARTprintf("Unknown event code: %d\n", code);

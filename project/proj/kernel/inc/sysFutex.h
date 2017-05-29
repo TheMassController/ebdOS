@@ -1,5 +1,5 @@
 /**
- * @brief The kernelspace side of the futex implementation. Uses the managed mutex.
+ * @brief The kernelspace side of the futex implementation. Uses the managed lock.
  * @author Jacko Dirks
  * This is a kernel build-in: the kernel supports futex, as opposed to it being a module.
  *

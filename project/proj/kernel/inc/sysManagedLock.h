@@ -9,7 +9,7 @@
  * The process of handing the mutex to the next process is FIFO and therefore fair:
  * under the assumption that every process will eventually let go of a mutex, every process will eventually get the mutex.
  * All functions defined here should only be called by a supervising process,
- * calling by interrupt might lead to undefined behaviour, calls by non-kenernel should lead to sergfault.
+ * calling by interrupt might lead to undefined behaviour, calls by non-kenernel should lead to a segfault.
  *
  * Before a managed lock can be used it needs to be requested from this module.
  *

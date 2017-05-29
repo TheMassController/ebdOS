@@ -109,22 +109,10 @@ void kernelMain(void){
                 case sysTimerOverflow:
                     it = sleepHandleSysTimerOverflow();
                     kernRetQueueAddList(it);
-                    it = timedManagedLockSysTimerOverflow();
-                    for (struct Process* i = it; i != NULL; i = i->nextProcess){
-                        i->context->retVal = ETIMEDOUT;
-                    }
-                    kernRetQueueAddList(it);
                     waitTimerSysTimerOverflow();
                     break;
                 case sleepTimerExpired:
                     it = refreshSleeplist();
-                    kernRetQueueAddList(it);
-                    break;
-                case managedLockTimerExpired:
-                    it = timedManagedLockTimeout();
-                    for (struct Process* i = it; i != NULL; i = i->nextProcess){
-                        i->context->retVal = ETIMEDOUT;
-                    }
                     kernRetQueueAddList(it);
                     break;
                 case waitModuleTimerExpired:

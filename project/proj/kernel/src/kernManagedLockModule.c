@@ -8,6 +8,8 @@
 #include "process.h"                // Contains the defenition of a proces
 #include "systemClockManagement.h"  // Declares setHalfWTimerInterrupt
 #include "abstrSysSleepFuncs.h"     // Declares translateSleepRequest
+#include "waitModule.h"             // Contains the timeout function set
+#include "kernMaintenanceQueue.h"   // releaseProcessToScheduler function
 
 #ifdef DEBUG
 #include "uartstdio.h"
@@ -110,6 +112,7 @@ static void removeLockWaiter(struct Process* proc){
         cur->nextElement = NULL;
     }
 }
+static int waitModuleTranslationMap[MAXTOTALPROCESSES];
 
 static void addToLockList(struct ManagedLock* lock, struct Process* proc){
     proc->nextProcess = NULL;
@@ -122,7 +125,7 @@ static void addToLockList(struct ManagedLock* lock, struct Process* proc){
         it->nextProcess = proc;
     }
 }
-// Returns -1 if not found, 0 if found
+
 static void removeFromLockList(struct ManagedLock* lock, struct Process* proc){
 #ifdef DEBUG
     int found = 0;
@@ -149,7 +152,7 @@ static void removeFromLockList(struct ManagedLock* lock, struct Process* proc){
             it->nextProcess = NULL;
         }
     }
-    if (proc->state == STATE_WAIT_TIMEOUT) removeLockWaiter(proc);
+    if (waitModuleTranslationMap[proc->pid] != -1) removeWaiter(proc);
     proc->state = STATE_READY;
 #ifdef DEBUG
     if (!found){
@@ -164,11 +167,18 @@ static struct Process* popFromLockList(struct ManagedLock* lock){
     if (proc != NULL){
         lock->waitinglist = proc->nextProcess;
         proc->nextProcess = NULL;
-        if (proc->state == STATE_WAIT_TIMEOUT) removeLockWaiter(proc);
+        if (waitModuleTranslationMap[proc->pid] != -1) removeWaiter(proc);
         proc->state = STATE_READY;
     }
     return proc;
 }
+
+static void removeWaiterCallback(struct Process* proc){
+    size_t lockId = waitModuleTranslationMap[proc->pid];
+    removeFromLockList(&lockPool[lockId], proc);
+    releaseProcessToScheduler(proc, ETIMEDOUT);
+}
+
 
 int allocateManagedLock(size_t* lockId, uintptr_t owner){
     size_t i = 0;
@@ -192,6 +202,7 @@ int freeManagedLock(size_t lockId){
 int waitForManagedLock(size_t lockId, struct Process* proc){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
     addToLockList(&lockPool[lockId], proc);
+    waitModuleTranslationMap[proc->pid] = -1;
     return 0;
 }
 
@@ -203,11 +214,11 @@ int releaseManagedLock(size_t lockId, struct Process** procReady){
 
 int timedWaitForManagedLock(size_t lockId, struct Process* proc, struct SleepRequest* slpReq){
     if (lockId >= MANAGEDLOCKCOUNT || !lockPool[lockId].taken) return EINVAL;
-    translateSleepRequest(proc, slpReq);
-    if (addLockWaiter(proc, lockId) == ETIMEDOUT){
+    if (addWaiter(removeWaiterCallback, proc, slpReq) == ETIMEDOUT){
         proc->state = STATE_READY;
         return ETIMEDOUT;
     }
+    waitModuleTranslationMap[proc->pid] = lockId;
     addToLockList(&lockPool[lockId], proc);
     proc->state = STATE_WAIT_TIMEOUT;
     return 0;

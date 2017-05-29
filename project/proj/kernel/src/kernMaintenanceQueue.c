@@ -15,6 +15,7 @@ static int processWritePos;
 
 void releaseProcessToScheduler(struct Process* procPtr, int contextRetVal){
     procPtr->context->retVal = contextRetVal;
+    procPtr->state = STATE_READY;
     kernRetQueuePush(procPtr);
 }
 

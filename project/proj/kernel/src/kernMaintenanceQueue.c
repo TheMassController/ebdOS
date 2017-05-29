@@ -1,5 +1,6 @@
 #include "kernMaintenanceQueue.h"   // Contains the function defenitions, contains #include process.h
 #include "kernelPredefined.h"       // Contains the def of MAXTOTALPROCESSES
+#include "core/inc/context.h"       // Contains the ProcessContext struct
 // System headers
 #include <stdlib.h>
 
@@ -11,6 +12,11 @@ static struct Process* procQueueEnd;
 static struct Process* processBuf[PROCESSBUFSIZE];
 static int processReadPos;
 static int processWritePos;
+
+void releaseProcessToScheduler(struct Process* procPtr, int contextRetVal){
+    procPtr->context->retVal = contextRetVal;
+    kernRetQueuePush(procPtr);
+}
 
 void kernRetQueuePush(struct Process* procPtr){
     if (procPtr == NULL) return;

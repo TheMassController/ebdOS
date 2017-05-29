@@ -10,6 +10,13 @@
  */
 
 /**
+ * @brief Sets the returnvalue from the perspective of procPtr and releases the process to the scheduler
+ * @param procPtr The process released
+ * @param contextRetVal The returnvalue to be set.
+ */
+void releaseProcessToScheduler(struct Process* procPtr, int contextRetVal);
+
+/**
  * @brief Add a process to the processQueue. It will be added to the end of it.
  * @param procPtr The pointer to the process you want to add. If this pointer is NULL, nothing happens
  * @warning If this function is called by anything other then the supervisor it will silently fail

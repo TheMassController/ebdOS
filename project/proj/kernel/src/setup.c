@@ -127,22 +127,27 @@ void kernelStart(void){
     ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
     ROM_TimerLoadSet(WTIMER0_BASE, TIMER_A, EBD_SYSCLOCKMAXVAL-1); // Load it with initial value - 1. This -1 is because it costs one cycle to reload and restart
     ROM_TimerMatchSet(WTIMER0_BASE, TIMER_A, 0); // Let it run until it reaches 0
+    // Configure timer 0B, the sleep timer
+    ROM_TimerPrescaleSet(WTIMER0_BASE, TIMER_B, ticksPerUs); // Setup the pre-scaler
     // Configure timer 1A, the futex timer
     ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_A, ticksPerUs); // Setup the pre-scaler
     // Configure timer 1B, the wait timer
     ROM_TimerPrescaleSet(WTIMER1_BASE, TIMER_B, ticksPerUs); // Setup the pre-scaler
     // Clear and enable the timer related interrupts
     ROM_IntPrioritySet(INT_WTIMER0A,    SLEEPTIMERPRIORITY);
+    ROM_IntPrioritySet(INT_WTIMER0B,    SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER1A,    SLEEPTIMERPRIORITY);
     ROM_IntPrioritySet(INT_WTIMER1B,    SLEEPTIMERPRIORITY);
     ROM_TimerIntEnable(WTIMER0_BASE,    TIMER_TIMA_TIMEOUT);    // Enable the timeout interrupt
     ROM_TimerIntClear(WTIMER0_BASE,     TIMER_TIMA_TIMEOUT);    // Clear the correct interrupt
     ROM_TimerIntEnable(WTIMER0_BASE,    TIMER_TIMB_MATCH);      // Enable the correct interrupt
+    ROM_TimerIntClear(WTIMER0_BASE,     TIMER_TIMB_MATCH);      // Let it interrupt on match
     ROM_TimerIntEnable(WTIMER1_BASE,    TIMER_TIMA_MATCH);      // Enable the correct interrupt
     ROM_TimerIntClear(WTIMER1_BASE,     TIMER_TIMA_MATCH);      // Let it interrupt on match
     ROM_TimerIntEnable(WTIMER1_BASE,    TIMER_TIMB_MATCH);      // Enable the correct interrupt
     ROM_TimerIntClear(WTIMER1_BASE,     TIMER_TIMB_MATCH);      // Let it interrupt on match
     ROM_IntEnable(INT_WTIMER0A);                                // Enable the interupt on NVIC
+    ROM_IntEnable(INT_WTIMER0B);                                // Enable the interupt on NVIC
     ROM_IntEnable(INT_WTIMER1A);                                // Enable the interupt on NVIC
     ROM_IntEnable(INT_WTIMER1B);                                // Enable the interupt on NVIC
 #ifdef DEBUG

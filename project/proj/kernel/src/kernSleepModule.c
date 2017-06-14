@@ -28,8 +28,12 @@ static struct Process* updateListAndInterrupt(void){
         }
     }
     // Configure the interrupt.
-    int disable = sleepList == NULL || sleepList->sleepObj.overflows > 0;
-    setHalfWTimerInterrupt(!disable, WTIMER0_BASE, TIMER_B, curValWTA, sleepList->sleepObj.sleepUntil);
+    if (sleepList == NULL){
+        setHalfWTimerInterrupt(0, WTIMER0_BASE, TIMER_B, curValWTA, 0);
+    } else {
+        int disable = sleepList->sleepObj.overflows > 0;
+        setHalfWTimerInterrupt(!disable, WTIMER0_BASE, TIMER_B, curValWTA, sleepList->sleepObj.sleepUntil);
+    }
     return retList;
 }
 

@@ -36,10 +36,11 @@ static void unknownStateResponse(){
 // There should always be a free space, since no process can be waiting twice
 static struct WaitQueueElement* getElementFromPool(void){
     static int cursor = 0;
-    while(waitQueuePool[cursor++].proc != NULL){
-        cursor %= MAXTOTALPROCESSES;
+    while(waitQueuePool[cursor].proc != NULL){
+        cursor++;
+        if (cursor == MAXTOTALPROCESSES) cursor = 0;
     }
-    return &waitQueuePool[cursor-1];
+    return &waitQueuePool[cursor];
 }
 
 static void releaseElementToPool(struct WaitQueueElement* we){
@@ -51,8 +52,9 @@ static void updateListAndInterrupt(void){
     // Start with cleaning out the current list
     while( waitQueueHead != NULL && waitQueueHead->proc->sleepObj.overflows == 0 && waitQueueHead->proc->sleepObj.sleepUntil >= curValWTA){
         waitQueueHead->remove(waitQueueHead->proc);
-        waitQueueHead = waitQueueHead->nextElement;
+        struct WaitQueueElement* tmp = waitQueueHead->nextElement;
         releaseElementToPool(waitQueueHead);
+        waitQueueHead = tmp;
     }
     // Configure the interrupt.
     if (waitQueueHead == NULL){

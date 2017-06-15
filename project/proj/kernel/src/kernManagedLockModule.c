@@ -86,6 +86,7 @@ static struct Process* popFromLockList(struct ManagedLock* lock){
 
 static void removeWaiterCallback(struct Process* proc){
     size_t lockId = waitModuleTranslationMap[proc->pid];
+    waitModuleTranslationMap[proc->pid] = -1;
     removeFromLockList(&lockPool[lockId], proc);
     releaseProcessToScheduler(proc, ETIMEDOUT);
 }

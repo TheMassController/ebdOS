@@ -95,6 +95,7 @@ void mpuFaultHandler(void){
 
 void busFaultHandler(void){
 #ifdef DEBUG
+    struct Process* currentProcess = getCurrentProcess();
     UARTprintf("Bus Fault\r\n");
     UARTprintf("BFAULTSTAT info\r\n");
     UARTprintf("\tBus Fault Address Register Valid: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_BFARV) ? 1 : 0);
@@ -104,8 +105,8 @@ void busFaultHandler(void){
     UARTprintf("\tImprecise Data Bus Error: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_IMPRE) ? 1 : 0);
     UARTprintf("\tPrecise Data Bus Error: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_PRECISE) ? 1 : 0);
     UARTprintf("\tInstruction Bus Error: %d\r\n", (NVIC_FAULT_STAT_R & NVIC_FAULT_STAT_IBUS) ? 1 : 0);
-
     UARTprintf("\r\nBus Fault Address value: 0x%x\r\n", NVIC_FAULT_ADDR_R);
+    UARTprintf("Current process name: %s\r\n", currentProcess->name);
 #endif //DEBUG
     while(1) waitForInterrupt();
 }

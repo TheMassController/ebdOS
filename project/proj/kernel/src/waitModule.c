@@ -7,6 +7,11 @@
 #include "kernelPredefined.h"       // Centralizes resource counts
 #include "abstrSysSleepFuncs.h"     // Contains information about the struct SleepRequest and related functions
 #include "systemClockManagement.h"  // Contains the function getCurrentSytemTimerValue
+#ifdef DEBUG
+#include "uartstdio.h"
+#include "kernUtils.h"
+#include "core/inc/anonymousSpinlock.h"
+#endif //DEBUG
 
 struct WaitQueueElement{
     struct WaitQueueElement* nextElement;
@@ -17,6 +22,16 @@ struct WaitQueueElement{
 // This is in the BSS section, so required to be NULL on OS launch
 static struct WaitQueueElement waitQueuePool[MAXTOTALPROCESSES];
 static struct WaitQueueElement* waitQueueHead = NULL;
+#ifdef DEBUG
+static struct AnonymousSpinlock spinLock;
+#endif //DEBUG
+
+#ifdef DEBUG
+static void unknownStateResponse(){
+    UARTprintf("The waitmodule is now in an unknown state because a combination of two waitQueuePool or waitQueueHead altering functions is running\n");
+    generateCrash();
+}
+#endif //DEBUG
 
 // There should always be a free space, since no process can be waiting twice
 static struct WaitQueueElement* getElementFromPool(void){
@@ -33,16 +48,17 @@ static void releaseElementToPool(struct WaitQueueElement* we){
 
 static void updateListAndInterrupt(void){
     unsigned curValWTA = getSystemClockValue();
-    struct WaitQueueElement* ref = waitQueueHead;
     // Start with cleaning out the current list
     while( waitQueueHead != NULL && waitQueueHead->proc->sleepObj.overflows == 0 && waitQueueHead->proc->sleepObj.sleepUntil >= curValWTA){
         waitQueueHead->remove(waitQueueHead->proc);
-        releaseElementToPool(waitQueueHead);
         waitQueueHead = waitQueueHead->nextElement;
+        releaseElementToPool(waitQueueHead);
     }
     // Configure the interrupt.
-    if (waitQueueHead != ref) {
-        int disable = waitQueueHead == NULL || waitQueueHead->proc->sleepObj.overflows > 0;
+    if (waitQueueHead == NULL){
+        setHalfWTimerInterrupt(0, WTIMER1_BASE, TIMER_B, curValWTA, 0);
+    } else {
+        int disable = waitQueueHead->proc->sleepObj.overflows > 0;
         setHalfWTimerInterrupt(!disable, WTIMER1_BASE, TIMER_B, curValWTA, waitQueueHead->proc->sleepObj.sleepUntil);
     }
 }
@@ -79,6 +95,9 @@ static void addToWaitQueue(struct WaitQueueElement* wqe){
 }
 
 int addWaiter(void(*remove)(struct Process*), struct Process* proc, const struct SleepRequest* sleepReq){
+#ifdef DEBUG
+    if (tryLockAnonymousSpinlock(&spinLock) != 0) unknownStateResponse();
+#endif //DEBUG
     translateSleepRequest(proc, sleepReq);
     if (proc->sleepObj.sleepUntil > getSystemClockValue()) return ETIMEDOUT;
     struct WaitQueueElement* we = getElementFromPool();
@@ -86,10 +105,16 @@ int addWaiter(void(*remove)(struct Process*), struct Process* proc, const struct
     we->proc = proc;
     addToWaitQueue(we);
     updateListAndInterrupt();
+#ifdef DEBUG
+    unlockAnonymousSpinlock(&spinLock);
+#endif //DEBUG
     return 0;
 }
 
 int removeWaiter(struct Process* proc){
+#ifdef DEBUG
+    if (tryLockAnonymousSpinlock(&spinLock) != 0) unknownStateResponse();
+#endif //DEBUG
     struct WaitQueueElement* cur = waitQueueHead;
     struct WaitQueueElement* prev = NULL;
     for(; cur != NULL; cur = cur->nextElement){
@@ -104,15 +129,27 @@ int removeWaiter(struct Process* proc){
         }
         prev = cur;
     }
+#ifdef DEBUG
+    unlockAnonymousSpinlock(&spinLock);
+#endif //DEBUG
     return EINVAL;
 }
 
 struct Process* waitTimerTimeout(void){
+#ifdef DEBUG
+    if (tryLockAnonymousSpinlock(&spinLock) != 0) unknownStateResponse();
+#endif //DEBUG
     updateListAndInterrupt();
+#ifdef DEBUG
+    unlockAnonymousSpinlock(&spinLock);
+#endif //DEBUG
     return NULL;
 }
 
 struct Process* waitTimerSysTimerOverflow(void){
+#ifdef DEBUG
+    if (tryLockAnonymousSpinlock(&spinLock) != 0) unknownStateResponse();
+#endif //DEBUG
     struct WaitQueueElement* prev = NULL;
     struct WaitQueueElement* cur = waitQueueHead;
     for (; cur != NULL; cur = cur->nextElement){
@@ -130,5 +167,8 @@ struct Process* waitTimerSysTimerOverflow(void){
         prev = cur;
     }
     updateListAndInterrupt();
+#ifdef DEBUG
+    unlockAnonymousSpinlock(&spinLock);
+#endif //DEBUG
     return NULL;
 }

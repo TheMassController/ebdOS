@@ -54,9 +54,7 @@ void kernelMain(void){
                     kernRetQueuePush(kernMaintenanceProc);
                     break;
                 case PROCESSSLEEP:
-                    context->retVal = 0;
-                    tProc = addSleeper(kernMaintenanceProc, context->genericPtr);
-                    kernRetQueueAddList(tProc);
+                    addSleeper(kernMaintenanceProc, context->genericPtr);
                     break;
                 case PROCESSEXIT:
                     terminateProcess(kernMaintenanceProc, context->passVal);

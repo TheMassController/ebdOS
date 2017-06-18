@@ -26,21 +26,8 @@ void systemTimerInterrupt(void){
 #endif //DEBUG
 }
 
-void sleepTimerInterrupt(void){
-    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_TIMB_MATCH);
-#ifdef DEBUG
-    int code = passMessageToKernel(sleepTimerExpired);
-    if (code != 0){
-        UARTprintf("Failed to pass sleepTimerExpired to kernel. Code: %d (%s)\n", code, strerror(code));
-        generateCrash();
-    }
-#else
-    passMessageToKernel(sleepTimerExpired);
-#endif //DEBUG
-}
-
 void waitModuleTimerInterrupt(void){
-    ROM_TimerIntClear(WTIMER1_BASE,  TIMER_TIMB_MATCH);
+    ROM_TimerIntClear(WTIMER0_BASE,  TIMER_TIMB_MATCH);
 #ifdef DEBUG
     int code = passMessageToKernel(waitModuleTimerExpired);
     if (code != 0){

@@ -94,9 +94,11 @@ void kernelMain(void){
                     context->retVal = sysDestroyFutex(context->genericPtr);
                     kernRetQueuePush(kernMaintenanceProc);
                     break;
+#ifdef DEBUG
                 default:
                     UARTprintf("Unknown code for kernel service: %d, process name: %s, pid: %d\n", context->comVal, kernMaintenanceProc->name, kernMaintenanceProc->pid);
                     break;
+#endif //DEBUG
             }
             kernMaintenanceProc = kernelBufferGetProcess();
         }
@@ -109,16 +111,16 @@ void kernelMain(void){
                     kernRetQueueAddList(it);
                     waitTimerSysTimerOverflow();
                     break;
-                case sleepTimerExpired:
-                    it = refreshSleeplist();
-                    kernRetQueueAddList(it);
-                    break;
                 case waitModuleTimerExpired:
                     waitTimerTimeout();
                     break;
+                case noMessageAvailable:
+                    break;
+#ifdef DEBUG
                 default:
                     UARTprintf("Unknown event code: %d\n", code);
                     break;
+#endif //DEBUG
             }
             code = kernelBufferGetCode();
         }

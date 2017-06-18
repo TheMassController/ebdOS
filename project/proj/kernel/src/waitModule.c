@@ -58,10 +58,10 @@ static void updateListAndInterrupt(void){
     }
     // Configure the interrupt.
     if (waitQueueHead == NULL){
-        setHalfWTimerInterrupt(0, WTIMER1_BASE, TIMER_B, curValWTA, 0);
+        setHalfWTimerInterrupt(0, WTIMER0_BASE, TIMER_B, curValWTA, 0);
     } else {
         int disable = waitQueueHead->proc->sleepObj.overflows > 0;
-        setHalfWTimerInterrupt(!disable, WTIMER1_BASE, TIMER_B, curValWTA, waitQueueHead->proc->sleepObj.sleepUntil);
+        setHalfWTimerInterrupt(!disable, WTIMER0_BASE, TIMER_B, curValWTA, waitQueueHead->proc->sleepObj.sleepUntil);
     }
 }
 

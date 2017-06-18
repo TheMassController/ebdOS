@@ -25,7 +25,6 @@ enum KernBufferMessageCodes{
     noMessageAvailable = 0, // This way, a buffer specified in the .bss section will be set to all 0 on reset and thus will be set to noMessageAvailable.
                             // Note that this is not necessary: the C standard specifies that the first value of an enum gets 0 per default.
     sysTimerOverflow,
-    sleepTimerExpired,
     waitModuleTimerExpired
 };
 

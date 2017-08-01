@@ -32,7 +32,7 @@ TOP :=./
 DIRS := $(shell ls -d */)
 DIRS := $(DIRS:=rules.mk)
 
-.PHONY: echo all debug clean distclean
+.PHONY: echo all debug full clean distclean
 
 all: CFLAGS += $(ALLBUILDCFLAGS)
 all: LDFLAGS += $(ALLBUILDLDFLAGS)
@@ -43,6 +43,8 @@ debug: CFLAGS += $(DEBUGBUILDCFLAGS)
 debug: LDFLAGS += $(DEBUGBUILDLDFLAGS)
 debug: pre-build
 debug: $(DEBUGTARGETBIN)
+
+full: all debug
 
 -include $(DIRS)
 

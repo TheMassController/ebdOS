@@ -100,8 +100,7 @@ function commandDistribution {
             runMake $1
             ;;
         full)
-            runMake all
-            runMake debug
+            runMake full
             ;;
         flash|debugflash)
             runFlash $1

@@ -9,12 +9,6 @@
     .type   pendSVHandler, %function
 pendSVHandler:
     cpsid i                     @Disables all configurable interrupts: hard fault and NMI can still happen
-    @ Check if we are inside the pendSV
-    mrs r2, PSR                 @ Load the PSR into r2
-    and r2, r2, #0xE            @ If we are in the pendsv then the last seven bits are equal to 0xe, see datasheet pp 76 - 79. So after this and, we are inside the pendSV if r2 == 0xe
-    cmp r2, #0xE                @ The compare instruction
-    bne .L3                     @ If not equal, jump to L3 (just exit the function)
-
     @ Load the currentProcess and the nextProcess, update the globalcontext
     sub sp, sp, #12             @ Create the stackspace we need
     str lr, [sp, #8]            @ Store the lr at the very bottom

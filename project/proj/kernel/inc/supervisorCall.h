@@ -7,14 +7,10 @@
 
 // The codes
 #define SVC_yield                               0
-#define SVC_sleep                               1
-#define SVC_wakeup                              2
-#define SVC_wakeupCurrent                       3
-#define SVC_wakeupKernel                        4
-#define SVC_serviceRequired                     5
-#define SVC_serviced                            6
-#define SVC_mainClockInterrupt                  7
-#define SVC_abort                               8
+#define SVC_wakeupKernel                        1
+#define SVC_serviceRequired                     2
+#define SVC_serviced                            3
+#define SVC_abort                               4
 #ifdef DEBUG
 #define SVC_test                                255
 #endif // DEBUG

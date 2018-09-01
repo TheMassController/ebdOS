@@ -64,7 +64,7 @@ static void sayHi(void){
 
 // This function responds to an interrupt that can be generated at any runlevel.
 // Handlermode is somewhere near equal to being in an interrupt.
-void svcHandler_main(const char reqCode, const unsigned fromHandlerMode){
+void svcHandler_main(const uint8_t reqCode, const unsigned fromHandlerMode){
     switch(reqCode){
         case SVC_yield:
             if (!fromHandlerMode) preemptCurrentProcess();

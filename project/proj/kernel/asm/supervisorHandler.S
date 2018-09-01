@@ -7,8 +7,8 @@
 	.thumb_func
 	.type	svcHandler, %function
 svcHandler:
-    @ Called when SVC interrupt happens. Bridges towards svcHandler_main. When done, r0 should not equal zero if the call came from handler mode and equal zero if it did.
-    @ r1 should be equal to the value passed with the svc instruction
+    @ Called when SVC interrupt happens. Bridges towards svcHandler_main. When done, r1 should not equal zero if the call came from handler mode and equal zero if it did.
+    @ r0 should be equal to the value passed with the svc instruction
 
     @ One of the goals of this code is to get the code part of the svc instruction.
     @ This part of the instruction is igorned by the CPU, so in order to get this code we are going to have to load it from the actual instruction.

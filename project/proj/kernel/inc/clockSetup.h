@@ -13,7 +13,7 @@
 // ROM api pp 182
 // Base speed after PLL is 200 MHz. 80 is the max the CPU can handle
 
-#define PC_BAUDRATE 115200
+#define PC_BAUDRATE 9600
 #define EDB_OS_CLOCK_80MHZ
 
 // The next table defines the possible clock speeds

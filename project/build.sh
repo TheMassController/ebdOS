@@ -44,7 +44,7 @@ function runFlash {
             runMake all
             $FLASH $RELEASEEXEC
             ;;
-        debugflash)
+        debugFlash)
             runMake debug
             $FLASH $DEBUGEXEC
             ;;
@@ -56,7 +56,7 @@ function runFlash {
 }
 
 function debugRun {
-    runFlash debugflash
+    runFlash debugFlash
     launchGDB
 }
 
@@ -81,7 +81,7 @@ function printUsage {
     echo "flash         Compile and flash. Implies all"
     echo "debugFlash    Compile and flash. Implies debug"
     echo "launchGDB     Connects the GDB debugger the the board and loads the debug symbols"
-    echo "debugRun      Same as $0 debug debugflash launchGDB"
+    echo "debugRun      Same as $0 debug debugFlash launchGDB"
     echo "clean         Remove all .o files"
     echo "distclean     Remove all files that are not created by the user"
     echo "screen        Connect to the stellaris using GNU screen"
@@ -102,7 +102,7 @@ function commandDistribution {
         full)
             runMake full
             ;;
-        flash|debugflash)
+        flash|debugFlash)
             runFlash $1
             ;;
         debugRun)

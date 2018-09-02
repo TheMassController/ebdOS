@@ -19,13 +19,7 @@
 #include <uartstdio.h>
 #endif //DEBUG
 
-//And the other defines
-// For now we want it to be 128 bytes
-#define IDLEFUNCSTACKLEN (128/sizeof(uint8_t))
-
 static struct Process processPool[MAXTOTALPROCESSES];
-static uint8_t idleProcStack[IDLEFUNCSTACKLEN + sizeof(struct ProcessContext)];
-static struct ProcessContext kernelContext;
 
 struct Process kernelStruct = {
     .mPid = 0,
@@ -35,11 +29,9 @@ struct Process kernelStruct = {
     .priority = 100,
     .state = STATE_READY,
     .blockAddress = NULL,
-    .stack = NULL,
     .stackPointer = NULL,
     .savedRegsPointer = &(kernelStruct.savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE]), // At the very end
     .hwFlags = PROCESS_IS_PRIVILEGED | PROCESS_USES_MSP,
-    .context = &kernelContext,
     .name = "Kernel",
 };
 
@@ -56,9 +48,10 @@ struct Process idleProcessStruct = {
 void __processReturn(void);
 void __sleepProcessFunc(void);
 
-static void releaseFromMemPool(struct Process* process){
-    process->containsProcess = 0;
-}
+// TODO add reap functionality
+//static void releaseFromMemPool(struct Process* process){
+//    process->containsProcess = 0;
+//}
 
 static struct Process* getProcessFromPool(void){
     //Starts at one because process zero is always the kernel. If that process does not exist then something real is going on.
@@ -81,14 +74,12 @@ static void assignChildToProcess(struct Process* parent, struct Process* child){
     }
 }
 
-static void setupDynamicMem(struct Process* proc, void* stack, size_t stacklen, void (*procFunc)(), void* param){
-    proc->stack = stack;
-    // Set the context pointer
-    proc->context = (struct ProcessContext*)((uintptr_t)proc->stack + stacklen);
+static void setupDynamicMem(struct Process* proc, void (*procFunc)(), void* param){
+    const size_t stacklen = USERSTACKSIZEBYTE;
     //Because a stack moves down (from high to low) move the pointer to the last address and then move it down to a position where for the address of the pointer lsb and lsb+1 = 0 (lsb and lsb+1 of SP are always 0)
     //This new address is always lower then or equal to the highest address that is assigned this process.
     //stacklen - 1 is because ptr + stacklen is one too much, the pointer itself is also assigned to the process
-    uintptr_t* stackPointer = (uintptr_t*)(((uintptr_t)proc->stack + stacklen - 1) & ~((uintptr_t)0x3));
+    uintptr_t* stackPointer = (uintptr_t*)(((uintptr_t)&proc->stack + stacklen - 1) & ~((uintptr_t)0x3));
     //Now start pushing registers
     //The first set of registers are for the interrupt handler, those will be read when the system returns from an interrupt
     //These are in order from down to up: R0, R1, R2, R3, R12, LR, PC, XSPR
@@ -131,7 +122,7 @@ void initializeProcesses(void){
     for (uint32_t i = 0; i < MAXTOTALPROCESSES; ++i){
         processPool[i].pid = i + 2;
     }
-    setupDynamicMem(&idleProcessStruct, (void*)&idleProcStack, IDLEFUNCSTACKLEN, __sleepProcessFunc, NULL);
+    setupDynamicMem(&idleProcessStruct, __sleepProcessFunc, NULL);
 }
 
 struct Process* createNewProcess(const struct ProcessCreateParams* params, struct Process* parentProc){
@@ -142,13 +133,6 @@ struct Process* createNewProcess(const struct ProcessCreateParams* params, struc
     }
     struct Process* newProc = getProcessFromPool();
     if ( newProc == NULL) { //Insufficient mem
-        errno = ENOMEM;
-        return NULL;
-    }
-    //Create the stack + processcontext.
-    void* stack = malloc(params->stacklen + sizeof(struct ProcessContext));
-    if (stack == NULL){
-        releaseFromMemPool(newProc);
         errno = ENOMEM;
         return NULL;
     }
@@ -165,7 +149,7 @@ struct Process* createNewProcess(const struct ProcessCreateParams* params, struc
     newProc->hwFlags = PROCESS_DEFAULT;
     if (params->isPrivileged) newProc->hwFlags |= PROCESS_IS_PRIVILEGED;
     newProc->blockAddress = NULL;
-    setupDynamicMem(newProc, stack, params->stacklen, params->procFunc, params->param);
+    setupDynamicMem(newProc, params->procFunc, params->param);
     // Add it as a child to its parent
     assignChildToProcess(parentProc, newProc);
     return newProc;
@@ -179,7 +163,6 @@ int terminateProcess(struct Process* proc, int32_t exitStatus){
         assignChildToProcess(&kernelStruct, proc->childPtr);
     }
     // Free the stack
-    free(proc->stack);
     proc->retval = exitStatus;
     return 0;
 }

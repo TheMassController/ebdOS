@@ -41,7 +41,7 @@ void kernelMain(void){
     while(1){
         struct Process* kernMaintenanceProc = kernelBufferGetProcess();
         while(kernMaintenanceProc != NULL){
-            struct ProcessContext* context = kernMaintenanceProc->context;
+            struct ProcessContext* context = &kernMaintenanceProc->context;
             struct Process* tProc = NULL;
             int retval;
             switch(context->comVal){

@@ -1,10 +1,14 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include <stdint.h>             // Types like uint32_t are defined here
-#include <stddef.h>             // size_t
+#include <stdint.h>                     // Types like uint32_t are defined here
+#include <stddef.h>                     // size_t
 
-#include "abstrSysSleepStructs.h"      // SleepingProcessStruct
+#include "abstrSysSleepStructs.h"       // SleepingProcessStruct
+#include "kernelPredefined.h"           // User process stack size
+#include "core/inc/context.h"           // ProcessContext
+
+#define USERSTACKSIZEWORD ((USERSTACKSIZEBYTE + sizeof(uint32_t) - 1) / sizeof(uint32_t) )
 
 /* States are handled as different bit flags:
  * pos 0 = sleep
@@ -40,11 +44,11 @@ struct Process {
     uintptr_t pid;                                                  // Pid of the process
     void* savedRegsPointer;                                         // Points towards the point were the saved data needs to be retrieved from or stored to
     uintptr_t hwFlags;                                              // HWflags used for context switching
-    struct ProcessContext* context;                                 // The userspace context of the process
+    struct ProcessContext context;                                  // The userspace context of the process
 
     uint32_t savedRegSpace[CS_SAVEDREGSPACE + CS_FPSAVEDREGSPACE];  // Space to save the saved temporaries. (8*4 byte, 1 reg is 4 byte (32 bit))
     uintptr_t  mPid;                                                // Mother pid
-    void* stack;                                                    // refers to the address returned by Malloc
+    uint32_t stack[USERSTACKSIZEWORD];                              // refers to the address returned by Malloc
     char name[32];                                                  // The name can be 31 chars max, the last char always needs to be a zero.
     uint8_t state;                                                  // Set of 1 bit flags indicating if the process is sleeping, waiting.. etc
     uint8_t priority;                                               // Higher is higher: 255 is highest

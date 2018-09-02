@@ -139,7 +139,7 @@ void changeGlobalContext(struct Process* newProcPtr){
     if (newProcPtr == NULL) generateCrash();
 #ifdef DEBUG
     // Tests for a stackoverflow. If the answer is yes, the stackoverflow has happend and the OS is in an unknown state.
-    if ((uintptr_t)(newProcPtr->stack) > (uintptr_t)(newProcPtr->stackPointer)){
+    if (newProcPtr->pid != 0 && (uintptr_t)(newProcPtr->stack) > (uintptr_t)(newProcPtr->stackPointer)){
         UARTprintf("STACKOVERFLOW: %s, %d CRASHING\n", newProcPtr->name, newProcPtr->pid);
         generateCrash();
     }
@@ -150,7 +150,7 @@ void changeGlobalContext(struct Process* newProcPtr){
     }
     setSystick(nextSliceLength);
     currentProcess = newProcPtr;
-    currentContext = newProcPtr->context;
+    currentContext = &newProcPtr->context;
 }
 
 // Init process, only runs once

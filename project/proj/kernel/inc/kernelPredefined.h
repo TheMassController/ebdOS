@@ -10,9 +10,10 @@
 // The maximal amount of managed locks that can exist
 #define MANAGEDLOCKCOUNT 30
 // The next var is only about user processes, the kernel-based processes (kernel itself and idle) are counted seperately
-#define MAXTOTALPROCESSES 10
+#define MAXTOTALPROCESSES 5
 // The size of the kernel message buffer, usually used by interrupts to notify the kernel
 #define KERNMESSAGEBUFFERSIZE 14
-
+// The size of the user space process stack in bytes. If this is not a multiple of four, it is rounded up to a multiple of four.
+#define USERSTACKSIZEBYTE 256
 
 #endif //KERNELPREDEFINED_H
